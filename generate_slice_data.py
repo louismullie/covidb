@@ -9,7 +9,8 @@ import os
 import numpy as np
 import pandas as pd
 
-from constants import DEBUG, COLUMNS, LIVE_SHEET_FILENAME
+from constants import DEBUG, TABLE_COLUMNS, OUTPUT_DIRECTORY, \
+  LIVE_SHEET_FILENAME, CSV_DIRECTORY, DICOM_DIRECTORY
 from sql_utils import sql_query, list_columns
 from file_utils import write_csv
 from identity_utils import generate_slice_study_uid, generate_slice_series_uid
@@ -20,7 +21,7 @@ from pydicom import Dataset
 series_counter = {}
 slice_data_rows = []
 
-for r, d, files in os.walk('./raw_dicom_data'):
+for r, d, files in os.walk(DICOM_DIRECTORY):
   for f in files:
     dicom_file_path = os.path.join(r, f)
     dicom = read_dcm(dicom_file_path)
@@ -79,7 +80,7 @@ for r, d, files in os.walk('./raw_dicom_data'):
 
     slice_num = series_counter[study_uid][series_uid]
 
-    slice_data_file_path = os.path.join('data', study_uid, series_uid)
+    slice_data_file_path = os.path.join(OUTPUT_DIRECTORY, study_uid, series_uid)
     slice_data_file_name = 'slice_' + str(slice_num) + '.dcmdata'
 
     os.makedirs(slice_data_file_path, exist_ok=True)
@@ -109,4 +110,5 @@ for r, d, files in os.walk('./raw_dicom_data'):
       data_file.write(pixel_data.hex())
 
 print('Total rows: %d' % len(slice_data_rows))
-write_csv(COLUMNS['slice_data'], slice_data_rows, './csv/slice_data.csv')
+write_csv(TABLE_COLUMNS['slice_data'], slice_data_rows, 
+  os.path.join(CSV_DIRECTORY, 'slice_data.csv'))

@@ -9,12 +9,12 @@ import csv, re, os
 import numpy as np
 import pandas as pd
 
-from constants import DEBUG, COLUMNS, LIVE_SHEET_FILENAME, CSV_DIRECTORY
+from constants import DEBUG, TABLE_COLUMNS, LIVE_SHEET_FILENAME, CSV_DIRECTORY
 from sql_utils import sql_query, list_columns
 from file_utils import write_csv, read_csv
 from time_utils import get_hours_between_datetimes, get_datetime_seconds
 from identity_utils import generate_patient_uid, generate_patient_site_uid
-from mappers import map_patient_covid_status, map_patient_age, map_patient_sex
+from mappers import map_patient_covid_status, map_patient_ramq, map_patient_age, map_patient_sex
 
 live_sheet_rows = read_csv(LIVE_SHEET_FILENAME)
 
@@ -34,10 +34,9 @@ for row in live_sheet_rows:
   patient_mrn_string = 'S' + patient_mrn
   patient_ramq = row[1]
 
-  if not re.match("[A-Z]{4}[0-9]{8}", patient_ramq):
+  if not validate_patient_ramq(patient_ramq):
     if DEBUG:
       print('Skipping patient with invalid RAMQ: %s' % patient_ramq)
-    continue
 
   patient_age = row[-1]
   patient_birth_sex = row[-2]
@@ -101,7 +100,7 @@ for index, row in df.iterrows():
       patient_mrns_having_imaging.append(row.dossier)
       accession_numbers.append(row.accession_number)
 
-write_csv(COLUMNS['imaging_data'], imaging_data_rows, 
+write_csv(TABLE_COLUMNS['imaging_data'], imaging_data_rows, 
   os.path.join(CSV_DIRECTORY, 'imaging_data.csv'))
 
 print('Number of patients with imaging: %d' % len( \
@@ -126,5 +125,5 @@ for patient_mrn in patient_mrns_having_imaging:
   if not found_positive:
     filtered_patient_data.append(patient_rows[0])
 
-write_csv(COLUMNS['patient_data'], filtered_patient_data, 
+write_csv(TABLE_COLUMNS['patient_data'], filtered_patient_data, 
   os.path.join(CSV_DIRECTORY, 'patient_data.csv'))

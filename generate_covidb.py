@@ -2,17 +2,20 @@ import subprocess, os
 import pandas as pd
 import numpy as np
 
-dir_path = os.path.dirname(os.path.realpath(__file__))
+from constants import CODE_DIRECTORY, CSV_DIRECTORY
 
 def most_frequent(data):
     return max(set(data), key=data.count)
 
 def run_step(step_name):
+
+  process_file_name = 'generate_' + step_name + '.py'
+
   subprocess.call([
-  'python '+os.path.join(dir_path, 'generate_' + step_name + '.py')
+  'python '+os.path.join(CODE_DIRECTORY, process_file_name)
   ], shell=True)
 
-  csv_path = os.path.join(dir_path, 'csv', step_name + '.csv')
+  csv_path = os.path.join(CSV_DIRECTORY, step_name + '.csv')
 
   print('\n\n* Table summary: %s' % step_name)
 

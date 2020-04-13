@@ -5,13 +5,13 @@
 @author: lmullie
 
 """
-import csv
+import csv, os
 import numpy as np
 import pandas as pd
 
-from constants import DEBUG, COLUMNS, LIVE_SHEET_FILENAME
+from constants import DEBUG, TABLE_COLUMNS, LIVE_SHEET_FILENAME, CSV_DIRECTORY
 from sql_utils import sql_query, list_columns, list_tables
-from file_utils import write_csv
+from file_utils import read_csv, write_csv
 from time_utils import get_hours_between_datetimes
 from identity_utils import generate_patient_uid, generate_patient_site_uid
 from mappers import map_lab_sample_site
@@ -30,8 +30,6 @@ for row in reader:
     patient_mrns.append(patient_mrn)
     pcr_sample_times[str(patient_mrn)] = row[1]
   row_count += 1
-
-#list_columns('oacis_lb')
 
 #df = sql_query("SELECT * FROM dw_v01.cerner_labs_table WHERE perform_dt_tm > 2020-01-01 AND person_id in (" + ", ".join(patient_mrns) + ") LIMIT 100")
 df = sql_query("SELECT * FROM dw_v01.oacis_lb WHERE " +
@@ -61,4 +59,6 @@ for index, row in df.iterrows():
     ])
 
 print('Total rows: %d' % len(lab_data_rows))
-write_csv(COLUMNS['lab_data'], lab_data_rows, './csv/lab_data.csv')
+
+write_csv(TABLE_COLUMNS['lab_data'], lab_data_rows, 
+  os.path.join(CSV_DIRECTORY, 'lab_data.csv'))

@@ -1,3 +1,12 @@
+import re
+
+def validate_patient_ramq(ramq):
+  ramq_str = str(ramq).strip()
+  if not re.match("[A-Z]{4}[0-9]{8}", ramq_str):
+    if ramq_str != '':
+      return False
+  return True
+
 def map_patient_covid_status(status):
   if status[0] == 'P':   return 1 # Positif
   elif status[0] == 'N': return 2 # Negatif

@@ -5,10 +5,11 @@
 @author: lmullie
 
 """
+import os
 import numpy as np
 import pandas as pd
 
-from constants import DEBUG, COLUMNS, CSV_DIRECTORY
+from constants import DEBUG, TABLE_COLUMNS, CSV_DIRECTORY
 from sql_utils import sql_query, list_columns, list_tables
 from file_utils import write_csv, read_csv
 from time_utils import get_hours_between_datetimes
@@ -57,5 +58,5 @@ for index, row in df.iterrows():
 
 print('Total rows: %d' % len(micro_data_rows))
 
-write_csv(COLUMNS['micro_data'], micro_data_rows, 
+write_csv(TABLE_COLUMNS['micro_data'], micro_data_rows, 
   os.path.join(CSV_DIRECTORY, 'micro_data.csv'))

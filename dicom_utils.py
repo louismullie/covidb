@@ -1,7 +1,6 @@
 import os
 import pydicom
 import numpy as np
-import matplotlib.pyplot as plt
 import scipy
 
 # Read in a DICOM file.
