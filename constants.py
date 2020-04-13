@@ -42,3 +42,4 @@ COLUMNS = {
 LIVE_SHEET_FILENAME = "/var/www/html/mchasse/covid19/data_all.csv"
 CSV_DIRECTORY = "/data8/projets/Mila_covid19/output/csv"
 SLICE_DATA_DIRECTORY = "/data8/projets/Mila_covid19/data/covid_citadel_pacs"
+SQLITE_DIRECTORY = "/data8/projets/Mila_covid19/output/sqlite"
