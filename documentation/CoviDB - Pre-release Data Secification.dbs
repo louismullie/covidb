@@ -94,11 +94,11 @@ Could be in: { viral pneumonitis, bacterial pneumonia, acute respiratory distres
 			<index name="pk_outcome_data_id" unique="PRIMARY_KEY" >
 				<column name="diagnosis_id" />
 			</index>
-			<fk name="fk_outcome_data_episode_data" to_schema="public" to_table="episode_data" >
-				<fk_column name="episode_data_id" pk="episode_data_id" />
-			</fk>
 			<fk name="fk_diagnosis_data_patient_data" to_schema="public" to_table="patient_data" >
 				<fk_column name="patient_uid" pk="patient_uid" />
+			</fk>
+			<fk name="fk_diagnosis_data_episode_data" to_schema="public" to_table="episode_data" >
+				<fk_column name="episode_data_id" pk="episode_data_id" />
 			</fk>
 		</table>
 		<table name="drug_data" >
@@ -143,7 +143,7 @@ Reference: https://bit.ly/3dRlo5z]]></comment>
 			<index name="pk_drug_data_id" unique="PRIMARY_KEY" >
 				<column name="drug_data_id" />
 			</index>
-			<fk name="fk_prescription_data" to_schema="public" to_table="patient_data" >
+			<fk name="fk_drug_data_patient_data" to_schema="public" to_table="patient_data" >
 				<fk_column name="patient_uid" pk="patient_uid" />
 			</fk>
 		</table>
@@ -299,7 +299,7 @@ Reference: https://bit.ly/2X8Yv7Q]]></comment>
 			<index name="unq_intervention_data_intervention_type_id" unique="UNIQUE" >
 				<column name="intervention_type_id" />
 			</index>
-			<fk name="fk_intervention_data" to_schema="public" to_table="patient_data" >
+			<fk name="fk_intervention_data_patient_data" to_schema="public" to_table="patient_data" >
 				<fk_column name="patient_uid" pk="patient_uid" />
 			</fk>
 			<fk name="fk_intervention_data_drug_data" to_schema="public" to_table="drug_data" >
@@ -323,7 +323,7 @@ Reference: https://bit.ly/2X8Yv7Q]]></comment>
 			<index name="pk_respiratory_data_id" unique="PRIMARY_KEY" >
 				<column name="intervention_type_id" />
 			</index>
-			<fk name="fk_intervention_type" to_schema="public" to_table="intervention_data" >
+			<fk name="fk_intervention_data_intervention_type" to_schema="public" to_table="intervention_data" >
 				<fk_column name="intervention_type_id" pk="intervention_type_id" />
 			</fk>
 		</table>
@@ -408,10 +408,10 @@ Could be in: { g/L, g/dL, 10^9 cells/L, 10^3 cells/microL, cells/microL, seconds
 			<index name="pk_clinical_data_id" unique="PRIMARY_KEY" >
 				<column name="observation_data_id" />
 			</index>
-			<fk name="fk_observation_data" to_schema="public" to_table="patient_data" >
+			<fk name="fk_observation_data_patient_data" to_schema="public" to_table="patient_data" >
 				<fk_column name="patient_uid" pk="patient_uid" />
 			</fk>
-			<fk name="fk_observation_type" to_schema="public" to_table="observation_type" >
+			<fk name="fk_observation_data_observation_type" to_schema="public" to_table="observation_type" >
 				<fk_column name="observation_type_id" pk="observation_type_id" />
 			</fk>
 		</table>
@@ -706,7 +706,7 @@ Should be: a string containing a comma-separated list of 3 floating point number
 		</table>
 	</schema>
 	<connector name="PostgreSQL" database="PostgreSQL" driver_class="org.postgresql.Driver" driver_jar="postgresql-42.2.8.jar" driver_desc="Standard" host="localhost" port="5432" instance="postgres" user="postgres" />
-	<layout name="CoviDB Data Spec" id="Layout_143a5b5" hide_fks="fk_culture_data_patient_data,fk_diagnosis_data_patient_data,fk_prescription_data,fk_episode_data_patient_data,fk_exposure_data_patient_data,fk_imaging_data_patient_data,fk_intervention_data,fk_intervention_data_drug_data,fk_lab_data_patient_data,fk_observation_data,fk_pcr_data_patient_data,fk_signal_data_patient_data,fk_slice_data_culture_data,fk_symptom_data_patient_data," show_relation="columns" >
+	<layout name="CoviDB Data Spec" id="Layout_143a5b5" hide_fks="fk_culture_data_patient_data,fk_diagnosis_data_patient_data,fk_drug_data_patient_data,fk_episode_data_patient_data,fk_exposure_data_patient_data,fk_imaging_data_patient_data,fk_intervention_data_patient_data,fk_intervention_data_drug_data,fk_lab_data_patient_data,fk_observation_data_patient_data,fk_pcr_data_patient_data,fk_signal_data_patient_data,fk_slice_data_culture_data,fk_symptom_data_patient_data," show_relation="columns" >
 		<comment><![CDATA[CoviDB - Pre-Release Data Specification]]></comment>
 		<entity schema="public" name="culture_data" color="C1D8EE" x="352" y="80" />
 		<entity schema="public" name="diagnosis_data" color="C1D8EE" x="64" y="480" />
