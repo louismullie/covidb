@@ -9,7 +9,7 @@ import os
 import numpy as np
 import pandas as pd
 
-from constants import DEBUG, TABLE_COLUMNS, OUTPUT_DIRECTORY, \
+from constants import DEBUG, TABLE_COLUMNS, BLOB_DIRECTORY, \
   LIVE_SHEET_FILENAME, CSV_DIRECTORY, DICOM_DIRECTORY
 from sql_utils import sql_query, list_columns
 from file_utils import write_csv
@@ -80,7 +80,7 @@ for r, d, files in os.walk(DICOM_DIRECTORY):
 
     slice_num = series_counter[study_uid][series_uid]
 
-    slice_data_file_path = os.path.join(OUTPUT_DIRECTORY, study_uid, series_uid)
+    slice_data_file_path = os.path.join(BLOB_DIRECTORY, study_uid, series_uid)
     slice_data_file_name = 'slice_' + str(slice_num) + '.dcmdata'
 
     os.makedirs(slice_data_file_path, exist_ok=True)

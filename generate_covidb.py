@@ -72,3 +72,10 @@ run_step('micro_data')
 
 print('\n\n* Generating slice data...')
 run_step('slice_data')
+
+print('\n\n* Generating SQLite data...')
+subprocess.call([
+  'python '+os.path.join(CODE_DIRECTORY, 'generate_sqlite.py')
+], shell=True)
+
+print('\n\n* Done!')

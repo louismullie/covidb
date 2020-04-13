@@ -28,7 +28,7 @@ for row in patient_data_rows:
   patient_mrn = str(row[0])
   patient_mrns.append(patient_mrn)
   patient_covid_statuses[patient_mrn] = row[-3]
-  pcr_sample_times[patient_mrn] = row[1]
+  pcr_sample_times[patient_mrn] = row[2]
 
 pcr_patterns = ['Culture', 'Cult', 'cult']
 

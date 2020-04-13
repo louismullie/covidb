@@ -28,7 +28,7 @@ for row in reader:
     patient_data_rows.append(row)
     patient_mrn = row[0]
     patient_mrns.append(patient_mrn)
-    pcr_sample_times[str(patient_mrn)] = row[1]
+    pcr_sample_times[str(patient_mrn)] = row[2]
   row_count += 1
 
 #df = sql_query("SELECT * FROM dw_v01.cerner_labs_table WHERE perform_dt_tm > 2020-01-01 AND person_id in (" + ", ".join(patient_mrns) + ") LIMIT 100")

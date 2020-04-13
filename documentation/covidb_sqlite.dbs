@@ -3,7 +3,7 @@
 	<comment><![CDATA[Version 1.0.0-rc1]]></comment>
 	<schema name="covidb" >
 		<table name="culture_data" >
-			<column name="patient_uid" type="char" length="128" decimal="0" jt="1" mandatory="y" >
+			<column name="patient_site_uid" type="char" length="128" decimal="0" jt="1" mandatory="y" >
 				<comment><![CDATA[Identifier referencing a specific individual in the patient_data table.]]></comment>
 			</column>
 			<column name="culture_data_id" type="integer" length="0" decimal="0" jt="4" mandatory="y" >
@@ -58,11 +58,11 @@
 				<column name="culture_data_id" />
 			</index>
 			<fk name="fk_culture_data_patient_data" to_schema="covidb" to_table="patient_data" >
-				<fk_column name="patient_uid" pk="patient_uid" />
+				<fk_column name="patient_site_uid" pk="patient_site_uid" />
 			</fk>
 		</table>
 		<table name="diagnosis_data" >
-			<column name="patient_uid" type="char" length="128" decimal="0" jt="1" mandatory="y" >
+			<column name="patient_site_uid" type="char" length="128" decimal="0" jt="1" mandatory="y" >
 				<comment><![CDATA[Identifier referencing a specific individual in the patient_data table.]]></comment>
 			</column>
 			<column name="episode_data_id" type="integer" length="0" decimal="0" jt="4" >
@@ -95,14 +95,14 @@ Could be in: { viral pneumonitis, bacterial pneumonia, acute respiratory distres
 				<column name="diagnosis_id" />
 			</index>
 			<fk name="fk_diagnosis_data_patient_data" to_schema="covidb" to_table="patient_data" >
-				<fk_column name="patient_uid" pk="patient_uid" />
+				<fk_column name="patient_site_uid" pk="patient_site_uid" />
 			</fk>
 			<fk name="fk_diagnosis_data_episode_data" to_schema="covidb" to_table="episode_data" >
 				<fk_column name="episode_data_id" pk="episode_data_id" />
 			</fk>
 		</table>
 		<table name="drug_data" >
-			<column name="patient_uid" type="char" length="128" decimal="0" jt="1" mandatory="y" >
+			<column name="patient_site_uid" type="char" length="128" decimal="0" jt="1" mandatory="y" >
 				<comment><![CDATA[Identifier referencing a specific individual in the patient_data table.]]></comment>
 			</column>
 			<column name="drug_data_id" type="bigint" decimal="0" jt="-5" mandatory="y" />
@@ -144,12 +144,12 @@ Reference: https://bit.ly/3dRlo5z]]></comment>
 				<column name="drug_data_id" />
 			</index>
 			<fk name="fk_drug_data_patient_data" to_schema="covidb" to_table="patient_data" >
-				<fk_column name="patient_uid" pk="patient_uid" />
+				<fk_column name="patient_site_uid" pk="patient_site_uid" />
 			</fk>
 		</table>
 		<table name="episode_data" >
 			<comment><![CDATA[Start and end type of patient presence on unit, with accompanying metadata.]]></comment>
-			<column name="patient_uid" type="char" length="128" decimal="0" jt="1" mandatory="y" >
+			<column name="patient_site_uid" type="char" length="128" decimal="0" jt="1" mandatory="y" >
 				<comment><![CDATA[Identifier referencing a specific individual in the patient_data table.]]></comment>
 			</column>
 			<column name="episode_data_id" type="bigint" decimal="0" jt="-5" mandatory="y" >
@@ -183,12 +183,12 @@ Should be blank unless episode_unit_type == 2.]]></comment>
 				<column name="episode_data_id" />
 			</index>
 			<fk name="fk_episode_data_patient_data" to_schema="covidb" to_table="patient_data" >
-				<fk_column name="patient_uid" pk="patient_uid" />
+				<fk_column name="patient_site_uid" pk="patient_site_uid" />
 			</fk>
 		</table>
 		<table name="exposure_data" >
 			<comment><![CDATA[Exposure dates and types.]]></comment>
-			<column name="patient_uid" type="char" length="128" decimal="0" jt="1" mandatory="y" >
+			<column name="patient_site_uid" type="char" length="128" decimal="0" jt="1" mandatory="y" >
 				<comment><![CDATA[Identifier referencing a specific individual in the patient_data table.]]></comment>
 			</column>
 			<column name="exposure_data_id" type="integer" length="0" decimal="0" jt="4" mandatory="y" >
@@ -213,7 +213,7 @@ Should be blank unless episode_unit_type == 2.]]></comment>
 				<column name="exposure_data_id" />
 			</index>
 			<fk name="fk_exposure_data_patient_data" to_schema="covidb" to_table="patient_data" >
-				<fk_column name="patient_uid" pk="patient_uid" />
+				<fk_column name="patient_site_uid" pk="patient_site_uid" />
 			</fk>
 			<fk name="fk_exposure_data_exposure_type" to_schema="covidb" to_table="exposure_type" >
 				<fk_column name="exposure_type_id" pk="exposure_type_id" />
@@ -237,7 +237,7 @@ Should be blank unless episode_unit_type == 2.]]></comment>
 			</index>
 		</table>
 		<table name="imaging_data" >
-			<column name="patient_uid" type="char" length="128" decimal="0" jt="1" mandatory="y" >
+			<column name="patient_site_uid" type="char" length="128" decimal="0" jt="1" mandatory="y" >
 				<comment><![CDATA[Identifier referencing a specific individual in the patient_data table.]]></comment>
 			</column>
 			<column name="imaging_data_id" type="bigint" decimal="0" jt="-5" mandatory="y" >
@@ -268,15 +268,16 @@ Reference: https://bit.ly/2X8Yv7Q]]></comment>
 			<column name="imaging_report_text" type="varchar" length="250" decimal="0" jt="12" >
 				<comment><![CDATA[De-identified textual report of the imaging.]]></comment>
 			</column>
+			<column name="imaging_site" type="varchar" length="36" jt="12" />
 			<index name="pk_study_data_id" unique="PRIMARY_KEY" >
 				<column name="imaging_data_id" />
 			</index>
 			<fk name="fk_imaging_data_patient_data" to_schema="covidb" to_table="patient_data" >
-				<fk_column name="patient_uid" pk="patient_uid" />
+				<fk_column name="patient_site_uid" pk="patient_site_uid" />
 			</fk>
 		</table>
 		<table name="intervention_data" >
-			<column name="patient_uid" type="char" length="128" decimal="0" jt="1" mandatory="y" >
+			<column name="patient_site_uid" type="char" length="128" decimal="0" jt="1" mandatory="y" >
 				<comment><![CDATA[Identifier referencing a specific individual in the patient_data table.]]></comment>
 			</column>
 			<column name="drug_data_id" type="integer" length="0" decimal="0" jt="4" />
@@ -300,7 +301,7 @@ Reference: https://bit.ly/2X8Yv7Q]]></comment>
 				<column name="intervention_type_id" />
 			</index>
 			<fk name="fk_intervention_data_patient_data" to_schema="covidb" to_table="patient_data" >
-				<fk_column name="patient_uid" pk="patient_uid" />
+				<fk_column name="patient_site_uid" pk="patient_site_uid" />
 			</fk>
 			<fk name="fk_intervention_data_drug_data" to_schema="covidb" to_table="drug_data" >
 				<fk_column name="drug_data_id" pk="drug_data_id" />
@@ -329,7 +330,7 @@ Reference: https://bit.ly/2X8Yv7Q]]></comment>
 		</table>
 		<table name="lab_data" >
 			<comment><![CDATA[Contains data related to laboratory tests.]]></comment>
-			<column name="patient_uid" type="char" length="128" decimal="0" jt="1" mandatory="y" >
+			<column name="patient_site_uid" type="char" length="128" decimal="0" jt="1" mandatory="y" >
 				<comment><![CDATA[Identifier referencing a specific individual in the patient_data table.]]></comment>
 			</column>
 			<column name="lab_data_id" type="bigint" decimal="0" jt="-5" mandatory="y" >
@@ -385,11 +386,11 @@ Could be in: { g/L, g/dL, 10^9 cells/L, 10^3 cells/microL, cells/microL, seconds
 				<column name="lab_data_id" />
 			</index>
 			<fk name="fk_lab_data_patient_data" to_schema="covidb" to_table="patient_data" >
-				<fk_column name="patient_uid" pk="patient_uid" />
+				<fk_column name="patient_site_uid" pk="patient_site_uid" />
 			</fk>
 		</table>
 		<table name="observation_data" >
-			<column name="patient_uid" type="char" length="128" decimal="0" jt="1" mandatory="y" >
+			<column name="patient_site_uid" type="char" length="128" decimal="0" jt="1" mandatory="y" >
 				<comment><![CDATA[Identifier referencing a specific individual in the patient_data table.]]></comment>
 			</column>
 			<column name="observation_data_id" type="bigint" decimal="0" jt="-5" mandatory="y" >
@@ -409,7 +410,7 @@ Could be in: { g/L, g/dL, 10^9 cells/L, 10^3 cells/microL, cells/microL, seconds
 				<column name="observation_data_id" />
 			</index>
 			<fk name="fk_observation_data_patient_data" to_schema="covidb" to_table="patient_data" >
-				<fk_column name="patient_uid" pk="patient_uid" />
+				<fk_column name="patient_site_uid" pk="patient_site_uid" />
 			</fk>
 			<fk name="fk_observation_data_observation_type" to_schema="covidb" to_table="observation_type" >
 				<fk_column name="observation_type_id" pk="observation_type_id" />
@@ -441,13 +442,13 @@ Could be in: { g/L, g/dL, 10^9 cells/L, 10^3 cells/microL, cells/microL, seconds
 		</table>
 		<table name="patient_data" >
 			<comment><![CDATA[Table for temporally invariant patient characteristics.]]></comment>
-			<column name="patient_uid" type="char" length="128" decimal="0" jt="1" mandatory="y" >
-				<comment><![CDATA[Primary key of this table. Globally unique identifier for a patient with a given RAMQ number. Generated deterministically from RAMQ number via PBKDF2. Not traceable back to patient; follows NIST best practices for cryptographically secure storage of password keys.
+			<column name="patient_site_uid" type="char" length="128" decimal="0" jt="1" mandatory="y" >
+				<comment><![CDATA[Per-site unique identifier, generated deterministically from unique local site ID via PBKDF2. 
 
 Procedure for generation: https://bit.ly/39ANAXa]]></comment>
 			</column>
-			<column name="patient_site_uid" type="char" length="128" decimal="0" jt="1" mandatory="y" >
-				<comment><![CDATA[Per-site unique identifier, generated deterministically from unique local site ID via PBKDF2. 
+			<column name="patient_global_uid" type="char" length="128" decimal="0" jt="1" mandatory="y" >
+				<comment><![CDATA[Primary key of this table. Globally unique identifier for a patient with a given RAMQ number. Generated deterministically from RAMQ number via PBKDF2. Not traceable back to patient; follows NIST best practices for cryptographically secure storage of password keys.
 
 Procedure for generation: https://bit.ly/39ANAXa]]></comment>
 			</column>
@@ -516,12 +517,15 @@ Reference codes: https://bit.ly/2Jyw7nN]]></comment>
 			<column name="patient_last_fu_date" type="date" length="0" decimal="0" jt="91" >
 				<comment><![CDATA[Date of last follow-up at which the mortality status of the patient was assessed.]]></comment>
 			</column>
-			<index name="pk_patient_data_patient_id" unique="PRIMARY_KEY" >
-				<column name="patient_uid" />
+			<index name="Unq_patient_data_patient_site_uid" unique="UNIQUE" >
+				<column name="patient_site_uid" />
+			</index>
+			<index name="Pk_patient_data_patient_site_uid" unique="PRIMARY_KEY" >
+				<column name="patient_site_uid" />
 			</index>
 		</table>
 		<table name="pcr_data" >
-			<column name="patient_uid" type="char" length="128" decimal="0" jt="1" mandatory="y" >
+			<column name="patient_site_uid" type="char" length="128" decimal="0" jt="1" mandatory="y" >
 				<comment><![CDATA[Identifier referencing a specific individual in the patient_data table.]]></comment>
 			</column>
 			<column name="pcr_data_id" type="bigint" decimal="0" jt="-5" mandatory="y" >
@@ -569,12 +573,12 @@ Reference: https://bit.ly/2wQJfly]]></comment>
 				<column name="pcr_data_id" />
 			</index>
 			<fk name="fk_pcr_data_patient_data" to_schema="covidb" to_table="patient_data" >
-				<fk_column name="patient_uid" pk="patient_uid" />
+				<fk_column name="patient_site_uid" pk="patient_site_uid" />
 			</fk>
 		</table>
 		<table name="signal_data" >
 			<comment><![CDATA[Raw signal data (e.g. EKG, pulse oximeter, arterial line)]]></comment>
-			<column name="patient_uid" type="char" length="128" decimal="0" jt="1" mandatory="y" >
+			<column name="patient_site_uid" type="char" length="128" decimal="0" jt="1" mandatory="y" >
 				<comment><![CDATA[Identifier referencing a specific individual in the patient_data table.]]></comment>
 			</column>
 			<column name="signal_data_id" type="bigint" decimal="0" jt="-5" mandatory="y" >
@@ -609,12 +613,12 @@ Reference: https://bit.ly/2wQJfly]]></comment>
 				<column name="signal_data_id" />
 			</index>
 			<fk name="fk_signal_data_patient_data" to_schema="covidb" to_table="patient_data" >
-				<fk_column name="patient_uid" pk="patient_uid" />
+				<fk_column name="patient_site_uid" pk="patient_site_uid" />
 			</fk>
 		</table>
 		<table name="slice_data" >
 			<comment><![CDATA[Diagnostic imaging data in DICOM format (X-ray, CT, ultrasound).]]></comment>
-			<column name="patient_uid" type="char" length="128" decimal="0" jt="1" mandatory="y" >
+			<column name="patient_site_uid" type="char" length="128" decimal="0" jt="1" mandatory="y" >
 				<comment><![CDATA[Identifier referencing a specific individual in the patient_data table.]]></comment>
 			</column>
 			<column name="imaging_data_id" type="integer" length="0" decimal="0" jt="4" >
@@ -667,13 +671,10 @@ Should be: a string containing a comma-separated list of 3 floating point number
 			<fk name="fk_slice_data_imaging_data" to_schema="covidb" to_table="imaging_data" >
 				<fk_column name="imaging_data_id" pk="imaging_data_id" />
 			</fk>
-			<fk name="fk_slice_data_culture_data" to_schema="covidb" to_table="patient_data" >
-				<fk_column name="patient_uid" pk="patient_uid" />
-			</fk>
 		</table>
 		<table name="symptom_data" >
 			<comment><![CDATA[Data for symptoms experienced by the patient.]]></comment>
-			<column name="patient_uid" type="char" length="128" decimal="0" jt="1" mandatory="y" >
+			<column name="patient_site_uid" type="char" length="128" decimal="0" jt="1" mandatory="y" >
 				<comment><![CDATA[Identifier referencing a specific individual in the patient_data table.]]></comment>
 			</column>
 			<column name="symptom_data_id" type="bigint" decimal="0" jt="-5" mandatory="y" >
@@ -701,12 +702,12 @@ Should be: a string containing a comma-separated list of 3 floating point number
 				<column name="symptom_data_id" />
 			</index>
 			<fk name="fk_symptom_data_patient_data" to_schema="covidb" to_table="patient_data" >
-				<fk_column name="patient_uid" pk="patient_uid" />
+				<fk_column name="patient_site_uid" pk="patient_site_uid" />
 			</fk>
 		</table>
 	</schema>
 	<connector name="PostgreSQL" database="PostgreSQL" driver_class="org.postgresql.Driver" driver_jar="postgresql-42.2.8.jar" driver_desc="Standard" host="localhost" port="5432" instance="postgres" user="postgres" />
-	<layout name="CoviDB Data Spec" id="Layout_143a5b5" hide_fks="fk_culture_data_patient_data,fk_diagnosis_data_patient_data,fk_drug_data_patient_data,fk_episode_data_patient_data,fk_exposure_data_patient_data,fk_imaging_data_patient_data,fk_intervention_data_patient_data,fk_intervention_data_drug_data,fk_lab_data_patient_data,fk_observation_data_patient_data,fk_pcr_data_patient_data,fk_signal_data_patient_data,fk_slice_data_culture_data,fk_symptom_data_patient_data," show_relation="columns" >
+	<layout name="CoviDB Data Spec" id="Layout_143a5b5" hide_fks="fk_culture_data_patient_data,fk_diagnosis_data_patient_data,fk_episode_data_patient_data,fk_exposure_data_patient_data,fk_imaging_data_patient_data,fk_intervention_data_patient_data,fk_intervention_data_drug_data,fk_lab_data_patient_data,fk_observation_data_patient_data,fk_pcr_data_patient_data,fk_signal_data_patient_data,fk_symptom_data_patient_data,fk_drug_data_patient_data," show_relation="columns" >
 		<comment><![CDATA[CoviDB - Pre-Release Data Specification]]></comment>
 		<entity schema="covidb" name="culture_data" color="C1D8EE" x="352" y="80" />
 		<entity schema="covidb" name="diagnosis_data" color="C1D8EE" x="64" y="480" />
