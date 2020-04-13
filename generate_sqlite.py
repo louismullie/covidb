@@ -25,17 +25,17 @@ for schema_block in schema_blocks:
 
 curr = conn.cursor()
 
-tables = ['patient_data', 'lab_data', 'pcr_data', 'micro_data', 'slice_data']
+tables = ['patient_data', 'lab_data', 'pcr_data', 'micro_data', 'slice_data', 'imaging_data']
 
 for table in tables:
   file_uri = os.path.join(CSV_DIRECTORY, table + '.csv')
   df = pd.read_csv(file_uri)
-  if 'patient_site_uid' in df.columns:
-    df['patient_site_uid'] = df['patient_site_uid'].map(lambda x: 
-      generate_patient_site_uid(x))
-  if 'patient_uid' in df.columns:
-    df['patient_uid'] = df['patient_uid'].map(lambda x: 
-      generate_patient_uid(x))
+  #if 'patient_site_uid' in df.columns:
+  #  df['patient_site_uid'] = df['patient_site_uid'].map(lambda x: 
+  #    generate_patient_site_uid(x))
+  #if 'patient_uid' in df.columns:
+  #  df['patient_uid'] = df['patient_uid'].map(lambda x: 
+  #    generate_patient_uid(x))
   df.rename({ 'patient_mrn': 'patient_site_uid', 'patient_ramq': 'patient_uid'})
   sql = df.to_sql(table, conn, if_exists='replace', index=False) 
 

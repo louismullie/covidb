@@ -36,7 +36,8 @@ for row in live_sheet_rows:
 
   if not validate_patient_ramq(patient_ramq):
     if DEBUG:
-      print('Skipping patient with invalid RAMQ: %s' % patient_ramq)
+      pass
+      #print('Patient with invalid RAMQ: %s' % patient_ramq)
 
   patient_age = row[-1]
   patient_birth_sex = row[-2]
@@ -49,11 +50,10 @@ for row in live_sheet_rows:
   patient_ramqs[patient_mrn_string] = patient_ramq
 
   try:
-
     if patient_mrn not in patient_data:
-      patient_data[patient_mrn_string] = []
+      patient_data[patient_mrn] = []
 
-    patient_data[patient_mrn_string].append([
+    patient_data[patient_mrn].append([
       patient_mrn,
       patient_ramq,
       pcr_sample_time,
@@ -92,11 +92,12 @@ for index, row in df.iterrows():
     
     if hours < 24:
       imaging_data_rows.append([
-        row.dossier[1:-1],
+        str(row.dossier)[1:],
         row.accession_number,
         'XR', 'chest'
       ])
-      patient_mrns_having_imaging.append(row.dossier)
+
+      patient_mrns_having_imaging.append(str(row.dossier)[1:])
       accession_numbers.append(row.accession_number)
 
 write_csv(TABLE_COLUMNS['imaging_data'], imaging_data_rows, 
@@ -112,16 +113,16 @@ filtered_patient_data = []
 
 for patient_mrn in patient_mrns_having_imaging:
 
-  patient_rows = patient_data[patient_mrn]
+  patient_rows = patient_data[str(patient_mrn)]
   patient_rows.sort(key=lambda x: get_datetime_seconds(x[2]))
   found_positive = False
   for patient_row in patient_rows:
-    if None in patient_row:
-      print(patient_row)
     if patient_row[-3] == 1 or patient_row[-3] == 3:
+      patient_row[0] = str(patient_row[0])
       filtered_patient_data.append(patient_row)
       found_positive = True
   if not found_positive:
+    patient_rows[0][0] = str(patient_rows[0][0])
     filtered_patient_data.append(patient_rows[0])
 
 write_csv(TABLE_COLUMNS['patient_data'], filtered_patient_data, 

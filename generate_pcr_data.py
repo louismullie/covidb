@@ -68,8 +68,12 @@ for index, row in df.iterrows():
 live_sheet_rows = read_csv(LIVE_SHEET_FILENAME, remove_duplicates=True)
 
 for row in live_sheet_rows:
-  patient_mrn = str(row[0])
 
+  is_external = (row[-3] == 'External')
+  if is_external: continue
+
+  patient_mrn = str(row[0])
+  
   if patient_mrn in patient_mrns:
 
     pcr_result_time = row[-6]

@@ -35,9 +35,11 @@ for r, d, files in os.walk(DICOM_DIRECTORY):
       if pixel_data == None:
         raise
     except:
-      if 'SR' not in dicom_file_path and DEBUG:
-        print('Skipping slice %s: no pixel data' % dicom_file_path)
-      continue
+      if 'KO' not in dicom_file_path \
+        and 'PR' not in dicom_file_path \
+        and 'SR' not in dicom_file_path:
+          if DEBUG: print('Skipping slice %s: no pixel data' % dicom_file_path)
+      else: continue # skip metadata files
     
     #pixel_array = None
 
@@ -51,7 +53,7 @@ for r, d, files in os.walk(DICOM_DIRECTORY):
     #  continue
     #print(pixel_array)
 
-    patient_mrn = dicom.get('PatientID')
+    patient_mrn = str(dicom.get('PatientID'))
     slice_study_id = dicom.get('StudyInstanceUID')
     slice_series_id = dicom.get('SeriesInstanceUID')
     slice_view_position = dicom.get('ViewPosition')
