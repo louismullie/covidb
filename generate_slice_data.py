@@ -35,7 +35,7 @@ for r, d, files in os.walk(DICOM_DIRECTORY):
       if pixel_data == None:
         raise
     except:
-      if DEBUG:
+      if 'SR' not in dicom_file_path and DEBUG:
         print('Skipping slice %s: no pixel data' % dicom_file_path)
       continue
     

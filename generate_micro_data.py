@@ -52,8 +52,7 @@ for index, row in df.iterrows():
     map_micro_sample_site(micro_sample_site),
     micro_sample_time, 
     micro_result_time, 
-    micro_result_value, 
-    patient_covid_statuses[patient_mrn]
+    micro_result_value
   ])
 
 print('Total rows: %d' % len(micro_data_rows))

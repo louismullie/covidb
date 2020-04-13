@@ -16,7 +16,7 @@ from time_utils import get_hours_between_datetimes, get_datetime_seconds
 from identity_utils import generate_patient_uid, generate_patient_site_uid
 from mappers import map_patient_covid_status, validate_patient_ramq, map_patient_age, map_patient_sex
 
-live_sheet_rows = read_csv(LIVE_SHEET_FILENAME)
+live_sheet_rows = read_csv(LIVE_SHEET_FILENAME, remove_duplicates=True)
 
 print('Number of rows in live sheet: %d' % len(live_sheet_rows))
 patient_data = {}
@@ -94,7 +94,7 @@ for index, row in df.iterrows():
       imaging_data_rows.append([
         row.dossier[1:-1],
         row.accession_number,
-        'XR'
+        'XR', 'chest'
       ])
       patient_mrns_having_imaging.append(row.dossier)
       accession_numbers.append(row.accession_number)

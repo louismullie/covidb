@@ -15,7 +15,7 @@ TABLE_COLUMNS = {
   'patient_data': [
     'patient_site_uid', 'patient_uid', 'pcr_sample_time', 
     'patient_site_code', 'patient_transfer_site_code', 
-    'patient_covid_status', 'patient_age', 'patient_birth_sex'
+    'patient_covid_status', 'patient_age', 'patient_sex'
   ],
 
   'lab_data': [
@@ -25,7 +25,7 @@ TABLE_COLUMNS = {
 
   'pcr_data': [
     'patient_site_uid', 'pcr_name', 'pcr_sample_site', 'pcr_sample_time', 
-    'pcr_result_time', 'pcr_result_value', 'patient_covid_status'
+    'pcr_result_time', 'pcr_result_value'
   ],
 
   'micro_data': [
@@ -33,7 +33,7 @@ TABLE_COLUMNS = {
     'micro_result_time', 'micro_result_value'
   ],
   'imaging_data': [
-    'patient_site_uid', 'imaging_accession_number', 'imaging_modality'
+    'patient_site_uid', 'imaging_accession_number', 'imaging_modality', 'imaging_site'
   ],
   'slice_data': [
     'patient_site_uid', 'slice_study_id', 'slice_series_id', 'slice_data_uri', 
