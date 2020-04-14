@@ -90,5 +90,21 @@ slices = curr.fetchall()
 
 # Retrieve the data files for the imaging study
 for slice in slices:
-  data = pd.DataFrame.from_csv(slice.slice_data_uri)
+  data_frame = pd.DataFrame.from_csv(slice.slice_data_uri)
+```
+
+### 3.3 Displaying a DICOM file
+```python
+import numpy as np
+import matplotlib.pyplot as plt
+from image_utils import equalize_histogram
+
+imge_data_frame = pd.DataFrame.from_csv(dicom_data_uri)
+image_numpy_array = data_frame.to_numpy()
+
+# Optional - use equalization method best suited for use
+image_contrast_adjusted = equalize_histogram(numpy_array)
+
+plt.imshow(image_contrast_adjusted, cmap="gray")
+plt.show()
 ```
