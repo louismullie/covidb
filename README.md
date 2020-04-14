@@ -41,18 +41,52 @@ Edit the following settings in constants.py:
 
 ### 2.2 Output description
 
-The following CSV files will be generated:
+The following CSV files will be generated inside `CSV_DIRECTORY`, as defined in `constants.py`:
 
-*`patient_data.csv`: contains temporally invariant patient data
-*`imaging_data.csv`: contains a list of imaging studies associated with patients
-*`slice_data.csv`: contains a list of DICOM files associated with imaging studies
-*`lab_data.csv`: contains a list of lab tests
-*`pcr_data.csv`: contains a list of PCR tests
-*`micro_data.csv`: contains a list of microbiological data
+*Patient data - `patient_data.csv`: contains temporally invariant patient data
+*Imaging data - `imaging_data.csv`: contains a list of imaging studies associated with patients
+*Slice data - `slice_data.csv`: contains a list of DICOM files associated with imaging studies
+*Laboratory data - `lab_data.csv`: contains a list of lab tests
+*PCR data - `pcr_data.csv`: contains a list of PCR tests
+*Micro data - `micro_data.csv`: contains a list of microbiological data
 
 After the CSV files are generated, these will be imported into an SQLite database. This database will contain one table for each of the CSV files. 
 
+The SQLite database will be generated as `covid_v1.0.0.db` inside `SQLITE_DIRECTORY`, as defined in `constants.py`.
+
 ## 3. Using the database
 
-### 3.1 Import the SQLite file
+### 3.1 Etablishing a connection
 
+```python
+from constants import SQLITE_DIRECTORY
+db_file_name = os.path.join(SQLITE_DIRECTORY, 'covid_v1.0.0.db')
+
+conn = sqlite3.connect(db_file_name)
+curr = conn.execute("SELECT * from patient_data where patient_sex = 'M' AND patient_covid_status=1")
+res = curr.fetchall()
+```
+
+### 3.2 Fetching the data for a DICOM file
+
+```python
+from constants import SQLITE_DIRECTORY
+db_file_name = os.path.join(SQLITE_DIRECTORY, 'covid_v1.0.0.db')
+
+conn = sqlite3.connect(db_file_name)
+
+# Fetch an imaging study from imaging data
+curr = conn.execute("SELECT * from imaging_data where imaging_site = 'chest' LIMIT 1")
+study = curr.fetchone()
+
+# Retrieve the patient site UID of interest
+imaging_data_id = study.imaging_data_id
+
+# Retrieve the DICOM slices for the imaging study
+curr = conn.execute("SELECT * from slice_data where imaging_data_id = '%s'" % imaging_data_id)
+slices = curr.fetchall()
+
+# Retrieve the data files for the imaging study
+for slice in slices:
+  data = pd.DataFrame.from_csv(slice.slice_data_uri)
+```
