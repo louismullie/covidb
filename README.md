@@ -1,6 +1,6 @@
 # CoviDB: a multimedia database of patients with COVID-19
 
-## 1.Installing
+## 1. Installing
 
 ### 1.1 Prerequisites
 
@@ -17,7 +17,9 @@ Ensure the following is installed before using this repository.
 
 `git clone git@github.com:louismullie/covidb.git`
 
-### 1.3 Suggested folder structure
+### 1.3 Folder structure
+
+The following is a suggested project folder. Data and output files are located in subfolders of the parent folder. 
 
 ```
 /covid19
@@ -29,6 +31,15 @@ Ensure the following is installed before using this repository.
     /csv
     /blob
     /sqlite
+```
+
+The structure of the `blob` folder is as follows:
+
+```
+/[imaging_accession_uid]
+  /[study_instance_uid]
+    /[series_instance_uid]
+      .csv files containing pixel data
 ```
 
 ### 1.4 Edit settings
@@ -71,6 +82,8 @@ res = curr.fetchall()
 
 ### 3.2 Fetching the data for a DICOM file
 
+First, fetch an imaging study and retrieve its ID (`imaging_data_id`).
+
 ```python
 from constants import SQLITE_DIRECTORY
 db_file_name = os.path.join(SQLITE_DIRECTORY, 'covid_v1.0.0.db')
@@ -82,13 +95,78 @@ curr = conn.execute("SELECT * from imaging_data where imaging_site = 'chest' LIM
 study = curr.fetchone()
 
 # Retrieve the patient site UID of interest
-imaging_data_id = study.imaging_data_id
+imaging_accession_uid = study.imaging_accession_uid
+```
 
+Next, retrieve the slice(s) associated with the imaging study, and retrieve the location on disk of their pixel data files  (`slice_data_uri`).
+
+```python
 # Retrieve the DICOM slices for the imaging study
-curr = conn.execute("SELECT * from slice_data where imaging_data_id = '%s'" % imaging_data_id)
+curr = conn.execute("SELECT * from slice_data where imaging_accession_uid = '%s'" % imaging_accession_uid)
 slices = curr.fetchall()
 
 # Retrieve the data files for the imaging study
 for slice in slices:
-  data = pd.DataFrame.from_csv(slice.slice_data_uri)
+  data_frame = pd.DataFrame.from_csv(slice.slice_data_uri)
+```
+
+The file on disk representing the pixel data is a matrix of 16-bit integers (range: -32,768 to +32,767), stored as a CSV file in ASCII text encoding, with commas as separators and no quotes around fields. This can be read directly into a Pandas data frame (as shown above), or converted to a NumPy array (see below).
+
+### 3.3 Displaying a DICOM file
+```python
+import numpy as np
+import matplotlib.pyplot as plt
+from image_utils import equalize_histogram
+
+imge_data_frame = pd.DataFrame.from_csv(dicom_data_uri)
+image_numpy_array = data_frame.to_numpy()
+
+# Optional - use equalization method best suited for use
+image_contrast_adjusted = equalize_histogram(numpy_array)
+
+plt.imshow(image_contrast_adjusted, cmap="gray")
+plt.show()
+```
+
+## 4. Available tables and columns
+
+The list of available tables and columns, as of version 1.0.0, includes:
+
+```python
+TABLE_COLUMNS = {
+
+  'patient_data': [
+    'patient_site_uid', 'patient_uid', 'pcr_sample_time', 
+    'patient_site_code', 'patient_transfer_site_code', 
+    'patient_covid_status', 'patient_age', 'patient_sex'
+  ],
+
+  'lab_data': [
+    'patient_site_uid', 'lab_name', 'lab_sample_site', 'lab_sample_time', 
+    'lab_result_time', 'lab_result_value', 'lab_result_units'
+  ],
+
+  'pcr_data': [
+    'patient_site_uid', 'pcr_name', 'pcr_sample_site', 'pcr_sample_time', 
+    'pcr_result_time', 'pcr_result_value'
+  ],
+
+  'micro_data': [
+    'patient_site_uid', 'micro_name', 'micro_sample_site', 'micro_sample_time', 
+    'micro_result_time', 'micro_result_value'
+  ],
+
+  'imaging_data': [
+    'patient_site_uid', 'imaging_accession_uid', 'imaging_modality', 'imaging_site'
+  ],
+
+  'slice_data': [
+    'patient_site_uid', 'imaging_accession_uid', 'slice_study_instance_uid', 
+    'slice_series_instance_uid', 'slice_data_uri', 'slice_view_position', 
+    'slice_patient_position', 'slice_image_orientation', 'slice_image_position', 
+    'slice_window_center', 'slice_window_width', 'slice_pixel_spacing', 
+    'slice_thickness', 'slice_rows', 'slice_columns', 'slice_rescale_intercept', 
+    'slice_rescale_slope'
+  ]
+}
 ```
