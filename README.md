@@ -121,7 +121,7 @@ plt.show()
 
 The list of available tables and columns, as of version 1.0.0, includes:
 
-```
+```python
 TABLE_COLUMNS = {
 
   'patient_data': [
