@@ -4,6 +4,8 @@
 
 ### 1.1 Prerequisites
 
+Ensure the following is installed before using this repository.
+
 * Anaconda / Python 3 environment
 * NumPy: `conda install numpy`
 * Pillow: `conda install pillow`
