@@ -14,7 +14,7 @@ from constants import DEBUG, TABLE_COLUMNS, BLOB_DIRECTORY, \
 from sql_utils import sql_query
 from file_utils import read_csv, write_csv
 from image_utils import equalize_histogram
-from identity_utils import generate_slice_study_uid, generate_slice_series_uid, get_patient_site_uid_from_dicom_id
+from identity_utils import generate_slice_study_uid, generate_slice_series_uid, get_patient_mrn_from_dicom_id
 from time_utils import get_hours_between_datetimes
 from dicom_utils import read_dcm, window_level
 from pydicom import Dataset
@@ -52,7 +52,8 @@ for r, d, files in os.walk(DICOM_DIRECTORY):
         print(transfer_syntax)
       continue
 
-    patient_mrn = str(dicom.get('PatientID'))
+    patient_dicom_id = str(dicom.get('PatientID'))
+    patient_mrn = get_patient_mrn_from_dicom_id(patient_dicom_id)
     slice_study_id = dicom.get('StudyInstanceUID')
     slice_series_id = dicom.get('SeriesInstanceUID')
     slice_view_position = dicom.get('ViewPosition')
@@ -74,18 +75,8 @@ for r, d, files in os.walk(DICOM_DIRECTORY):
     pixel_array = slice_rescale_slope * \
       pixel_array.astype(np.float64) + slice_rescale_intercept
     
-    #pixel_array -= np.min(pixel_array)
-    #pixel_array /= np.max(pixel_array)
-    #print(pixel_array)
-    #pixel_array = equalize_histogram(pixel_array)
     pixel_array = (pixel_array).astype(np.int16)
 
-    #from PIL import Image
-    #img = Image.fromarray(pixel_array)
-    #img.save("test.jpeg")
-
-    #exit()
-    #print(rescaled_pixel_array)
     study_uid = generate_slice_study_uid(slice_study_id)
     series_uid = generate_slice_series_uid(slice_series_id)
 
@@ -124,12 +115,15 @@ for r, d, files in os.walk(DICOM_DIRECTORY):
       slice_rescale_intercept,
       slice_rescale_slope
     ]])
-    print(pixel_array)
+
+    print('.')
+
     df = pd.DataFrame(data=pixel_array)
     csv = df.to_csv()
+
     with open(slice_data_uri, 'w') as data_file:
       data_file.write(csv)
-    exit()
+
 
 print('Total rows: %d' % len(slice_data_rows))
 write_csv(TABLE_COLUMNS['slice_data'], slice_data_rows, 

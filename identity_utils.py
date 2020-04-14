@@ -1,8 +1,16 @@
 import hashlib
-from constants import DICOM_ID_MAP, PATIENT_GLOBAL_SALT, PATIENT_SITE_SALT
+from constants import DICOM_PATIENT_ID_MAP, DICOM_STUDY_ID_MAP, 
+                      PATIENT_GLOBAL_SALT, PATIENT_SITE_SALT
 
-def get_patient_site_uid_from_dicom_id(dicom_id):
-  dicom_id_str = str(dicom_id)
+def get_patient_mrn_from_dicom_patient_id(dicom_patient_id):
+  dicom_id_str = str(dicom_patient_id)
+  if not dicom_id_str in DICOM_ID_MAP:
+    print('Fatal: DICOM ID not found in map.')
+    exit()
+  return get_patient_uid(DICOM_ID_MAP[dicom_id_str])
+
+def get_accession_number_from_dicom_study_id(dicom_study_id):
+  dicom_id_str = str(dicom_study_id)
   if not dicom_id_str in DICOM_ID_MAP:
     print('Fatal: DICOM ID not found in map.')
     exit()
