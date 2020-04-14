@@ -126,7 +126,8 @@ CREATE TABLE exposure_data (
 CREATE TABLE imaging_data ( 
 	patient_site_uid     char(128) NOT NULL    ,
 	imaging_data_id      bigint NOT NULL  PRIMARY KEY  ,
-	imaging_accession_number varchar     ,
+	imaging_accession_uid char(128)     ,
+	imaging_status       varchar(16)     ,
 	imaging_modality     varchar     ,
 	imaging_iv_contrast  boolean     ,
 	imaging_manufacturer varchar     ,
@@ -186,9 +187,11 @@ CREATE TABLE observation_data (
 CREATE TABLE slice_data ( 
 	patient_site_uid     char(128) NOT NULL    ,
 	imaging_data_id      integer     ,
+	imaging_accession_uid char(128)     ,
 	slice_data_id        bigint NOT NULL  PRIMARY KEY  ,
-	slice_series_id      varchar     ,
-	slice_data_uri       varchar     ,
+	slice_series_instance_uid varchar(256)     ,
+	slice_study_instance_uid varchar(256)     ,
+	slice_data_uri       varchar(256)     ,
 	slice_view_position  varchar     ,
 	slice_patient_position varchar     ,
 	slice_image_orientation varchar     ,
@@ -211,4 +214,3 @@ CREATE TABLE diagnosis_data (
 	FOREIGN KEY ( patient_site_uid ) REFERENCES patient_data( patient_site_uid )  ,
 	FOREIGN KEY ( episode_data_id ) REFERENCES episode_data( episode_data_id )  
  );
-
