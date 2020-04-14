@@ -33,4 +33,26 @@
 
 Edit the following settings in constants.py:
 
+## 2. Generating database
+
+### 2.1 Run generation script
+
+`python_generate_covidb.py`
+
+### 2.2 Output description
+
+The following CSV files will be generated:
+
+*`patient_data.csv`: contains temporally invariant patient data
+*`imaging_data.csv`: contains a list of imaging studies associated with patients
+*`slice_data.csv`: contains a list of DICOM files associated with imaging studies
+*`lab_data.csv`: contains a list of lab tests
+*`pcr_data.csv`: contains a list of PCR tests
+*`micro_data.csv`: contains a list of microbiological data
+
+After the CSV files are generated, these will be imported into an SQLite database. This database will contain one table for each of the CSV files. 
+
+## 3. Using the database
+
+### 3.1 Import the SQLite file
 
