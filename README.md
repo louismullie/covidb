@@ -71,6 +71,8 @@ res = curr.fetchall()
 
 ### 3.2 Fetching the data for a DICOM file
 
+First, fetch an imaging study and retrieve its ID (`imaging_data_id`).
+
 ```python
 from constants import SQLITE_DIRECTORY
 db_file_name = os.path.join(SQLITE_DIRECTORY, 'covid_v1.0.0.db')
@@ -83,7 +85,11 @@ study = curr.fetchone()
 
 # Retrieve the patient site UID of interest
 imaging_data_id = study.imaging_data_id
+```
 
+Next, retrieve the slice(s) associated with the imaging study, and retrieve the location on disk of their pixel data files  (`slice_data_uri`).
+
+```python
 # Retrieve the DICOM slices for the imaging study
 curr = conn.execute("SELECT * from slice_data where imaging_data_id = '%s'" % imaging_data_id)
 slices = curr.fetchall()
@@ -92,6 +98,8 @@ slices = curr.fetchall()
 for slice in slices:
   data_frame = pd.DataFrame.from_csv(slice.slice_data_uri)
 ```
+
+The file on disk representing the pixel data is a matrix of 16-bit integers (range: -32,768 to +32,767), stored as a CSV file in ASCII text encoding, with commas as separators and no quotes around fields. This can be read directly into a Pandas data frame (as shown above), or converted to a NumPy array (see below).
 
 ### 3.3 Displaying a DICOM file
 ```python
