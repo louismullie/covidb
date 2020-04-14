@@ -1,6 +1,6 @@
 # CoviDB: a multimedia database of patients with COVID-19
 
-## 1.Installing
+## 1. Installing
 
 ### 1.1 Prerequisites
 
@@ -115,4 +115,47 @@ image_contrast_adjusted = equalize_histogram(numpy_array)
 
 plt.imshow(image_contrast_adjusted, cmap="gray")
 plt.show()
+```
+
+## 4. Available tables and columns
+
+The list of available tables and columns, as of version 1.0.0, includes:
+
+```
+TABLE_COLUMNS = {
+
+  'patient_data': [
+    'patient_site_uid', 'patient_uid', 'pcr_sample_time', 
+    'patient_site_code', 'patient_transfer_site_code', 
+    'patient_covid_status', 'patient_age', 'patient_sex'
+  ],
+
+  'lab_data': [
+    'patient_site_uid', 'lab_name', 'lab_sample_site', 'lab_sample_time', 
+    'lab_result_time', 'lab_result_value', 'lab_result_units'
+  ],
+
+  'pcr_data': [
+    'patient_site_uid', 'pcr_name', 'pcr_sample_site', 'pcr_sample_time', 
+    'pcr_result_time', 'pcr_result_value'
+  ],
+
+  'micro_data': [
+    'patient_site_uid', 'micro_name', 'micro_sample_site', 'micro_sample_time', 
+    'micro_result_time', 'micro_result_value'
+  ],
+
+  'imaging_data': [
+    'patient_site_uid', 'imaging_accession_number', 'imaging_modality', 'imaging_site'
+  ],
+
+  'slice_data': [
+    'patient_site_uid', 'slice_imaging_data_id', 'slice_study_instance_uid', 
+    'slice_series_instance_uid', 'slice_data_uri', 'slice_view_position', 
+    'slice_patient_position', 'slice_image_orientation', 'slice_image_position', 
+    'slice_window_center', 'slice_window_width', 'slice_pixel_spacing', 
+    'slice_thickness', 'slice_rows', 'slice_columns', 'slice_rescale_intercept', 
+    'slice_rescale_slope'
+  ]
+}
 ```
