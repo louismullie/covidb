@@ -95,14 +95,14 @@ curr = conn.execute("SELECT * from imaging_data where imaging_site = 'chest' LIM
 study = curr.fetchone()
 
 # Retrieve the patient site UID of interest
-imaging_data_id = study.imaging_data_id
+imaging_accession_uid = study.imaging_accession_uid
 ```
 
 Next, retrieve the slice(s) associated with the imaging study, and retrieve the location on disk of their pixel data files  (`slice_data_uri`).
 
 ```python
 # Retrieve the DICOM slices for the imaging study
-curr = conn.execute("SELECT * from slice_data where imaging_data_id = '%s'" % imaging_data_id)
+curr = conn.execute("SELECT * from slice_data where imaging_accession_uid = '%s'" % imaging_accession_uid)
 slices = curr.fetchall()
 
 # Retrieve the data files for the imaging study
