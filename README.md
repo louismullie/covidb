@@ -15,7 +15,21 @@
 
 `git clone git@github.com:louismullie/covidb.git`
 
-### 1.3 Edit settings
+### 1.3 Suggested folder structure
+
+```
+/covid19
+  /code --> this repository
+  /data
+    /dicom_ids
+    /dicom_files
+  /output
+    /csv
+    /blob
+    /sqlite
+```
+
+### 1.4 Edit settings
 
 Edit the following settings in constants.py:
 
