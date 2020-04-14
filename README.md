@@ -19,6 +19,8 @@ Ensure the following is installed before using this repository.
 
 ### 1.3 Folder structure
 
+The following is a suggested project folder. Data and output files are located in subfolders of the parent folder. 
+
 ```
 /covid19
   /code --> this repository
@@ -29,6 +31,15 @@ Ensure the following is installed before using this repository.
     /csv
     /blob
     /sqlite
+```
+
+The structure of the `blob` folder is as follows:
+
+```
+/[imaging_accession_uid]
+  /[study_instance_uid]
+    /[series_instance_uid]
+      .csv files containing pixel data
 ```
 
 ### 1.4 Edit settings
