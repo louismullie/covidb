@@ -243,8 +243,11 @@ Should be blank unless episode_unit_type == 2.]]></comment>
 			<column name="imaging_data_id" type="bigint" decimal="0" jt="-5" mandatory="y" >
 				<comment><![CDATA[Primary key of this table; implemented as an auto-incrementing integer.]]></comment>
 			</column>
-			<column name="imaging_accession_number" type="varchar" decimal="0" jt="12" >
+			<column name="imaging_accession_uid" type="char" length="128" jt="1" >
 				<comment><![CDATA[Accession number of the imaging on the site's local PACS database.]]></comment>
+			</column>
+			<column name="imaging_status" type="varchar" length="16" jt="12" >
+				<comment><![CDATA[Status of the imaging. Can be "read", "pending", "destroyed"]]></comment>
 			</column>
 			<column name="imaging_modality" type="varchar" decimal="0" jt="12" >
 				<comment><![CDATA[Modality of the imaging that was performed, as defined by the DICOM "Modality" header (DICOM standard section C.7.3.1).
@@ -624,14 +627,16 @@ Reference: https://bit.ly/2wQJfly]]></comment>
 			<column name="imaging_data_id" type="integer" length="0" decimal="0" jt="4" >
 				<comment><![CDATA[Identifier that references the imaging study to which this slice belongs.]]></comment>
 			</column>
+			<column name="imaging_accession_uid" type="char" length="128" jt="1" />
 			<column name="slice_data_id" type="bigint" decimal="0" jt="-5" mandatory="y" >
 				<comment><![CDATA[Primary key of this table; implemented as an auto-incrementing integer.]]></comment>
 			</column>
-			<column name="slice_series_id" type="varchar" decimal="0" jt="12" >
+			<column name="slice_series_instance_uid" type="varchar" length="256" jt="12" >
 				<comment><![CDATA[As defined by the DICOM SeriesInstanceUID header (0020,000E).]]></comment>
 			</column>
-			<column name="slice_data_uri" type="varchar" decimal="0" jt="12" >
-				<comment><![CDATA[Unique resource identifier pointing to the binary object representing the pixel data.]]></comment>
+			<column name="slice_study_instance_uid" type="varchar" length="256" jt="12" />
+			<column name="slice_data_uri" type="varchar" length="256" jt="12" >
+				<comment><![CDATA[Unique resource identifier pointing to file containing the pixel data. The file on disk representing the pixel data is a matrix of 16-bit integers (range: -32,768 to +32,767), stored as a CSV file in ASCII text encoding, with commas as separators and no quotes around fields.]]></comment>
 			</column>
 			<column name="slice_view_position" type="varchar" decimal="0" jt="12" >
 				<comment><![CDATA[As defined by the DICOM ViewPosition header (DICOM standard, C.8.1.1)
@@ -719,8 +724,8 @@ Should be: a string containing a comma-separated list of 3 floating point number
 		<entity schema="covidb" name="intervention_data" color="C1D8EE" x="752" y="640" />
 		<entity schema="covidb" name="intervention_type" color="C1D8EE" x="736" y="960" />
 		<entity schema="covidb" name="lab_data" color="C1D8EE" x="352" y="320" />
-		<entity schema="covidb" name="observation_data" color="C1D8EE" x="752" y="320" />
-		<entity schema="covidb" name="observation_type" color="C1D8EE" x="1072" y="368" />
+		<entity schema="covidb" name="observation_data" color="C1D8EE" x="752" y="336" />
+		<entity schema="covidb" name="observation_type" color="C1D8EE" x="1072" y="400" />
 		<entity schema="covidb" name="patient_data" color="C1D8EE" x="48" y="80" />
 		<entity schema="covidb" name="pcr_data" color="C1D8EE" x="560" y="80" />
 		<entity schema="covidb" name="signal_data" color="C1D8EE" x="560" y="320" />
