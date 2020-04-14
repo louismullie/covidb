@@ -11,14 +11,11 @@ import pandas as pd
 
 from constants import DEBUG, TABLE_COLUMNS, LIVE_SHEET_FILENAME, CSV_DIRECTORY
 from time_utils import get_datetime_seconds, get_hours_between_datetimes
-from identity_utils import generate_patient_uid, generate_patient_site_uid
+from identity_utils import generate_patient_uid, generate_patient_site_uid, generate_accession_uid
 from file_utils import write_csv, read_csv
 from sql_utils import sql_query
 
-from mappers import map_patient_ramq,
-                    map_patient_covid_status, 
-                    map_patient_age, 
-                    map_patient_sex
+from mappers import map_patient_ramq, map_patient_covid_status, map_patient_age, map_patient_sex
 
 live_sheet_rows = read_csv(LIVE_SHEET_FILENAME, remove_duplicates=True)
 
@@ -97,7 +94,7 @@ for index, row in df.iterrows():
     if hours < 24:
       imaging_data_rows.append([
         str(row.dossier)[1:],
-        row.accession_number,
+        generate_accession_uid(row.accession_number),
         'XR', 'chest'
       ])
 

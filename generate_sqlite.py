@@ -4,7 +4,7 @@ import pandas as pd
 from constants import SQLITE_DIRECTORY, CSV_DIRECTORY
 from identity_utils import generate_patient_uid, generate_patient_site_uid
 
-db_file_name = os.path.join(SQLITE_DIRECTORY, 'covid_v1.0.0.db')
+db_file_name = os.path.join(SQLITE_DIRECTORY, 'covidb_version-1.0.0.db')
 
 with open(db_file_name, 'w') as db_file:
   db_file.write('')
