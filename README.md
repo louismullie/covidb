@@ -6,12 +6,12 @@
 
 Ensure the following is installed before using this repository.
 
-* Anaconda / Python 3 environment
-* NumPy: `conda install numpy`
-* Pillow: `conda install pillow`
-* LibJPEG and OpenJPEG: `conda install -c conda-forge openjpeg jpeg`
-* GDCM: `conda install gdcm -c conda-forge`
-* PyDicom: `conda install -c conda-forge pydicom`
+- Anaconda / Python 3 environment
+- NumPy: `conda install numpy`
+- Pillow: `conda install pillow`
+- LibJPEG and OpenJPEG: `conda install -c conda-forge openjpeg jpeg`
+- GDCM: `conda install gdcm -c conda-forge`
+- PyDicom: `conda install -c conda-forge pydicom`
 
 ### 1.2 Clone Git repo
 
@@ -45,12 +45,12 @@ Edit the following settings in constants.py:
 
 The following CSV files will be generated inside `CSV_DIRECTORY`, as defined in `constants.py`:
 
-*Patient data - `patient_data.csv`: contains temporally invariant patient data
-*Imaging data - `imaging_data.csv`: contains a list of imaging studies associated with patients
-*Slice data - `slice_data.csv`: contains a list of DICOM files associated with imaging studies
-*Laboratory data - `lab_data.csv`: contains a list of lab tests
-*PCR data - `pcr_data.csv`: contains a list of PCR tests
-*Micro data - `micro_data.csv`: contains a list of microbiological data
+- Patient data - `patient_data.csv`: contains temporally invariant patient data
+- Imaging data - `imaging_data.csv`: contains a list of imaging studies associated with patients
+- Slice data - `slice_data.csv`: contains a list of DICOM files associated with imaging studies
+- Laboratory data - `lab_data.csv`: contains a list of lab tests
+- PCR data - `pcr_data.csv`: contains a list of PCR tests
+- Micro data - `micro_data.csv`: contains a list of microbiological data
 
 After the CSV files are generated, these will be imported into an SQLite database. This database will contain one table for each of the CSV files. 
 
