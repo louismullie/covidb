@@ -150,7 +150,7 @@ TABLE_COLUMNS = {
   ],
 
   'slice_data': [
-    'patient_site_uid', 'slice_imaging_data_id', 'slice_study_instance_uid', 
+    'patient_site_uid', 'imaging_data_id', 'slice_study_instance_uid', 
     'slice_series_instance_uid', 'slice_data_uri', 'slice_view_position', 
     'slice_patient_position', 'slice_image_orientation', 'slice_image_position', 
     'slice_window_center', 'slice_window_width', 'slice_pixel_spacing', 
