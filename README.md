@@ -17,7 +17,7 @@ Ensure the following is installed before using this repository.
 
 `git clone git@github.com:louismullie/covidb.git`
 
-### 1.3 Suggested folder structure
+### 1.3 Folder structure
 
 ```
 /covid19
