@@ -10,12 +10,13 @@ import numpy as np
 import pandas as pd
 
 from constants import DEBUG, TABLE_COLUMNS, BLOB_DIRECTORY, \
-  LIVE_SHEET_FILENAME, CSV_DIRECTORY, DICOM_DIRECTORY
-from sql_utils import sql_query, list_columns
-from file_utils import write_csv
-from identity_utils import generate_slice_study_uid, generate_slice_series_uid
+  LIVE_SHEET_FILENAME, DICOM_ID_MAP_FILENAME, CSV_DIRECTORY, DICOM_DIRECTORY
+from sql_utils import sql_query
+from file_utils import read_csv, write_csv
+from image_utils import equalize_histogram
+from identity_utils import generate_slice_study_uid, generate_slice_series_uid, get_patient_site_uid_from_dicom_id
 from time_utils import get_hours_between_datetimes
-from dicom_utils import read_dcm
+from dicom_utils import read_dcm, window_level
 from pydicom import Dataset
 
 series_counter = {}
@@ -41,17 +42,15 @@ for r, d, files in os.walk(DICOM_DIRECTORY):
           if DEBUG: print('Skipping slice %s: no pixel data' % dicom_file_path)
       else: continue # skip metadata files
     
-    #pixel_array = None
+    pixel_array = None
 
-    #dicom.decompress()
-    #try:
-    #  pixel_array = dicom.pixel_array
-    #except:
-    #  if DEBUG:
-    #    print('Skipping slices: cannot read pixel data')
-    #    print(transfer_syntax)
-    #  continue
-    #print(pixel_array)
+    try:
+      pixel_array = dicom.pixel_array
+    except:
+      if DEBUG:
+        print('Skipping slices: cannot read pixel data')
+        print(transfer_syntax)
+      continue
 
     patient_mrn = str(dicom.get('PatientID'))
     slice_study_id = dicom.get('StudyInstanceUID')
@@ -67,8 +66,26 @@ for r, d, files in os.walk(DICOM_DIRECTORY):
     slice_rows = dicom.get('Rows')
     slice_columns = dicom.get('Columns')
     slice_rescale_intercept = dicom.get('RescaleIntercept')
-    slice_rescale_slope = dicom.get('Slope')
+    slice_rescale_slope = dicom.get('RescaleSlope')
 
+    if slice_rescale_intercept is None: slice_rescale_intercept = 0
+    if slice_rescale_slope is None: slice_rescale_slope = 1
+
+    pixel_array = slice_rescale_slope * \
+      pixel_array.astype(np.float64) + slice_rescale_intercept
+    
+    #pixel_array -= np.min(pixel_array)
+    #pixel_array /= np.max(pixel_array)
+    #print(pixel_array)
+    #pixel_array = equalize_histogram(pixel_array)
+    pixel_array = (pixel_array).astype(np.int16)
+
+    #from PIL import Image
+    #img = Image.fromarray(pixel_array)
+    #img.save("test.jpeg")
+
+    #exit()
+    #print(rescaled_pixel_array)
     study_uid = generate_slice_study_uid(slice_study_id)
     series_uid = generate_slice_series_uid(slice_series_id)
 
@@ -83,7 +100,7 @@ for r, d, files in os.walk(DICOM_DIRECTORY):
     slice_num = series_counter[study_uid][series_uid]
 
     slice_data_file_path = os.path.join(BLOB_DIRECTORY, study_uid, series_uid)
-    slice_data_file_name = 'slice_' + str(slice_num) + '.dcmdata'
+    slice_data_file_name = 'slice_' + str(slice_num) + '.csv'
 
     os.makedirs(slice_data_file_path, exist_ok=True)
 
@@ -107,9 +124,12 @@ for r, d, files in os.walk(DICOM_DIRECTORY):
       slice_rescale_intercept,
       slice_rescale_slope
     ]])
-
+    print(pixel_array)
+    df = pd.DataFrame(data=pixel_array)
+    csv = df.to_csv()
     with open(slice_data_uri, 'w') as data_file:
-      data_file.write(pixel_data.hex())
+      data_file.write(csv)
+    exit()
 
 print('Total rows: %d' % len(slice_data_rows))
 write_csv(TABLE_COLUMNS['slice_data'], slice_data_rows, 

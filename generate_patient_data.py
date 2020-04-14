@@ -10,11 +10,15 @@ import numpy as np
 import pandas as pd
 
 from constants import DEBUG, TABLE_COLUMNS, LIVE_SHEET_FILENAME, CSV_DIRECTORY
-from sql_utils import sql_query, list_columns
-from file_utils import write_csv, read_csv
-from time_utils import get_hours_between_datetimes, get_datetime_seconds
+from time_utils import get_datetime_seconds, get_hours_between_datetimes
 from identity_utils import generate_patient_uid, generate_patient_site_uid
-from mappers import map_patient_covid_status, validate_patient_ramq, map_patient_age, map_patient_sex
+from file_utils import write_csv, read_csv
+from sql_utils import sql_query
+
+from mappers import map_patient_ramq,
+                    map_patient_covid_status, 
+                    map_patient_age, 
+                    map_patient_sex
 
 live_sheet_rows = read_csv(LIVE_SHEET_FILENAME, remove_duplicates=True)
 
@@ -34,7 +38,7 @@ for row in live_sheet_rows:
   patient_mrn_string = 'S' + patient_mrn
   patient_ramq = str(row[1])
 
-  if not validate_patient_ramq(patient_ramq):
+  if not map_patient_ramq(patient_ramq):
     if DEBUG:
       pass
       #print('Patient with invalid RAMQ: %s' % patient_ramq)

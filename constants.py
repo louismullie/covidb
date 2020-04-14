@@ -1,14 +1,25 @@
+from file_utils import read_csv
+
 import pandas as pd
 pd.set_option('display.max_rows', 250)
 
 DEBUG = True
 
+PATIENT_GLOBAL_SALT = '|.@Zbyi*7@?OBKZ4'
+PATIENT_SITE_SALT = ':/o"3yR<>|9ue~{/'
 LIVE_SHEET_FILENAME = "/var/www/html/mchasse/covid19/data_all.csv"
 CSV_DIRECTORY = "/data8/projets/Mila_covid19/output/csv"
 BLOB_DIRECTORY = "/data8/projets/Mila_covid19/output/blob"
+DICOM_ID_MAP_FILENAME = "/data8/projets/Mila_covid19/data/patient_infos/dicom_id_map.csv"
 DICOM_DIRECTORY = "/data8/projets/Mila_covid19/data/covid_citadel_pacs"
 SQLITE_DIRECTORY = "/data8/projets/Mila_covid19/output/sqlite"
 CODE_DIRECTORY = "/data8/projets/Mila_covid19/code/lmullie/git_Mila_covid19"
+
+dicom_id_map_rows = read_csv(DICOM_ID_MAP_FILENAME)
+DICOM_ID_MAP = {}
+
+for dicom_id_map_row in dicom_id_map_rows:
+  DICOM_ID_MAP[str(dicom_id_map_row[1])] = str(dicom_id_map_row[0])
 
 TABLE_COLUMNS = {
 
