@@ -41,6 +41,7 @@ pcr_data_rows = []
 
 for index, row in df.iterrows():
 
+  continue
   patient_mrn = str(row.dossier)
   pcr_name = row.longdesc
   pcr_sample_site = row.specimencollectionmethodcd

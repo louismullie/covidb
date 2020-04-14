@@ -23,7 +23,7 @@ def generate_patient_site_uid(patient_mrn):
 
   return hashlib.pbkdf2_hmac('sha256', 
     patient_mrn.encode('utf-8'), 
-    PATIENT_SITE_SALT.encode('utf-8'), 10000).hex()
+    PATIENT_SITE_SALT.encode('utf-8'), 100000).hex()
 
 def generate_patient_uid(patient_ramq):
 
@@ -31,23 +31,23 @@ def generate_patient_uid(patient_ramq):
 
   return hashlib.pbkdf2_hmac('sha256', 
     patient_ramq.encode('utf-8'), 
-    PATIENT_GLOBAL_SALT.encode('utf-8'), 10000).hex()
+    PATIENT_GLOBAL_SALT.encode('utf-8'), 100000).hex()
 
 def generate_accession_uid(accession_number):
 
   return hashlib.pbkdf2_hmac('sha256', 
     accession_number.encode('utf-8'), 
-    PATIENT_SITE_SALT.encode('utf-8'), 10000).hex()
+    PATIENT_SITE_SALT.encode('utf-8'), 100000).hex()
 
 def generate_slice_study_uid(study_uid):
 
   return hashlib.pbkdf2_hmac('sha256', 
     study_uid.encode('utf-8'), 
-    PATIENT_SITE_SALT.encode('utf-8'), 10000).hex()
+    PATIENT_SITE_SALT.encode('utf-8'), 100000).hex()
 
 def generate_slice_series_uid(series_uid):
 
   return hashlib.pbkdf2_hmac('sha256', 
     series_uid.encode('utf-8'), 
-    PATIENT_SITE_SALT.encode('utf-8'), 10000).hex()
+    PATIENT_SITE_SALT.encode('utf-8'), 100000).hex()
 
