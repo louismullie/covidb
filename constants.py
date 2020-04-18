@@ -5,8 +5,8 @@ pd.set_option('display.max_rows', 250)
 
 DEBUG = True
 
-PATIENT_GLOBAL_SALT = '|.@Zbyi*7@?OBKZ4'
-PATIENT_SITE_SALT = ':/o"3yR<>|9ue~{/'
+PATIENT_GLOBAL_SALT = None
+PATIENT_SITE_SALT = None
 LIVE_SHEET_FILENAME = "/var/www/html/mchasse/covid19/data_all.csv"
 CSV_DIRECTORY = "/data8/projets/Mila_covid19/output/csv"
 BLOB_DIRECTORY = "/data8/projets/Mila_covid19/output/blob"
