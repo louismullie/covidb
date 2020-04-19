@@ -8,12 +8,13 @@ def map_patient_ramq(ramq):
   return ramq_str
 
 def map_patient_covid_status(status):
-  if status[0] == 'P':   return 1 # Positif
-  elif status[0] == 'N': return 2 # Negatif
-  elif status[0] == 'E': return 5 # En attente
-  elif status[0] == 'T': return 6 # Test annule
-  elif status[0] == 'A': return 6 # Annule
-  elif status[0] == 'R': return 5 # Rapport numerise
+  status_str = str(status).strip().lower()
+  if status_str[0] == 'p':   return 1 # Positif
+  elif status_str[0] == 'n': return 2 # Negatif
+  elif status_str[0] == 'e': return 5 # En attente
+  elif status_str[0] == 't': return 6 # Test annule
+  elif status_str[0] == 'a': return 6 # Annule
+  elif status_str[0] == 'r': return 5 # Rapport numerise
   else: raise Exception('Invalid COVID status: %s' % status)
 
 def map_patient_age(age):
@@ -70,3 +71,10 @@ def map_micro_sample_site(desc):
   else:
     print('Unrecognized sample site: ' + desc)
     return 8
+
+def map_episode_unit_type(unit_code):
+  unit_code_str = str(unit_code)
+  if '10S' in unit_code_str or '10N' in unit_code_str:
+    return 5
+  else: 
+    return 3

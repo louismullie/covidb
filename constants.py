@@ -5,14 +5,14 @@ pd.set_option('display.max_rows', 250)
 
 DEBUG = True
 
-PATIENT_GLOBAL_SALT = '|.@Zbyi*7@?OBKZ4'
-PATIENT_SITE_SALT = ':/o"3yR<>|9ue~{/'
+PATIENT_GLOBAL_SALT = '1fd5789d7ef4287fd8acfc765061e10eb3e7c093ff9150978695fb83692e4a87d55c4abf83c7ad9bcc3305ab03a4d28a5c404db6b84886c1665f949215e75a2b'
+PATIENT_SITE_SALT = '243460170aec12b2cb4ce6e92d1293ebe8bbc83b4a860681ecfd4b653961f253fc3cb7ae833de5a4faca2d98ed9789e061e95aea7335901e6c84c7c05feee85f'
 LIVE_SHEET_FILENAME = "/var/www/html/mchasse/covid19/data_all.csv"
-CSV_DIRECTORY = "/data8/projets/Mila_covid19/output/csv"
-BLOB_DIRECTORY = "/data8/projets/Mila_covid19/output/blob"
+CSV_DIRECTORY = "/data8/projets/Mila_covid19/output/staging/csv"
+BLOB_DIRECTORY = "/data8/projets/Mila_covid19/output/staging/blob"
 DICOM_MAP_FILENAME = "/data8/projets/Mila_covid19/data/patient_infos/dicom_id_map.csv"
 DICOM_DIRECTORY = "/data8/projets/Mila_covid19/data/covid_citadel_pacs"
-SQLITE_DIRECTORY = "/data8/projets/Mila_covid19/output/sqlite"
+SQLITE_DIRECTORY = "/data8/projets/Mila_covid19/output/staging/sqlite"
 CODE_DIRECTORY = "/data8/projets/Mila_covid19/code/lmullie/git_Mila_covid19"
 
 dicom_id_map_rows = read_csv(DICOM_MAP_FILENAME)
@@ -30,6 +30,15 @@ TABLE_COLUMNS = {
     'patient_site_uid', 'patient_uid', 'pcr_sample_time', 
     'patient_site_code', 'patient_transfer_site_code', 
     'patient_covid_status', 'patient_age', 'patient_sex'
+  ],
+
+  'episode_data': [
+    'patient_site_uid', 'episode_unit_type', 'episode_start_time', 
+    'episode_end_time', 'episode_description',
+  ],
+
+  'diagnosis_data': [
+    'patient_site_uid', 'diagnosis_type', 'diagnosis_time'
   ],
 
   'lab_data': [

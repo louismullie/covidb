@@ -141,6 +141,11 @@ TABLE_COLUMNS = {
     'patient_covid_status', 'patient_age', 'patient_sex'
   ],
 
+  'episode_data': [
+    'patient_site_uid', 'episode_unit_type', 'episode_start_time', 
+    'episode_end_time', 'episode_description',
+  ],
+
   'lab_data': [
     'patient_site_uid', 'lab_name', 'lab_sample_site', 'lab_sample_time', 
     'lab_result_time', 'lab_result_value', 'lab_result_units'

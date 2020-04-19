@@ -55,15 +55,11 @@ for r, d, files in os.walk(DICOM_DIRECTORY):
         print('Skipping slices: cannot read pixel data')
         print(transfer_syntax)
       continue
-    print(dicom)
+    
     dicom_study_id = str(dicom.get('PatientID'))
-    print(dicom_study_id)
     patient_mrn = get_patient_mrn_from_dicom_study_id(dicom_study_id)
-    print(patient_mrn)
     accession_number = get_accession_number_from_dicom_study_id(dicom_study_id)
-    print(accession_number)
     imaging_accession_uid = generate_accession_uid(accession_number)
-    print(imaging_accession_uid)
 
     slice_study_instance_uid = dicom.get('StudyInstanceUID')
     slice_series_instance_uid = dicom.get('SeriesInstanceUID')
@@ -101,7 +97,7 @@ for r, d, files in os.walk(DICOM_DIRECTORY):
 
     slice_num = series_counter[slice_study_instance_uid][slice_series_instance_uid]
 
-    slice_data_file_path = os.path.join('blob', imaging_accession_uid, \
+    slice_data_file_path = os.path.join(BLOB_DIRECTORY, imaging_accession_uid, \
       slice_study_instance_uid, slice_series_instance_uid)
     slice_data_file_name = 'slice_' + str(slice_num) + '.csv'
 
