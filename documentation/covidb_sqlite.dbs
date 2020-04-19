@@ -573,8 +573,8 @@ Reference: https://bit.ly/2wQJfly]]></comment>
 			<column name="pcr_result_time" type="varchar" decimal="0" jt="12" >
 				<comment><![CDATA[Timestamp, with timezone, indicating the time at which the PCR test was resulted.]]></comment>
 			</column>
-			<column name="pcr_result_positive" type="boolean" length="0" decimal="0" jt="-7" >
-				<comment><![CDATA[True if the result from the PCR test was positive.]]></comment>
+			<column name="pcr_result_value" type="smallint" jt="5" >
+				<comment><![CDATA[Result from the PCR test.]]></comment>
 			</column>
 			<index name="pk_pcr_data_id" unique="PRIMARY_KEY" >
 				<column name="pcr_data_id" />

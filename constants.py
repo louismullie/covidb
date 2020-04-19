@@ -5,21 +5,24 @@ pd.set_option('display.max_rows', 250)
 
 DEBUG = True
 
-PATIENT_GLOBAL_SALT = '|.@Zbyi*7@?OBKZ4'
-PATIENT_SITE_SALT = ':/o"3yR<>|9ue~{/'
+PATIENT_GLOBAL_SALT = None
+PATIENT_SITE_SALT = None
 LIVE_SHEET_FILENAME = "/var/www/html/mchasse/covid19/data_all.csv"
 CSV_DIRECTORY = "/data8/projets/Mila_covid19/output/csv"
 BLOB_DIRECTORY = "/data8/projets/Mila_covid19/output/blob"
-DICOM_ID_MAP_FILENAME = "/data8/projets/Mila_covid19/data/patient_infos/dicom_id_map.csv"
+DICOM_MAP_FILENAME = "/data8/projets/Mila_covid19/data/patient_infos/dicom_id_map.csv"
 DICOM_DIRECTORY = "/data8/projets/Mila_covid19/data/covid_citadel_pacs"
 SQLITE_DIRECTORY = "/data8/projets/Mila_covid19/output/sqlite"
 CODE_DIRECTORY = "/data8/projets/Mila_covid19/code/lmullie/git_Mila_covid19"
 
-dicom_id_map_rows = read_csv(DICOM_ID_MAP_FILENAME)
-DICOM_ID_MAP = {}
+dicom_id_map_rows = read_csv(DICOM_MAP_FILENAME)
+DICOM_PATIENT_ID_MAP = {}
+DICOM_STUDY_ID_MAP = {}
 
 for dicom_id_map_row in dicom_id_map_rows:
-  DICOM_ID_MAP[str(dicom_id_map_row[1])] = str(dicom_id_map_row[0])
+  if len(dicom_id_map_row) == 0: continue
+  DICOM_PATIENT_ID_MAP[str(dicom_id_map_row[2])] = str(dicom_id_map_row[0])
+  DICOM_STUDY_ID_MAP[str(dicom_id_map_row[2])] = str(dicom_id_map_row[1])
 
 TABLE_COLUMNS = {
 
@@ -43,14 +46,17 @@ TABLE_COLUMNS = {
     'patient_site_uid', 'micro_name', 'micro_sample_site', 'micro_sample_time', 
     'micro_result_time', 'micro_result_value'
   ],
+
   'imaging_data': [
-    'patient_site_uid', 'imaging_accession_number', 'imaging_modality', 'imaging_site'
+    'patient_site_uid', 'imaging_accession_uid', 'imaging_modality', 'imaging_site'
   ],
+
   'slice_data': [
-    'patient_site_uid', 'slice_study_id', 'slice_series_id', 'slice_data_uri', 
-    'slice_view_position', 'slice_patient_position', 'slice_image_orientation',
-    'slice_image_position', 'slice_window_center', 'slice_window_width', 
-    'slice_pixel_spacing', 'slice_thickness', 'slice_rows', 'slice_columns',
-    'slice_rescale_intercept', 'slice_rescale_slope'
+    'patient_site_uid', 'imaging_accession_uid', 'slice_study_instance_uid', 
+    'slice_series_instance_uid', 'slice_data_uri', 'slice_view_position', 
+    'slice_patient_position', 'slice_image_orientation', 'slice_image_position', 
+    'slice_window_center', 'slice_window_width', 'slice_pixel_spacing', 
+    'slice_thickness', 'slice_rows', 'slice_columns', 'slice_rescale_intercept', 
+    'slice_rescale_slope'
   ]
 }
