@@ -42,7 +42,7 @@ CREATE TABLE pcr_data (
 	pcr_sample_time      varchar     ,
 	pcr_sample_site      smallint     ,
 	pcr_result_time      varchar     ,
-	pcr_result_positive  boolean     ,
+	pcr_result_value     smallint     ,
 	FOREIGN KEY ( patient_site_uid ) REFERENCES patient_data( patient_site_uid )  
  );
 
@@ -214,3 +214,4 @@ CREATE TABLE diagnosis_data (
 	FOREIGN KEY ( patient_site_uid ) REFERENCES patient_data( patient_site_uid )  ,
 	FOREIGN KEY ( episode_data_id ) REFERENCES episode_data( episode_data_id )  
  );
+

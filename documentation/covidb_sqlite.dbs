@@ -71,12 +71,13 @@
 			<column name="diagnosis_id" type="bigint" decimal="0" jt="-5" mandatory="y" >
 				<comment><![CDATA[Primary key of this table; implemented as an auto-incrementing integer.]]></comment>
 			</column>
-			<column name="diagnosis_type" type="varchar" decimal="0" jt="12" >
+			<column name="diagnosis_type" type="smallint" jt="5" >
 				<comment><![CDATA[Type of diagnosis recorded.
 1 = comorbidity prior to admission (BDCP type 1)
 2 = comorbidity after admission (BDCP type 2)
 3 = primary diagnosis (BDCP type M)
 4 = secondary diagnosis (BDCP type 3)
+5 = death
 
 Reference: Canadian Norms for Codification of Medical Diagnoses, https://bit.ly/346yCHg]]></comment>
 			</column>
@@ -178,6 +179,9 @@ Should be blank unless episode_unit_type == 2.]]></comment>
 			</column>
 			<column name="episode_end_time" type="varchar" decimal="0" jt="12" >
 				<comment><![CDATA[Timestamp, with timezone, of when the episode ended (e.g. discharged from the emergency room).]]></comment>
+			</column>
+			<column name="episode_description" type="varchar" length="256" jt="12" >
+				<comment><![CDATA[Free text description of the reason for the episode.]]></comment>
 			</column>
 			<index name="pk_episode_data_id" unique="PRIMARY_KEY" >
 				<column name="episode_data_id" />
@@ -569,8 +573,8 @@ Reference: https://bit.ly/2wQJfly]]></comment>
 			<column name="pcr_result_time" type="varchar" decimal="0" jt="12" >
 				<comment><![CDATA[Timestamp, with timezone, indicating the time at which the PCR test was resulted.]]></comment>
 			</column>
-			<column name="pcr_result_positive" type="boolean" length="0" decimal="0" jt="-7" >
-				<comment><![CDATA[True if the result from the PCR test was positive.]]></comment>
+			<column name="pcr_result_value" type="smallint" jt="5" >
+				<comment><![CDATA[Result from the PCR test.]]></comment>
 			</column>
 			<index name="pk_pcr_data_id" unique="PRIMARY_KEY" >
 				<column name="pcr_data_id" />
@@ -712,7 +716,7 @@ Should be: a string containing a comma-separated list of 3 floating point number
 		</table>
 	</schema>
 	<connector name="PostgreSQL" database="PostgreSQL" driver_class="org.postgresql.Driver" driver_jar="postgresql-42.2.8.jar" driver_desc="Standard" host="localhost" port="5432" instance="postgres" user="postgres" />
-	<layout name="CoviDB Data Spec" id="Layout_143a5b5" hide_fks="fk_culture_data_patient_data,fk_diagnosis_data_patient_data,fk_episode_data_patient_data,fk_exposure_data_patient_data,fk_imaging_data_patient_data,fk_intervention_data_patient_data,fk_intervention_data_drug_data,fk_lab_data_patient_data,fk_observation_data_patient_data,fk_pcr_data_patient_data,fk_signal_data_patient_data,fk_symptom_data_patient_data,fk_drug_data_patient_data," show_relation="columns" >
+	<layout name="CoviDB Data Spec" id="Layout_143a5b5" hide_fks="fk_culture_data_patient_data,fk_diagnosis_data_patient_data,fk_drug_data_patient_data,fk_episode_data_patient_data,fk_exposure_data_patient_data,fk_imaging_data_patient_data,fk_intervention_data_patient_data,fk_intervention_data_drug_data,fk_lab_data_patient_data,fk_observation_data_patient_data,fk_pcr_data_patient_data,fk_signal_data_patient_data,fk_symptom_data_patient_data," show_relation="columns" >
 		<comment><![CDATA[CoviDB - Pre-Release Data Specification]]></comment>
 		<entity schema="covidb" name="culture_data" color="C1D8EE" x="352" y="80" />
 		<entity schema="covidb" name="diagnosis_data" color="C1D8EE" x="64" y="480" />
