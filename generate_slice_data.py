@@ -11,7 +11,7 @@ import pandas as pd
 
 from constants import DEBUG, TABLE_COLUMNS, BLOB_DIRECTORY, \
   LIVE_SHEET_FILENAME, CSV_DIRECTORY, DICOM_DIRECTORY
-from sql_utils import sql_query
+from postgresql_utils import sql_query
 from file_utils import read_csv, write_csv
 from image_utils import equalize_histogram
 from identity_utils import generate_slice_study_uid, generate_accession_uid, \

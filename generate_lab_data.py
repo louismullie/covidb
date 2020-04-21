@@ -9,12 +9,13 @@ import csv, os
 import numpy as np
 import pandas as pd
 
-from constants import DEBUG, TABLE_COLUMNS, LIVE_SHEET_FILENAME, CSV_DIRECTORY
-from sql_utils import sql_query, list_columns, list_tables
+from constants import DEBUG, TABLE_COLUMNS, LIVE_SHEET_FILENAME, CSV_DIRECTORY, \
+ LAB_CANCELLED_FLAGS, LAB_SKIP_VALUES
+from postgresql_utils import sql_query
 from file_utils import read_csv, write_csv
 from time_utils import get_hours_between_datetimes
 from identity_utils import generate_patient_uid, generate_patient_site_uid
-from mappers import map_lab_sample_site
+from mappers import map_lab_sample_site, map_lab_result_value
 
 row_count = 0
 patient_data_rows = []
@@ -44,17 +45,35 @@ for index, row in df.iterrows():
   lab_sample_site = row.specimencollectionmethodcd
   lab_sample_time = row.specimencollectiondtm
   lab_result_time = row.resultdtm
-  lab_result_value = row.lbres_ck
+  lab_result_string = row.lbres_ck
   lab_result_units = row.resultunit
+
+  if lab_result_string in LAB_SKIP_VALUES:
+    continue
+
+  if lab_result_string in LAB_CANCELLED_FLAGS:
+    lab_result_status = 3
+    lab_result_string = ''
+  else:
+    lab_result_status = 1
+
+  if lab_result_string == '*00.0':
+    print(row)
 
   delta_hours = get_hours_between_datetimes(
     pcr_sample_times[str(patient_mrn)], str(lab_sample_time))
-
-  if delta_hours < 24:
+  
+  if delta_hours > -48 and delta_hours < 7*24:
     lab_data_rows.append([
-      patient_mrn, lab_name, 
-      map_lab_sample_site(lab_sample_site), lab_sample_time, 
-      lab_result_time, lab_result_value, lab_result_units
+      patient_mrn, 
+      lab_name, 
+      map_lab_sample_site(lab_sample_site), 
+      lab_sample_time, 
+      lab_result_time, 
+      lab_result_status,
+      lab_result_units, 
+      lab_result_string, 
+      map_lab_result_value(lab_result_string)
     ])
 
 print('Total rows: %d' % len(lab_data_rows))

@@ -11,10 +11,10 @@ def map_patient_covid_status(status):
   status_str = str(status).strip().lower()
   if status_str[0] == 'p':   return 1 # Positif
   elif status_str[0] == 'n': return 2 # Negatif
-  elif status_str[0] == 'e': return 5 # En attente
-  elif status_str[0] == 't': return 6 # Test annule
-  elif status_str[0] == 'a': return 6 # Annule
-  elif status_str[0] == 'r': return 5 # Rapport numerise
+  elif status_str[0] == 'e': return 3 # En attente
+  elif status_str[0] == 't': return 4 # Test annule
+  elif status_str[0] == 'a': return 4 # Annule
+  elif status_str[0] == 'r': return 4 # Rapport numerise
   else: raise Exception('Invalid COVID status: %s' % status)
 
 def map_patient_age(age):
@@ -33,6 +33,8 @@ def map_patient_sex(sex):
   elif sex_parsed == 'x': return 'X'
   else: raise Exception('Invalid birth sex: %s' % sex)
 
+#def map_lab_result(lab_result):
+  
 def map_lab_sample_site(code):
   code = (str(code).strip()).lower()
   if 'veineux' in code: return 1
@@ -56,7 +58,19 @@ def map_pcr_sample_site(code):
     print('Unrecognized sample site: ' + code)
     return 5
 
-def map_micro_sample_site(desc):
+def map_lab_result_value(result_string):
+  result_string = str(result_string) \
+    .replace('<', '') \
+    .replace('>', '') \
+    .replace(',', '.') \
+    .strip()
+  if result_string == '':
+    return ''
+  else:
+    return float(result_string)
+
+def map_culture_sample_site(desc):
+  if desc is None: return 8
   desc = (str(desc).strip()).lower()
   if 'moculture' in desc: return 1
   elif 'sang' in desc: return 1
@@ -72,9 +86,24 @@ def map_micro_sample_site(desc):
     print('Unrecognized sample site: ' + desc)
     return 8
 
+def map_culture_growth_value(value):
+  if value is None: return ''
+  value_str = str(value).strip().lower()
+  if value_str == 'pos': return 1
+  elif value_str == 'neg': return 0
+  else: 
+    print('Unrecognized growth result')
+    return ''
+
 def map_episode_unit_type(unit_code):
   unit_code_str = str(unit_code)
   if '10S' in unit_code_str or '10N' in unit_code_str:
     return 5
   else: 
     return 3
+
+def map_observation_name(name):
+  if name == 'FIO2': return 'fraction_inspired_oxygen'
+  if name == 'Sat O2 Art': return 'arterial_oxygen_saturation'
+  if name == 'Température': return 'temperature'
+  return 'unknown'

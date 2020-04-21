@@ -10,7 +10,7 @@ import numpy as np
 import pandas as pd
 
 from constants import DEBUG, TABLE_COLUMNS, LIVE_SHEET_FILENAME, CSV_DIRECTORY
-from sql_utils import sql_query, list_columns, list_tables
+from postgresql_utils import sql_query
 from file_utils import write_csv, read_csv
 from time_utils import get_hours_between_datetimes
 from identity_utils import generate_patient_uid, generate_patient_site_uid

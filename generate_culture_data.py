@@ -10,11 +10,11 @@ import numpy as np
 import pandas as pd
 
 from constants import DEBUG, TABLE_COLUMNS, CSV_DIRECTORY
-from sql_utils import sql_query, list_columns, list_tables
+from postgresql_utils import sql_query
 from file_utils import write_csv, read_csv
 from time_utils import get_hours_between_datetimes
 from identity_utils import generate_patient_uid, generate_patient_site_uid
-from mappers import map_micro_sample_site
+from mappers import map_culture_sample_site, map_culture_growth_value
 
 row_count = 0
 patient_data_rows = []
@@ -36,26 +36,26 @@ df = sql_query("SELECT * FROM dw_v01.oacis_mi WHERE longdesc NOT LIKE '%RIA%' AN
     ' OR '.join(["longdesc LIKE '%" + pat + "%'" for pat in pcr_patterns]) + ") AND "
     "specimencollectiondtm > '2020-01-01' AND dossier in (" + ", ".join(patient_mrns) + ")")
 
-micro_data_rows = []
+culture_data_rows = []
 
 for index, row in df.iterrows():
 
   patient_mrn = str(row.dossier)
-  micro_name = row.longdesc
-  micro_sample_site = row.specimencollectionmethodcd
-  micro_sample_time = row.specimencollectiondtm
-  micro_result_time = row.resultdtm
-  micro_result_value = row.growthcd
+  culture_name = row.longdesc
+  culture_sample_site = row.specimencollectionmethodcd
+  culture_sample_time = row.specimencollectiondtm
+  culture_result_time = row.resultdtm
+  culture_growth_value = row.growthcd
 
-  micro_data_rows.append([
-    patient_mrn, micro_name, 
-    map_micro_sample_site(micro_sample_site),
-    micro_sample_time, 
-    micro_result_time, 
-    micro_result_value
+  culture_data_rows.append([
+    patient_mrn, culture_name, 
+    map_culture_sample_site(culture_sample_site),
+    culture_sample_time, 
+    culture_result_time, 
+    map_culture_growth_value(culture_growth_value)
   ])
 
-print('Total rows: %d' % len(micro_data_rows))
+print('Total rows: %d' % len(culture_data_rows))
 
-write_csv(TABLE_COLUMNS['micro_data'], micro_data_rows, 
-  os.path.join(CSV_DIRECTORY, 'micro_data.csv'))
+write_csv(TABLE_COLUMNS['culture_data'], culture_data_rows, 
+  os.path.join(CSV_DIRECTORY, 'culture_data.csv'))
