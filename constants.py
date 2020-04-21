@@ -31,7 +31,7 @@ TABLE_COLUMNS = {
     'patient_site_uid', 'patient_uid', 'pcr_sample_time', 
     'patient_site_code', 'patient_transfer_site_code', 
     'patient_covid_status', 'patient_age', 'patient_sex',
-    'patient_is_dead'
+    'patient_death_status'
   ],
 
   'episode_data': [

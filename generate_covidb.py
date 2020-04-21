@@ -76,8 +76,8 @@ run_step('lab_data')
 print('\n\n* Generating PCR data...')
 run_step('pcr_data')
 
-print('\n\n* Generating micro data...')
-run_step('micro_data')
+print('\n\n* Generating culture data...')
+run_step('culture_data')
 
 print('\n\n* Generating slice data...')
 run_step('slice_data')

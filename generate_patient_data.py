@@ -23,8 +23,6 @@ print('Number of rows in live sheet: %d' % len(live_sheet_rows))
 patient_data = {}
 patient_mrns = []
 patient_covid_statuses = {}
-patient_ramqs = {}
-pcr_sample_times = {}
 
 for row in live_sheet_rows:
 
@@ -32,7 +30,6 @@ for row in live_sheet_rows:
   if is_external: continue
 
   patient_mrn = str(row[0])
-  patient_mrn_string = 'S' + patient_mrn
   patient_ramq = str(row[1])
   patient_age = row[-1]
   patient_birth_sex = row[-2]
@@ -40,9 +37,6 @@ for row in live_sheet_rows:
   
   pcr_result_time = row[-6]
   pcr_sample_time = row[-7]
-
-  pcr_sample_times[patient_mrn_string] = pcr_sample_time
-  patient_ramqs[patient_mrn_string] = patient_ramq
   
   if patient_mrn not in patient_covid_statuses:
     patient_covid_statuses[patient_mrn] = [patient_covid_status]
@@ -71,7 +65,7 @@ for row in live_sheet_rows:
       print('  due to error: %s' % err)
     continue
 
-  patient_mrns.append(patient_mrn_string)
+  patient_mrns.append(patient_mrn)
 
 filtered_patient_data = []
 
@@ -96,11 +90,11 @@ for patient_mrn in patient_data:
         found_positive = True
 
 # Add death status
-df = sql_query("SELECT DISTINCT dossier FROM dw_test.orcl_cichum_bendeces_live WHERE " + \
+df = sql_query("SELECT DISTINCT * FROM dw_test.orcl_cichum_bendeces_live WHERE " + \
   "dossier in ('" + "', '".join(patient_mrns) + "') " + \
   "AND dhredeces > '2020-01-01'")
-dead = [row.dossier for row in df.iterrows()]
 
+dead = [row.dossier for index, row in df.iterrows()]
 final_patient_data = []
 
 for row in filtered_patient_data:
@@ -108,7 +102,7 @@ for row in filtered_patient_data:
   if row[0] in dead:
     final_row = final_row + [1]
   else:
-    final_row = final_row + [0]
+    final_row = final_row + [2]
   final_patient_data.append(final_row)
 
 write_csv(TABLE_COLUMNS['patient_data'], final_patient_data, 

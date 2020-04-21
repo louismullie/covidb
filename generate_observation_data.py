@@ -9,7 +9,7 @@ import csv, os
 import numpy as np
 import pandas as pd
 
-from constants import DEBUG, TABLE_COLUMNS, CSV_DIRECTORY
+from constants import DEBUG, TABLE_COLUMNS, CSV_DIRECTORY, LAB_CANCELLED_FLAGS
 from postgresql_utils import sql_query
 from file_utils import read_csv, write_csv
 from time_utils import get_hours_between_datetimes
@@ -44,6 +44,9 @@ for index, row in df.iterrows():
   observation_name = map_observation_name(row.longdesc)
   observation_time = row.specimencollectiondtm
   observation_value = row.lbres_ck
+
+  if observation_value is None or observation_value in LAB_CANCELLED_FLAGS:
+    continue
 
   delta_hours = get_hours_between_datetimes(
     pcr_sample_times[str(patient_mrn)], str(observation_time))
