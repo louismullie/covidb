@@ -17,6 +17,7 @@ CREATE TABLE patient_data (
 	patient_site_uid     char(128) NOT NULL  PRIMARY KEY  ,
 	patient_global_uid   char(128) NOT NULL    ,
 	patient_site_code    varchar     ,
+	patient_was_transferred boolean     ,
 	patient_transfer_site_code date     ,
 	patient_covid_status smallint     ,
 	patient_birth_date   date     ,
@@ -27,7 +28,7 @@ CREATE TABLE patient_data (
 	patient_postal_district char(3)     ,
 	patient_assisted_living smallint     ,
 	patient_code_status  smallint     ,
-	patient_death        boolean     ,
+	patient_death_status smallint     ,
 	patient_death_cause  varchar     ,
 	patient_last_fu_date date     ,
 	CONSTRAINT Unq_patient_data_patient_site_uid UNIQUE ( patient_site_uid ) 
@@ -42,7 +43,9 @@ CREATE TABLE pcr_data (
 	pcr_sample_time      varchar     ,
 	pcr_sample_site      smallint     ,
 	pcr_result_time      varchar     ,
+	pcr_result_status    smallint     ,
 	pcr_result_value     smallint     ,
+	pcr_result_transferred timestamp     ,
 	FOREIGN KEY ( patient_site_uid ) REFERENCES patient_data( patient_site_uid )  
  );
 
@@ -108,6 +111,7 @@ CREATE TABLE episode_data (
 	episode_ctas         date     ,
 	episode_start_time   varchar     ,
 	episode_end_time     varchar     ,
+	episode_description  varchar(256)     ,
 	FOREIGN KEY ( patient_site_uid ) REFERENCES patient_data( patient_site_uid )  
  );
 
@@ -165,11 +169,12 @@ CREATE TABLE lab_data (
 	lab_loinc_code       varchar     ,
 	lab_cerner_code      varchar     ,
 	lab_units            varchar     ,
-	lab_status           smallint     ,
 	lab_sample_time      varchar     ,
 	lab_sample_type      smallint     ,
+	lab_result_status    smallint     ,
 	lab_result_time      varchar     ,
-	lab_result_value     float     ,
+	lab_result_value     float(0,0)     ,
+	lab_result_string    varchar(16)     ,
 	FOREIGN KEY ( patient_site_uid ) REFERENCES patient_data( patient_site_uid )  
  );
 
@@ -180,6 +185,7 @@ CREATE TABLE observation_data (
 	observation_device   varchar     ,
 	observation_start_time varchar     ,
 	observation_end_time varchar     ,
+	observation_source   varchar(256)     ,
 	FOREIGN KEY ( patient_site_uid ) REFERENCES patient_data( patient_site_uid )  ,
 	FOREIGN KEY ( observation_type_id ) REFERENCES observation_type( observation_type_id )  
  );
@@ -207,10 +213,11 @@ CREATE TABLE diagnosis_data (
 	patient_site_uid     char(128) NOT NULL    ,
 	episode_data_id      integer     ,
 	diagnosis_id         bigint NOT NULL  PRIMARY KEY  ,
-	diagnosis_type       varchar     ,
+	diagnosis_type       smallint     ,
 	diagnosis_name       varchar(100)     ,
 	diagnosis_icd_code   varchar     ,
 	diagnosis_source     varchar     ,
+	diagnosis_time       timestamp     ,
 	FOREIGN KEY ( patient_site_uid ) REFERENCES patient_data( patient_site_uid )  ,
 	FOREIGN KEY ( episode_data_id ) REFERENCES episode_data( episode_data_id )  
  );

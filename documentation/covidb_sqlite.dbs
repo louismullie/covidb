@@ -92,6 +92,9 @@ Could be in: { viral pneumonitis, bacterial pneumonia, acute respiratory distres
 			<column name="diagnosis_source" type="varchar" decimal="0" jt="12" >
 				<comment><![CDATA[Data source from which the diagnosis occurred.]]></comment>
 			</column>
+			<column name="diagnosis_time" type="timestamp" jt="93" >
+				<comment><![CDATA[Timestamp (with timezone) at which the diagnosis was made.]]></comment>
+			</column>
 			<index name="pk_outcome_data_id" unique="PRIMARY_KEY" >
 				<column name="diagnosis_id" />
 			</index>
@@ -363,14 +366,6 @@ Reference (for CERNER): https://bit.ly/2UGF5pp]]></comment>
 
 Could be in: { g/L, g/dL, 10^9 cells/L, 10^3 cells/microL, cells/microL, seconds, U/L, micromol/L, mg/L, mg/dL, mmol/L, mg/dL, mEq/L }]]></comment>
 			</column>
-			<column name="lab_status" type="smallint" length="0" decimal="0" jt="5" >
-				<comment><![CDATA[Current status of the culture:
-1 = Resulted
-2 = Pending
-3 = Rejected
-4 = Cancelled
-5 = Other]]></comment>
-			</column>
 			<column name="lab_sample_time" type="varchar" decimal="0" jt="12" >
 				<comment><![CDATA[Timezone, with timestamp, indicating the time at which the laboratory test was sampled.]]></comment>
 			</column>
@@ -383,11 +378,20 @@ Could be in: { g/L, g/dL, 10^9 cells/L, 10^3 cells/microL, cells/microL, seconds
 5 = Other
 6 = Unspecified]]></comment>
 			</column>
+			<column name="lab_result_status" type="smallint" length="0" decimal="0" jt="5" >
+				<comment><![CDATA[Current status of the culture:
+1 = Resulted
+2 = Pending
+3 = Cancelled]]></comment>
+			</column>
 			<column name="lab_result_time" type="varchar" decimal="0" jt="12" >
 				<comment><![CDATA[Timezone, with timestamp, indicating the time at which the laboratory test was resulted.]]></comment>
 			</column>
-			<column name="lab_result_value" type="float" decimal="0" jt="7" >
-				<comment><![CDATA[Value of the laboratory result.]]></comment>
+			<column name="lab_result_value" type="float" length="0" decimal="0" jt="7" >
+				<comment><![CDATA[Value of the laboratory result, as a floating-point number. The lower or upper limit of the detectable value is used for extreme results (e.g. < 0.01 is encoded as 0.01).]]></comment>
+			</column>
+			<column name="lab_result_string" type="varchar" length="16" jt="12" >
+				<comment><![CDATA[Value of the laboratory result, as a string.]]></comment>
 			</column>
 			<index name="pk_lab_data_lab_data_id" unique="PRIMARY_KEY" >
 				<column name="lab_data_id" />
@@ -412,6 +416,9 @@ Could be in: { g/L, g/dL, 10^9 cells/L, 10^3 cells/microL, cells/microL, seconds
 			</column>
 			<column name="observation_end_time" type="varchar" decimal="0" jt="12" >
 				<comment><![CDATA[Timestamp, with timezone, indicating the time at which the observation ended. Empty if the observation is made at a single point in time.]]></comment>
+			</column>
+			<column name="observation_source" type="varchar" length="256" jt="12" >
+				<comment><![CDATA[Description of which source system the observation was drawn from (e.g. from lab data, Oacis, SIURGE, etc.)]]></comment>
 			</column>
 			<index name="pk_clinical_data_id" unique="PRIMARY_KEY" >
 				<column name="observation_data_id" />
@@ -464,18 +471,18 @@ Procedure for generation: https://bit.ly/39ANAXa]]></comment>
 
 Reference codes: https://bit.ly/2Jyw7nN]]></comment>
 			</column>
+			<column name="patient_was_transferred" type="boolean" jt="-7" >
+				<comment><![CDATA[True if the patient was transferred from another institution.]]></comment>
+			</column>
 			<column name="patient_transfer_site_code" type="date" length="0" decimal="0" jt="91" >
 				<comment><![CDATA[Site code of the transferring institution, if the patient has been transferred from elsewhere.]]></comment>
 			</column>
 			<column name="patient_covid_status" type="smallint" length="0" decimal="0" jt="5" >
 				<comment><![CDATA[COVID status of the patient.
-1 = Positive at current site
-2 = Negative at current site
-3 = Positive at other site (transferred + patient)
-4 = Negative at other site (transferred - patient)
-5 = Test result pending
-6 = Not tested for COVID
-7 = Recovered patient]]></comment>
+1 = Negative at all times
+2 = Positive at any time
+3 = COVID status pending
+4 = Unknown / not tested]]></comment>
 			</column>
 			<column name="patient_birth_date" type="date" length="0" decimal="0" jt="91" >
 				<comment><![CDATA[Birth date of the patient. Should be replaced by patient_age, computed as per the most recent birth date, in de-identified data exports.]]></comment>
@@ -515,8 +522,10 @@ Reference codes: https://bit.ly/2Jyw7nN]]></comment>
 3 = medical therapy only
 4 = comfort care only]]></comment>
 			</column>
-			<column name="patient_death" type="boolean" length="0" decimal="0" jt="-7" >
-				<comment><![CDATA[True if the patient has died.]]></comment>
+			<column name="patient_death_status" type="smallint" jt="5" >
+				<comment><![CDATA[1 = patient is dead
+2 = patient is alive
+3 = death status unknown]]></comment>
 			</column>
 			<column name="patient_death_cause" type="varchar" decimal="0" jt="12" >
 				<comment><![CDATA[ICD code representing the cause of death.]]></comment>
@@ -573,8 +582,19 @@ Reference: https://bit.ly/2wQJfly]]></comment>
 			<column name="pcr_result_time" type="varchar" decimal="0" jt="12" >
 				<comment><![CDATA[Timestamp, with timezone, indicating the time at which the PCR test was resulted.]]></comment>
 			</column>
+			<column name="pcr_result_status" type="smallint" length="1" jt="5" >
+				<comment><![CDATA[Status of the PCR.
+
+1 = Resulted
+2 = Pending
+3 = Cancelled]]></comment>
+			</column>
 			<column name="pcr_result_value" type="smallint" jt="5" >
-				<comment><![CDATA[Result from the PCR test.]]></comment>
+				<comment><![CDATA[1 = Negative
+2 = Positive]]></comment>
+			</column>
+			<column name="pcr_result_transferred" type="timestamp" jt="93" >
+				<comment><![CDATA[True if the PCR was transferred from another site.]]></comment>
 			</column>
 			<index name="pk_pcr_data_id" unique="PRIMARY_KEY" >
 				<column name="pcr_data_id" />
