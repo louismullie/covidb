@@ -90,7 +90,7 @@ DRUG_SKIP_VALUES = [
   'bilan comparatif des médicaments (bcm) au dossier.'
 ]
 
-drug_route_map = {
+DRUG_ROUTE_MAP = {
   'sous-cutané': 'sc',
   'sous-cutané:': 'sc',
   'dans les oreilles': 'otic',
