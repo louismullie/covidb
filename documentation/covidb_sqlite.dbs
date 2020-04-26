@@ -27,7 +27,7 @@
 			<column name="culture_loinc_code" type="varchar" decimal="0" jt="12" >
 				<comment><![CDATA[LOINC code of the culture being performed.]]></comment>
 			</column>
-			<column name="culture_sample_site" type="smallint" length="0" decimal="0" jt="5" >
+			<column name="culture_specimen_type" type="smallint" length="0" decimal="0" jt="5" >
 				<comment><![CDATA[Site from which the culture sample was collected.
 1 = Expectorated sputum
 2 = Endotracheal aspirate
@@ -130,8 +130,8 @@ Reference: https://bit.ly/2R8jPGC]]></comment>
 			<column name="drug_rate" type="float" decimal="0" jt="7" >
 				<comment><![CDATA[Drug infusion rate, for continuous infusions.]]></comment>
 			</column>
-			<column name="drug_roa" type="varchar" decimal="0" jt="12" >
-				<comment><![CDATA[Drug route of administration short name, as defined by FDA standards (e.g. IV, SC, PO). 
+			<column name="drug_route" type="varchar" length="16" jt="12" >
+				<comment><![CDATA[Drug route of administration short name, as defined by FDA standards (e.g. IV, SC, PO).  N.B. IV DRIP is not used; information on whether the drug is administered as an continuous infusion is found in the drug_infusion column.
 
 Reference: https://bit.ly/3dRlo5z]]></comment>
 			</column>
