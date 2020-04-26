@@ -57,6 +57,7 @@ for r, d, files in os.walk(DICOM_DIRECTORY):
       continue
     
     dicom_study_id = str(dicom.get('PatientID'))
+    #print(dicom_study_id)
     patient_mrn = get_patient_mrn_from_dicom_study_id(dicom_study_id)
     accession_number = get_accession_number_from_dicom_study_id(dicom_study_id)
     imaging_accession_uid = generate_accession_uid(accession_number)

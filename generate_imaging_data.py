@@ -62,7 +62,8 @@ imaging_accession_numbers = np.unique(imaging_accession_numbers)
 print('Number of patients with imaging: %d' % \
   len(patients_with_imaging))
 
-write_csv(['accession_number'], imaging_accession_numbers, \
+write_csv(['accession_number'], \
+ [[x] for x in imaging_accession_numbers], \
  IMAGING_LIST_FILENAME)
 
 write_csv(TABLE_COLUMNS['imaging_data'], imaging_data_rows, 

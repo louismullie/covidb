@@ -1,20 +1,22 @@
 import re
 
+from constants import DRUG_ROUTE_MAP, DRUG_FREQUENCY_MAP
+
 def map_patient_ramq(ramq):
   ramq_str = str(ramq).strip()
   if not re.match("[A-Z]{4}[0-9]{8}", ramq_str):
-    if ramq_str != '':
-      return False
+    return ''
   return ramq_str
 
 def map_patient_covid_status(status):
   status_str = str(status).strip().lower()
-  if status_str[0] == 'p':   return 1 # Positif
-  elif status_str[0] == 'n': return 2 # Negatif
-  elif status_str[0] == 'e': return 3 # En attente
-  elif status_str[0] == 't': return 4 # Test annule
-  elif status_str[0] == 'a': return 4 # Annule
-  elif status_str[0] == 'r': return 4 # Rapport numerise
+  if status_str == 'positif':   return 1
+  elif status_str == 'négatif': return 2
+  elif status_str == 'en attente': return 3
+  elif status_str == 'test annulé': return 4
+  elif status_str == 'annulé': return 4
+  elif status_str == 'rapp. numérisé': return 4
+  elif status_str == 'non valide': return 4
   else: raise Exception('Invalid COVID status: %s' % status)
 
 def map_patient_age(age):
@@ -107,3 +109,30 @@ def map_observation_name(name):
   if name == 'Sat O2 Art': return 'arterial_oxygen_saturation'
   if name == 'Température': return 'temperature'
   return 'unknown'
+
+def map_drug_route(route_code):
+
+  route_code_str = str(route_code)
+
+  if 'routecd' in route_code_str:
+    route_code_str = route_code_str.replace('\n', ' ')
+    route_code_parts = route_code_str.split('routecd')
+    route_code_parts = [d.strip() for d in route_code_parts]
+    route_code_parts = [d for d in route_code_parts if d != '']
+    route_code_str = route_code_parts[0].replace('CY', '')
+
+  route_code_str = route_code_str.lower().strip()
+  
+  if route_code_str in DRUG_ROUTE_MAP:
+    return DRUG_ROUTE_MAP[route_code_str]
+  else: 
+    print('Invalid drug route: %s' % route_code_str)
+
+def map_drug_frequency(frequency_code):
+
+  frequency_code_str = str(frequency_code).lower().strip()
+  
+  if frequency_code_str in DRUG_FREQUENCY_MAP:
+    return DRUG_FREQUENCY_MAP[frequency_code_str]
+  else: 
+    print('Invalid drug frequency: %s' % frequency_code_str)

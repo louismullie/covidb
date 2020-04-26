@@ -49,10 +49,9 @@ for row in live_sheet_rows:
 
     patient_data[patient_mrn].append([
       patient_mrn,
-      patient_ramq,
+      map_patient_ramq(patient_ramq),
       pcr_sample_time,
       'CHUM',
-      '',
       patient_covid_status,
       map_patient_age(patient_age),
       map_patient_sex(patient_birth_sex)
@@ -77,7 +76,7 @@ for patient_mrn in patient_data:
   covid_status = min(patient_covid_statuses[patient_mrn])
   found_positive = False
   
-  # Choose the first PCR entry - to be reviseds
+  # Choose the first PCR entry - to be revised
   if covid_status > 1:
     patient_rows[0][0] = str(patient_rows[0][0])
     filtered_patient_data.append(patient_rows[0])

@@ -14,4 +14,5 @@ def list_tables(table_schema, table_name):
   for row in df.iterrows():
     print(row)
 
-#list_tables('dw_v01', 'urg')
+#list_tables('dw_v01', 'rx')
+#list_columns('oacis_rx')
