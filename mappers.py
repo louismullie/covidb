@@ -1,6 +1,11 @@
 import re
 
 from constants import DRUG_ROUTE_MAP #, DRUG_FREQUENCY_MAP
+from lang_utils import transliterate_string
+
+def map_time(time):
+  if time is None: return ''
+  return str(time).strip().lower()
 
 def map_patient_ramq(ramq):
   ramq_str = str(ramq).strip()
@@ -10,13 +15,13 @@ def map_patient_ramq(ramq):
 
 def map_patient_covid_status(status):
   status_str = str(status).strip().lower()
-  if status_str == 'positif':   return 1
-  elif status_str == 'négatif': return 2
-  elif status_str == 'en attente': return 3
-  elif status_str == 'test annulé': return 4
-  elif status_str == 'annulé': return 4
-  elif status_str == 'rapp. numérisé': return 4
-  elif status_str == 'non valide': return 4
+  if status_str == 'positif':   return 'positive'
+  elif status_str == 'négatif': return 'negative'
+  elif status_str == 'en attente': return 'pending'
+  elif status_str == 'test annulé': return 'unknown'
+  elif status_str == 'annulé': return 'unknown'
+  elif status_str == 'rapp. numérisé': return 'unknown'
+  elif status_str == 'non valide': return 'unknown'
   else: raise Exception('Invalid COVID status: %s' % status)
 
 def map_patient_age(age):
@@ -30,35 +35,26 @@ def map_patient_age(age):
 def map_patient_sex(sex):
   sex_parsed = (str(sex).strip()).lower()
   if sex_parsed == '': return ''
-  if sex_parsed == 'm': return 'M'
-  elif sex_parsed == 'f': return 'F'
-  elif sex_parsed == 'x': return 'X'
+  if sex_parsed == 'm': return 'male'
+  elif sex_parsed == 'f': return 'female'
+  elif sex_parsed == 'x': return 'unspecified'
   else: raise Exception('Invalid birth sex: %s' % sex)
 
-#def map_lab_result(lab_result):
+def map_lab_name(name):
+  name_str = str(name).strip().lower()
+  name_str = transliterate_string(name_str)
+  return name_str
   
 def map_lab_sample_site(code):
+  if code is None: return ''
   code = (str(code).strip()).lower()
-  if 'veineux' in code: return 1
-  elif 'art' in code: return 2
-  elif 'urine' in code: return 4
-  elif 'autres' in code: return 5
-  elif 'none' in code: return 6
+  if 'veineux' in code: return 'venous_blood'
+  elif 'art' in code: return 'arterial_blood'
+  elif 'urine' in code: return 'urine'
+  elif 'autres' in code: return 'other'
   else:
     print('Unrecognized sample site: ' + code)
-    return 5
-
-def map_pcr_sample_site(code):
-  code = (str(code).strip()).lower()
-  if 'couvillon' in code: return 1
-  elif 'urine' in code: return 8
-  elif 'sang' in code: return 9
-  elif 'micro' in code: return 10
-  elif 'autres' in code: return 10
-  elif 'none' in code: return 10
-  else:
-    print('Unrecognized sample site: ' + code)
-    return 5
+    return ''
 
 def map_lab_result_value(result_string):
   result_string = str(result_string) \
@@ -71,28 +67,70 @@ def map_lab_result_value(result_string):
   else:
     return float(result_string)
 
-def map_culture_sample_site(desc):
-  if desc is None: return 8
-  desc = (str(desc).strip()).lower()
-  if 'moculture' in desc: return 1
-  elif 'sang' in desc: return 1
-  elif 'urine' in desc: return 2
-  elif 'lavage broncho-a' in desc: return 3
-  elif 'intravasculaire' in desc: return 4
-  elif 'bronchique' in desc: return 5
-  elif 'expectoration' in desc: return 6
-  elif 'pus profond' in desc: return 7
-  elif 'cimen micro' in desc: return 8
-  elif 'autres' in desc: return 8
+def map_pcr_sample_site(code):
+  code = (str(code).strip()).lower()
+  if 'couvillon' in code: return 'nasopharyngeal_swab'
+  elif 'urine' in code: return 'urine'
+  elif 'sang' in code: return 'blood'
+  elif 'autres' in code: return 'other'
+  elif 'micro' in code: return ''
+  elif 'none' in code: return ''
+  else:
+    print('Unrecognized sample site: ' + code)
+    return ''
+
+def map_culture_type(culture_type):
+  type_str = str(culture_type).strip().lower()
+  if 'myco/f lytic' in type_str: return 'myco_culture'
+  elif 'culture virale' in type_str: return 'viral_culture'
+  else: return 'bacterial_culture'
+
+def map_culture_specimen_type(type_desc, site_desc):
+
+  type_desc = (str(type_desc).strip()).lower()
+  site_desc = (str(site_desc).strip()).lower()
+
+  desc = type_desc + ' ' + site_desc
+  if 'hémoculture' in desc: return 'blood'
+  if 'expectoration' in desc: return 'expectorated_sputum'
+  if 'moelle' in desc: return 'bone_marrow'
+  if 'prothèse' in desc: return 'prosthesis'
+  if 'selles' in desc: return 'stool'
+  if 'erv par culture' in desc: return 'rectal_swab'
+  if 'sarm par culture' in desc: return 'nasal_swab'
+  if 'gorge' in desc: return 'nasal_swab'
+  if 'sécrétions nasales' in desc: return 'nasal_secretions'
+  if 'céphalo-rachidien' in desc: return 'cerebrospinal_fluid'
+  if 'biopsie d\'os' in desc: return 'bone_biopsy'
+  if 'biopsie pulmonaire' in desc: return 'lung_biopsy'
+  if 'biopsie pulmonaire' in desc: return 'lung_biopsy'
+  if 'biopsie cutanée' in desc: return 'skin_biopsy'
+  if 'biopsie de ganglion cutané' in desc: return 'lymph_node_biopsy'
+  if 'corps étransfer' in desc: return 'foreign_body'
+  if 'intravasculaire' in desc: return 'intravascular_catheter'
+  if 'liq préservation' in desc: return 'preservation_liquid'
+  if 'ascite' in desc: return 'ascites_fluid'
+  if 'pleural' in desc: return 'pleural_fluid'
+  if 'abcès du cerveau' in desc: return 'cerebral_abscess'
+  if 'pus superficiel' in desc: return 'superficial_pus'
+  if 'pus profond' in desc: return 'deep_pus'
+  if 'urine' in desc: return 'urine'
+  if 'bronchique' in desc: return 'bronchial_secretions'
+  if 'sang' in desc: return 'blood'
+  if 'urine' in desc: return 'urine'
+  if 'lavage broncho-alvéolaire' in desc: return 'bronchoalveolar_lavage'
+  if 'bronchique' in desc: return 'bronchial_secretions'
+  if 'cimen micro' in desc: return 'other'
+  if 'autres' in site_desc: return 'other'
   else:
     print('Unrecognized sample site: ' + desc)
-    return 8
+    exit()
 
 def map_culture_growth_value(value):
   if value is None: return ''
   value_str = str(value).strip().lower()
-  if value_str == 'pos': return 1
-  elif value_str == 'neg': return 0
+  if value_str == 'pos': return 'positive'
+  elif value_str == 'neg': return 'negative'
   else: 
     print('Unrecognized growth result')
     return ''
@@ -100,16 +138,23 @@ def map_culture_growth_value(value):
 def map_episode_unit_type(unit_code):
   unit_code_str = str(unit_code)
   if '10S' in unit_code_str or '10N' in unit_code_str:
-    return 5
+    return 'intensive_care'
+  elif 'ER' in unit_code_str:
+    return 'emergency_room'
   else: 
-    return 3
+    return 'inpatient_ward'
 
 def map_observation_name(name):
   if name == 'FIO2': return 'fraction_inspired_oxygen'
   if name == 'Sat O2 Art': return 'arterial_oxygen_saturation'
   if name == 'Température': return 'temperature'
-  return 'unknown'
+  return None
 
+def map_drug_name(name):
+  name_str = str(name).strip().lower()
+  name_str = transliterate_string(name_str)
+  return name_str
+  
 def map_drug_route(route_code):
 
   route_code_str = str(route_code)

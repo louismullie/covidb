@@ -51,7 +51,7 @@ for index, row in df.iterrows():
   pcr_result_units = row.resultunit
 
   if 'COVID' in pcr_name:
-    pcr_name = 'COVID-19 PCR'
+    pcr_name = 'covid-19 pcr'
   
   pcr_result_value = row.abnormalflagcd
 

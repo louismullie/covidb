@@ -48,10 +48,10 @@ for row in live_sheet_rows:
       patient_data[patient_mrn] = []
 
     patient_data[patient_mrn].append([
-      patient_mrn,
+      str(patient_mrn),
       map_patient_ramq(patient_ramq),
       pcr_sample_time,
-      'CHUM',
+      'chum',
       patient_covid_status,
       map_patient_age(patient_age),
       map_patient_sex(patient_birth_sex)
@@ -68,23 +68,22 @@ for row in live_sheet_rows:
 
 filtered_patient_data = []
 
+status_col = TABLE_COLUMNS['patient_data'].index('patient_covid_status')
+
 # Build a list of unique patients
 for patient_mrn in patient_data:
 
   patient_rows = patient_data[str(patient_mrn)]
   patient_rows.sort(key=lambda x: get_datetime_seconds(x[2]))
-  covid_status = min(patient_covid_statuses[patient_mrn])
   found_positive = False
   
   # Choose the first PCR entry - to be revised
-  if covid_status > 1:
-    patient_rows[0][0] = str(patient_rows[0][0])
+  if 'positive' not in patient_covid_statuses[patient_mrn]:
     filtered_patient_data.append(patient_rows[0])
   else:
     for patient_row in patient_rows:
       if found_positive: continue
-      if patient_row[-3] == 1:
-        patient_row[0] = str(patient_row[0])
+      if patient_row[status_col] == 'positive':
         filtered_patient_data.append(patient_row)
         found_positive = True
 
@@ -99,9 +98,9 @@ final_patient_data = []
 for row in filtered_patient_data:
   final_row = row
   if row[0] in dead:
-    final_row = final_row + [1]
+    final_row = final_row + ['dead']
   else:
-    final_row = final_row + [2]
+    final_row = final_row + ['alive']
   final_patient_data.append(final_row)
 
 write_csv(TABLE_COLUMNS['patient_data'], final_patient_data, 

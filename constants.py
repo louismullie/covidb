@@ -13,7 +13,7 @@ BLOB_DIRECTORY = "/data8/projets/Mila_covid19/output/covidb_full/blob"
 IMAGING_LIST_FILENAME = "/data8/projets/Mila_covid19/data/studies_to_extract.csv"
 DICOM_MAP_FILENAME = "/data8/projets/Mila_covid19/data/patient_infos/dicom_id_map_v2.csv"
 DICOM_DIRECTORY = "/data8/projets/Mila_covid19/data/covid_citadel_pacs_v1"
-SQLITE_DIRECTORY = "/data8/projets/Mila_covid19/output/staging/sqlite"
+SQLITE_DIRECTORY = "/data8/projets/Mila_covid19/output/covidb_full/sqlite"
 CODE_DIRECTORY = "/data8/projets/Mila_covid19/code/lmullie/git_Mila_covid19"
 
 dicom_id_map_rows = read_csv(DICOM_MAP_FILENAME)
@@ -66,7 +66,7 @@ TABLE_COLUMNS = {
   ],
 
   'culture_data': [
-    'patient_site_uid', 'culture_name', 'culture_sample_site', 'culture_sample_time', 
+    'patient_site_uid', 'culture_type', 'culture_specimen_type', 'culture_sample_time', 
     'culture_result_time', 'culture_growth_positive'
   ],
 
@@ -155,7 +155,7 @@ LAB_CANCELLED_FLAGS = [
   'test annulé', 'Annulé', 'ANNULe'
 ]
 
-LAB_SKIP_VALUES = ['.', '*00.0', '9*', '*9', 'Att. Hémolyse']
+LAB_SKIP_VALUES = ['.', '..', '*00.0', '9*', '*9', 'Att. Hémolyse']
 
 LAB_NAMES_MAP = {
   '% Éosino.Urin.': '% éosino.urin.', 

@@ -33,7 +33,7 @@ diagnosis_data_rows = []
 for index, row in df.iterrows():
   patient_mrn = str(row.dossier)
 
-  diagnosis_type = 5
+  diagnosis_type = 'death'
   diagnosis_time = row.dhredeces
 
   diagnosis_data_rows.append([

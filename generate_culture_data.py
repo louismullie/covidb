@@ -14,7 +14,8 @@ from postgresql_utils import sql_query
 from file_utils import write_csv, read_csv
 from time_utils import get_hours_between_datetimes
 from identity_utils import generate_patient_uid, generate_patient_site_uid
-from mappers import map_culture_sample_site, map_culture_growth_value
+from mappers import map_culture_type, map_culture_specimen_type, \
+  map_culture_growth_value
 
 row_count = 0
 patient_data_rows = []
@@ -41,15 +42,20 @@ culture_data_rows = []
 for index, row in df.iterrows():
 
   patient_mrn = str(row.dossier)
-  culture_name = row.longdesc
+  culture_type = row.longdesc
+
+  if 'non disponible' in str(culture_type).lower():
+    continue
+
   culture_sample_site = row.specimencollectionmethodcd
   culture_sample_time = row.specimencollectiondtm
   culture_result_time = row.resultdtm
   culture_growth_value = row.growthcd
 
   culture_data_rows.append([
-    patient_mrn, culture_name, 
-    map_culture_sample_site(culture_sample_site),
+    patient_mrn, 
+    map_culture_type(culture_type), 
+    map_culture_specimen_type(culture_type, culture_sample_site),
     culture_sample_time, 
     culture_result_time, 
     map_culture_growth_value(culture_growth_value)

@@ -145,18 +145,23 @@ def analyze_column(col_name, rows, col_index):
     ['datetime', re.compile('^[0-9]{4}-[0-9]{2}-[0-9]{2} [0-9]{2}:[0-9]{2}:[0-9]{2}$')],
     ['free string', re.compile('^.+$')],
   ]
+  no_outside = 0
+  validation_pattern = None
+
+  empty_els = np.sum([1 for el in col_data if el == ''])
 
   for pattern_name, pattern_re in PATTERNS:
     matching_els = [1 for el in col_data if pattern_re.match(str(el))]
-    no_outside = len(col_data) - len(matching_els)
+    no_outside = len(col_data) - len(matching_els) - empty_els
 
-    if len(matching_els) >= len(col_data) * 0.9 and no_outside < 100:
+    if (len(matching_els) + empty_els) >= len(col_data) * 0.9 and no_outside < 100:
       lines.append('validation charset: %s' % pattern_name)
-      lines.append('no. not in charset: %d' % no_outside)
+      validation_pattern = pattern_name
       break
   
-  lines.append('no. of null values: %d' % np.count_nonzero(null_col_data))
-  lines.append('no. of empty values: %d' % np.count_nonzero(empty_col_data))
+  lines.append('total no. of values: %d' % len(col_data))
+  lines.append('no. illegal values: %d' % no_outside)
+  lines.append('no. empty values: %d' % np.count_nonzero(empty_col_data))
 
   # Sample the first 50 to avoid computationally intensive calculations
   uniq_col_data = np.unique(col_data[0:50])
@@ -173,5 +178,11 @@ def analyze_column(col_name, rows, col_index):
     lines.append('no. of unique values: %d' % len(uniq_col_data))
     lines.append('no. with most frequent value: %s' % np.count_nonzero(mf_col_data))
     lines.append('no. with least frequent value: %s' % np.count_nonzero(lf_col_data))
+  
+  if validation_pattern in ['positive float']:
+    col_data_num = [float(x) for x in col_data if x != '']
+    mean = round(np.mean(col_data_num), 2)
+    stdev = round(np.std(col_data_num), 2)
+    lines.append('mean value (stdev): %f +/- %f' % (mean, stdev))
 
   return [pad_whitespace(line, COLUMN_WIDTH) for line in lines]

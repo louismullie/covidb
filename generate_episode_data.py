@@ -14,7 +14,7 @@ from postgresql_utils import sql_query, list_columns, list_tables
 from file_utils import write_csv, read_csv
 from time_utils import get_hours_between_datetimes
 from identity_utils import generate_patient_site_uid
-from mappers import map_episode_unit_type
+from mappers import map_time, map_episode_unit_type
 
 row_count = 0
 patient_data_rows = []
@@ -39,9 +39,9 @@ episode_data_rows = []
 for index, row in df.iterrows():
   patient_mrn = str(row.dossier)
 
-  episode_unit_type = 2
-  episode_start_time = str(row.dhreadm)
-  episode_end_time = str(row.dhredep)
+  episode_unit_type = map_episode_unit_type('ER')
+  episode_start_time = map_time(row.dhreadm)
+  episode_end_time = map_time(row.dhredep)
   service_code = row.demadmservcode
   episode_description = row.diagdesc 
 
@@ -65,8 +65,6 @@ df = sql_query("SELECT DISTINCT * FROM dw_test.ci_sejhosp_lit_live WHERE " + \
 for index, row in df.iterrows():
   patient_mrn = str(row.dossier)
   
-  episode_unit_type = 3
-
   episode_start_time = str(row.dhredeb)
   
 
