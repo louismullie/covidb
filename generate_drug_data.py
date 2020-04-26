@@ -33,15 +33,13 @@ df = sql_query("SELECT dossier, longdesc, orderstartdtm, componentstrengthnm, " 
   "orderstopdtm, routecd, intervalsig, routecd FROM dw_v01.oacis_rx WHERE " + \
   "orderstartdtm > '2020-01-01' AND dossier in (" + ", ".join(patient_mrns) + ")")
 
-drug_data_rows = {}
-
+drug_data_rows = []
+test = []
 for index, row in df.iterrows():
-  a = str(row.intervalsig).lower()
-  drug_data_rows[a] = a[0:2]
-  continue
-print(drug_data_rows)
-exit()
-for x in drug_data_rows:
+
+  if row.longdesc.lower() in DRUG_SKIP_VALUES:
+    continue
+
   patient_mrn = row.dossier
   drug_name = row.longdesc.lower()
 
@@ -56,19 +54,18 @@ for x in drug_data_rows:
   drug_frequency = map_drug_frequency(row.intervalsig)
   drug_route = map_drug_route(row.routecd)
 
-  if drug_route is None or drug_frequency is None:
-    print(drug_name)
-
-  if row.longdesc in DRUG_SKIP_VALUES:
-    continue
+  if drug_frequency is None:
+    a = str(row.intervalsig).strip().lower()
+    test.append(a)
+    print(drug_name, row.intervalsig)
 
   drug_data_rows.append([
     patient_mrn, drug_name, 
     drug_start_time, drug_end_time,
     drug_frequency, drug_route
   ])
-
-print(drug_data_rows)
+print(np.unique(test))
+#print(drug_data_rows)
 print('Total rows: %d' % len(drug_data_rows))
 
 write_csv(TABLE_COLUMNS['drug_data'], drug_data_rows, 
