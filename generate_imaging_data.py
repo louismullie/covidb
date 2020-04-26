@@ -53,7 +53,7 @@ for index, row in df.iterrows():
     imaging_data_rows.append([
       row_patient_mrn,
       imaging_accession_uid,
-      'XR', 'chest'
+      'xr', 'chest'
     ])
 
 patients_with_imaging = np.unique(patients_with_imaging)
