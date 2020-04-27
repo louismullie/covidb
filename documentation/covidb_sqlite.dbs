@@ -16,7 +16,7 @@
 3 = Fungal culture
 4 = Mycobacterial culture]]></comment>
 			</column>
-			<column name="culture_status" type="smallint" length="0" decimal="0" jt="5" >
+			<column name="culture_result_status" type="smallint" length="0" decimal="0" jt="5" >
 				<comment><![CDATA[Current status of the culture:
 1 = Resulted
 2 = Pending
@@ -27,7 +27,7 @@
 			<column name="culture_loinc_code" type="varchar" decimal="0" jt="12" >
 				<comment><![CDATA[LOINC code of the culture being performed.]]></comment>
 			</column>
-			<column name="culture_specimen_type" type="smallint" length="0" decimal="0" jt="5" >
+			<column name="culture_specimen_type" type="varchar" length="64" jt="12" >
 				<comment><![CDATA[Site from which the culture sample was collected.
 1 = Expectorated sputum
 2 = Endotracheal aspirate
@@ -369,14 +369,8 @@ Could be in: { g/L, g/dL, 10^9 cells/L, 10^3 cells/microL, cells/microL, seconds
 			<column name="lab_sample_time" type="varchar" decimal="0" jt="12" >
 				<comment><![CDATA[Timezone, with timestamp, indicating the time at which the laboratory test was sampled.]]></comment>
 			</column>
-			<column name="lab_sample_type" type="smallint" length="0" decimal="0" jt="5" >
-				<comment><![CDATA[Type of specimen sample.
-1 = Venous blood
-2 = Arterial blood
-3 = Capillary blood
-4 = Urine
-5 = Other
-6 = Unspecified]]></comment>
+			<column name="lab_sample_type" type="varchar" length="64" jt="12" >
+				<comment><![CDATA[Type of specimen sample. Possible values: "venous_blood", "arterial_blood", "capillary_blood", "urine", "other".]]></comment>
 			</column>
 			<column name="lab_result_status" type="smallint" length="0" decimal="0" jt="5" >
 				<comment><![CDATA[Current status of the culture:
@@ -522,13 +516,10 @@ Reference codes: https://bit.ly/2Jyw7nN]]></comment>
 3 = medical therapy only
 4 = comfort care only]]></comment>
 			</column>
-			<column name="patient_death_status" type="smallint" jt="5" >
+			<column name="patient_vital_status" type="smallint" jt="5" >
 				<comment><![CDATA[1 = patient is dead
 2 = patient is alive
 3 = death status unknown]]></comment>
-			</column>
-			<column name="patient_death_cause" type="varchar" decimal="0" jt="12" >
-				<comment><![CDATA[ICD code representing the cause of death.]]></comment>
 			</column>
 			<column name="patient_last_fu_date" type="date" length="0" decimal="0" jt="91" >
 				<comment><![CDATA[Date of last follow-up at which the mortality status of the patient was assessed.]]></comment>
@@ -549,14 +540,6 @@ Reference codes: https://bit.ly/2Jyw7nN]]></comment>
 			</column>
 			<column name="pcr_name" type="varchar" length="100" decimal="0" jt="12" >
 				<comment><![CDATA[Name of the PCR test being performed (e.g. "SaRS-CoV-2 PCR").]]></comment>
-			</column>
-			<column name="pcr_status" type="smallint" length="0" decimal="0" jt="5" >
-				<comment><![CDATA[Current status of the culture:
-1 = Resulted
-2 = Pending
-3 = Rejected
-4 = Cancelled
-5 = Other]]></comment>
 			</column>
 			<column name="pcr_loinc_code" type="varchar" decimal="0" jt="12" >
 				<comment><![CDATA[LOINC code identifying the test kit used for PCR testing. If a non-commercial kit was used, the appropriate code is 94500-6.
@@ -582,12 +565,8 @@ Reference: https://bit.ly/2wQJfly]]></comment>
 			<column name="pcr_result_time" type="varchar" decimal="0" jt="12" >
 				<comment><![CDATA[Timestamp, with timezone, indicating the time at which the PCR test was resulted.]]></comment>
 			</column>
-			<column name="pcr_result_status" type="smallint" length="1" jt="5" >
-				<comment><![CDATA[Status of the PCR.
-
-1 = Resulted
-2 = Pending
-3 = Cancelled]]></comment>
+			<column name="pcr_result_status" type="varchar" length="64" jt="12" >
+				<comment><![CDATA[Status of the PCR. Possible values: "resulted", "pending", "cancelled".]]></comment>
 			</column>
 			<column name="pcr_result_value" type="smallint" jt="5" >
 				<comment><![CDATA[1 = Negative

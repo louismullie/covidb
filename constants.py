@@ -166,8 +166,34 @@ LAB_CANCELLED_FLAGS = [
 ]
 
 LAB_SKIP_VALUES = [
-  '.', '..', '*00.0', '9*', '*9', 'Att. Hémolyse', 
-  'Durée Gross. (Sem.)', 'G10_Sorgho d\'Alep', 'Volume 24 Heures'
+  '.', '..', 
+  '*00.0', '9*', '*9', 
+  'att. hémolyse', 
+  'durée gross. (sem.)', 
+  'g10_sorgho d\'alep', 
+  'volume 24 heures',
+  'gb cell.souches',
+  'hb cell.souches',
+  'plt cell.souches',
+  'cell.mononucléées (c.s.)',
+  'cell.polynucléées (c.s.)',
+  'gb cell.souches',
+  'hb cell.souches',
+  'plt cell.souches',
+  'cell.mononucléées (c.s.)',
+  'cell.polynucléées (c.s.)',
+  'hb semi-quantitatif',
+  'po2 sg cord.tc',
+  'pco2 sg cord.tc',
+  'sat o2 cordon art',
+  'hco3 act.sg c.',
+  'po2 sg cord.v.tc',
+  'pco2 sg cord.tc',
+  'sat o2 cordon vein',
+  'hco3 act.sg c.v.',
+  'bil.t.cordon',
+  'ex.base sg cord.',
+  'ex.base sg c. v.'
 ]
 
 LAB_NAMES_MAP = {
@@ -458,7 +484,44 @@ LAB_NAMES_MAP = {
   'éosino lba %': 'eosinophil_percent', 
   'éthanol': 'ethanol',
   'éthanol (ur)': 'ethanol',
-  'aldostérone sér.': 'aldosterone'
+  'aldostérone sér.': 'aldosterone',
+  'phosphore, mict.': 'phosphate',
+  'arn-hcv/copies': 'hcv_rna',
+  'arn-hcv/log': 'hcv_rna_log',
+  'magnésium, mict': 'magnesium',
+  'dhea-so4': 'dhea_so4',
+  'gl.rou. l.ple': 'red_blood_cell_count',
+  'carboxyhb art': 'carboxyhemoglobin',
+  'méthémoglob art': 'methemoglobin',
+  'gl.rou. l.ple': 'red_blood_cell_count',
+  'fructosamine': 'fructosamine',
+  'fructo/prot': 'fructosamine_prot',
+  'm3_asper.fumig.': 'aspergillus_antibodies',
+  'lamotrigine': 'lamotrigine',
+  'atiii fonc.': 'antithrombin_iii',
+  'hbs ag quantitatif': 'hbv_sag',
+  'varicelle igg index': 'anti_vzv_igg',
+  'hb semi-quantitatif': 'free_hemogloin',
+  'hb plasmat. dosage': 'plasma_hemoglobin',
+  'act.anti-xa hép.std': 'anti_xa',
+  'hb semi-quantitatif': 'hemoglobin_semiquant',
+  'tobra post dose': 'tobramycin_post_dose',
+  'po2 art ecmo': 'po2',
+  'pco2 art ecmo': 'pco2',
+  'sat o2 art ecmo': 'arterial_o2_sat',
+  'excès base vein ecmo': 'base_excess',
+  'po2 art ecmo': 'po2',
+  'pco2 art ecmo': 'pco2',
+  'sat o2 art ecmo': 'arterial_o2_sat',
+  'hco3 art ecmo': 'bicarbonate',
+  'pco2 vein ecmo': 'venous_pco2',
+  'po2 vein ecmo': 'venous_po2',
+  'sat o2 vein ecmo': 'venous_o2_sat',
+  'hco3 vein ecmo': 'bicarbonate',
+  'g6pd quantit.': 'g6pd_quantitative',
+  'enz.conversion': 'angiotensin_converting_enzyme',
+  'éthanol (p)': 'ethanol',
+  'amylase, mict.': 'amylase'
 }
 
 NP_TO_FIO2_MAP = {
@@ -483,106 +546,3 @@ NP_TO_FIO2_MAP = {
   '9.5': '58',
   '10.0': '60'
 }
-
-Invalid lab name: phosphore, mict.
-Invalid lab name: arn-hcv/copies
-Invalid lab name: arn-hcv/log
-Invalid lab name: magnésium, mict
-Invalid lab name: dhea-so4
-Invalid lab name: gl.rou. l.ple
-Invalid lab name: carboxyhb art
-Invalid lab name: méthémoglob art
-Invalid lab name: gb cell.souches
-Invalid lab name: hb cell.souches
-Invalid lab name: plt cell.souches
-Invalid lab name: cell.mononucléées (c.s.)
-Invalid lab name: cell.polynucléées (c.s.)
-Invalid lab name: gb cell.souches
-Invalid lab name: hb cell.souches
-Invalid lab name: plt cell.souches
-Invalid lab name: cell.mononucléées (c.s.)
-Invalid lab name: cell.polynucléées (c.s.)
-Invalid lab name: gl.rou. l.ple
-Invalid lab name: fructosamine
-Invalid lab name: fructo/prot
-Invalid lab name: m3_asper.fumig.
-Invalid lab name: lamotrigine
-Invalid lab name: atiii fonc.
-Invalid lab name: hbs ag quantitatif
-Invalid lab name: varicelle igg index
-Invalid lab name: act.anti-xa hép.std
-Invalid lab name: hb semi-quantitatif
-Invalid lab name: hb plasmat. dosage
-Invalid lab name: act.anti-xa hép.std
-Invalid lab name: act.anti-xa hép.std
-Invalid lab name: hb semi-quantitatif
-Invalid lab name: hb plasmat. dosage
-Invalid lab name: act.anti-xa hép.std
-Invalid lab name: act.anti-xa hép.std
-Invalid lab name: tobra post dose
-Invalid lab name: po2 art ecmo
-Invalid lab name: pco2 art ecmo
-Invalid lab name: sat o2 art ecmo
-Invalid lab name: hco3 art ecmo
-Invalid lab name: excès base art ecmo
-Invalid lab name: pco2 vein ecmo
-Invalid lab name: po2 vein ecmo
-Invalid lab name: sat o2 vein ecmo
-Invalid lab name: hco3 vein ecmo
-Invalid lab name: excès base vein ecmo
-Invalid lab name: act.anti-xa hép.std
-Invalid lab name: po2 art ecmo
-Invalid lab name: pco2 art ecmo
-Invalid lab name: sat o2 art ecmo
-Invalid lab name: hco3 art ecmo
-Invalid lab name: pco2 vein ecmo
-Invalid lab name: po2 vein ecmo
-Invalid lab name: sat o2 vein ecmo
-Invalid lab name: hco3 vein ecmo
-Invalid lab name: hb semi-quantitatif
-Invalid lab name: hb plasmat. dosage
-Invalid lab name: excès base vein ecmo
-Invalid lab name: excès base art ecmo
-Invalid lab name: hb semi-quantitatif
-Invalid lab name: hb plasmat. dosage
-Invalid lab name: act.anti-xa hép.std
-Invalid lab name: act.anti-xa hép.std
-Invalid lab name: po2 art ecmo
-Invalid lab name: pco2 art ecmo
-Invalid lab name: sat o2 art ecmo
-Invalid lab name: hco3 art ecmo
-Invalid lab name: pco2 vein ecmo
-Invalid lab name: po2 vein ecmo
-Invalid lab name: sat o2 vein ecmo
-Invalid lab name: hco3 vein ecmo
-Invalid lab name: excès base art ecmo
-Invalid lab name: excès base vein ecmo
-Invalid lab name: pco2 vein ecmo
-Invalid lab name: po2 vein ecmo
-Invalid lab name: sat o2 vein ecmo
-Invalid lab name: hco3 vein ecmo
-Invalid lab name: po2 art ecmo
-Invalid lab name: pco2 art ecmo
-Invalid lab name: sat o2 art ecmo
-Invalid lab name: hco3 art ecmo
-Invalid lab name: excès base vein ecmo
-Invalid lab name: excès base art ecmo
-Invalid lab name: hb semi-quantitatif
-Invalid lab name: hb plasmat. dosage
-Invalid lab name: act.anti-xa hép.std
-Invalid lab name: g6pd quantit.
-Invalid lab name: 6pgd quantit.
-Invalid lab name: enz.conversion
-Invalid lab name: po2 sg cord.tc
-Invalid lab name: pco2 sg cord.tc
-Invalid lab name: sat o2 cordon art
-Invalid lab name: hco3 act.sg c.
-Invalid lab name: po2 sg cord.v.tc
-Invalid lab name: pco2 sg cord.tc
-Invalid lab name: sat o2 cordon vein
-Invalid lab name: hco3 act.sg c.v.
-Invalid lab name: bil.t.cordon
-Invalid lab name: ex.base sg cord.
-Invalid lab name: ex.base sg c. v.
-Invalid lab name: éthanol (p)
-Invalid lab name: amylase, mict.
