@@ -1,6 +1,6 @@
 import re
 import numpy as np
-from constants import DRUG_ROUTE_MAP #, DRUG_FREQUENCY_MAP
+from constants import DRUG_ROUTE_MAP, LAB_NAMES_MAP
 from lang_utils import transliterate_string
 
 def map_time(time):
@@ -54,21 +54,26 @@ def map_patient_sex(sex):
 
 def map_lab_name(name):
   name_str = str(name).strip().lower()
-  name_str = transliterate_string(name_str)
-  return name_str
+  if name_str in LAB_NAMES_MAP:
+    return LAB_NAMES_MAP[name_str]
+  else:
+    print('Invalid lab name: %s' % name_str)
   
 def map_lab_sample_site(name, code):
   name_str = str(name).strip().lower()
   code_str = (str(code).strip()).lower()
   
-  if 'abdb' in name_str: return 'capillary_blood'
-  if 'veineux' in code_str: return 'venous_blood'
-  elif 'art' in code_str: return 'arterial_blood'
+  if 'adbd' in name_str: return 'blood'
+  if 'veineux' in code_str: return 'blood'
+  elif 'art' in code_str: return 'blood'
   elif 'urine' in code_str: return 'urine'
+  elif '(ur)' in name_str: return 'urine'
+  elif 'mict' in name_str: return 'urine'
+  elif 'selle' in name_str: return 'stool'
   elif 'autres' in code_str: return 'other'
   else:
-    print('Unrecognized sample site: ' + code)
-    return ''
+    #print('Unrecognized sample site: ', name_str, code_str)
+    return 'blood'
 
 def map_lab_result_value(result_string):
   if result_string is None: return ''
@@ -227,8 +232,7 @@ def map_observation_name(name):
   if name_str == 'rythme_resp': return 'respiratory_rate'
   if name_str == 'pouls': return 'heart_rate'
   if name_str == 'temp': return 'temperature'
-  print('Unrecognized observation: ' + name_str)
-  exit()
+  raise Exception('Unrecognized observation: %s' % name_str)
 
 def map_drug_name(name):
   name_str = str(name).strip().lower()

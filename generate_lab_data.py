@@ -44,9 +44,12 @@ lab_data_rows = []
 for index, row in df.iterrows():
   
   # Temperature and other observations encoded in labs
-  if map_observation_name(row.longdesc) is not None:
-    continue
-
+  try:
+    if map_observation_name(row.longdesc) is not None:
+      continue
+  except:
+    pass
+  
   patient_mrn = str(row.dossier)
   lab_name = row.longdesc
  
@@ -55,8 +58,9 @@ for index, row in df.iterrows():
   lab_result_time = row.resultdtm
   lab_result_string = row.lbres_ck
   lab_result_units = row.resultunit
-
-  if lab_result_string in LAB_SKIP_VALUES:
+  
+  if lab_name in LAB_SKIP_VALUES or \
+     lab_result_string in LAB_SKIP_VALUES:
     continue
 
   if lab_result_string in LAB_CANCELLED_FLAGS:

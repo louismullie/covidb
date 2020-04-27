@@ -170,7 +170,7 @@ LAB_SKIP_VALUES = [
   'Durée Gross. (Sem.)', 'G10_Sorgho d\'Alep', 'Volume 24 Heures'
 ]
 
-lab_names_map = {
+LAB_NAMES_MAP = {
   '% éosino.urin.': 'urinary_eosinophil_percent', 
   '25(oh)-vit. d': '25_oh_vitamin_d', 
   'a-1-antitryps. %': 'alpha1_antitrypsin_percent', 
@@ -276,6 +276,7 @@ lab_names_map = {
   'créatinine urine': 'creatinine', 
   'créatinine, liq.': 'creatinine', 
   'créatinine,mict.': 'creatinine', 
+  'cryoglobuline': 'cryoglobulin',
   'cyclo.2 h post-d': 'cyclosporin_2h_post_dose', 
   'cyclos. pré-dose': 'cyclosporin_pre_dose', 
   'céruloplasmine': 'ceruloplasmin', 
@@ -286,6 +287,7 @@ lab_names_map = {
   'ebna1 igg index': 'anti_ebna1_igg', 
   'excès de base': 'base_excess', 
   'excès de base (v)': 'base_excess', 
+  'ethyl glucuron.': 'ethyl_glucuronide',
   'f.rhumatoïde': 'rheumatoid_factor', 
   'fsh': 'follicle_stimulating_hormone', 
   'facteur ii': 'factor_ii', 
@@ -326,6 +328,7 @@ lab_names_map = {
   'haptoglobine, élec.': 'haptoglobin', 
   'hb': 'hemoglobin', 
   'hb l.bio': 'hemoglobin', 
+  'homocystéine': 'homocysteine', 
   'iga': 'iga', 
   'ige': 'ige', 
   'igg': 'igg', 
@@ -359,6 +362,7 @@ lab_names_map = {
   'neutro # (man)': 'neutrophil_count', 
   'neutro % lba': 'neutrophil_count', 
   'non-hdl cholest': 'non_hdl_cholesterol', 
+  'norépinéphrine': 'norepinephrine',
   'normétanéphrine libre': 'free_normetanephrine', 
   'osm.calc.selles': 'osmolality', 
   'osmo. (plasma)': 'osmolality', 
@@ -452,7 +456,9 @@ lab_names_map = {
   'éosino #': 'eosinophil_count', 
   'éosino # (man)': 'eosinophil_count', 
   'éosino lba %': 'eosinophil_percent', 
-  'éthanol': 'ethanol'
+  'éthanol': 'ethanol',
+  'éthanol (ur)': 'ethanol',
+  'aldostérone sér.': 'aldosterone'
 }
 
 NP_TO_FIO2_MAP = {
@@ -477,3 +483,106 @@ NP_TO_FIO2_MAP = {
   '9.5': '58',
   '10.0': '60'
 }
+
+Invalid lab name: phosphore, mict.
+Invalid lab name: arn-hcv/copies
+Invalid lab name: arn-hcv/log
+Invalid lab name: magnésium, mict
+Invalid lab name: dhea-so4
+Invalid lab name: gl.rou. l.ple
+Invalid lab name: carboxyhb art
+Invalid lab name: méthémoglob art
+Invalid lab name: gb cell.souches
+Invalid lab name: hb cell.souches
+Invalid lab name: plt cell.souches
+Invalid lab name: cell.mononucléées (c.s.)
+Invalid lab name: cell.polynucléées (c.s.)
+Invalid lab name: gb cell.souches
+Invalid lab name: hb cell.souches
+Invalid lab name: plt cell.souches
+Invalid lab name: cell.mononucléées (c.s.)
+Invalid lab name: cell.polynucléées (c.s.)
+Invalid lab name: gl.rou. l.ple
+Invalid lab name: fructosamine
+Invalid lab name: fructo/prot
+Invalid lab name: m3_asper.fumig.
+Invalid lab name: lamotrigine
+Invalid lab name: atiii fonc.
+Invalid lab name: hbs ag quantitatif
+Invalid lab name: varicelle igg index
+Invalid lab name: act.anti-xa hép.std
+Invalid lab name: hb semi-quantitatif
+Invalid lab name: hb plasmat. dosage
+Invalid lab name: act.anti-xa hép.std
+Invalid lab name: act.anti-xa hép.std
+Invalid lab name: hb semi-quantitatif
+Invalid lab name: hb plasmat. dosage
+Invalid lab name: act.anti-xa hép.std
+Invalid lab name: act.anti-xa hép.std
+Invalid lab name: tobra post dose
+Invalid lab name: po2 art ecmo
+Invalid lab name: pco2 art ecmo
+Invalid lab name: sat o2 art ecmo
+Invalid lab name: hco3 art ecmo
+Invalid lab name: excès base art ecmo
+Invalid lab name: pco2 vein ecmo
+Invalid lab name: po2 vein ecmo
+Invalid lab name: sat o2 vein ecmo
+Invalid lab name: hco3 vein ecmo
+Invalid lab name: excès base vein ecmo
+Invalid lab name: act.anti-xa hép.std
+Invalid lab name: po2 art ecmo
+Invalid lab name: pco2 art ecmo
+Invalid lab name: sat o2 art ecmo
+Invalid lab name: hco3 art ecmo
+Invalid lab name: pco2 vein ecmo
+Invalid lab name: po2 vein ecmo
+Invalid lab name: sat o2 vein ecmo
+Invalid lab name: hco3 vein ecmo
+Invalid lab name: hb semi-quantitatif
+Invalid lab name: hb plasmat. dosage
+Invalid lab name: excès base vein ecmo
+Invalid lab name: excès base art ecmo
+Invalid lab name: hb semi-quantitatif
+Invalid lab name: hb plasmat. dosage
+Invalid lab name: act.anti-xa hép.std
+Invalid lab name: act.anti-xa hép.std
+Invalid lab name: po2 art ecmo
+Invalid lab name: pco2 art ecmo
+Invalid lab name: sat o2 art ecmo
+Invalid lab name: hco3 art ecmo
+Invalid lab name: pco2 vein ecmo
+Invalid lab name: po2 vein ecmo
+Invalid lab name: sat o2 vein ecmo
+Invalid lab name: hco3 vein ecmo
+Invalid lab name: excès base art ecmo
+Invalid lab name: excès base vein ecmo
+Invalid lab name: pco2 vein ecmo
+Invalid lab name: po2 vein ecmo
+Invalid lab name: sat o2 vein ecmo
+Invalid lab name: hco3 vein ecmo
+Invalid lab name: po2 art ecmo
+Invalid lab name: pco2 art ecmo
+Invalid lab name: sat o2 art ecmo
+Invalid lab name: hco3 art ecmo
+Invalid lab name: excès base vein ecmo
+Invalid lab name: excès base art ecmo
+Invalid lab name: hb semi-quantitatif
+Invalid lab name: hb plasmat. dosage
+Invalid lab name: act.anti-xa hép.std
+Invalid lab name: g6pd quantit.
+Invalid lab name: 6pgd quantit.
+Invalid lab name: enz.conversion
+Invalid lab name: po2 sg cord.tc
+Invalid lab name: pco2 sg cord.tc
+Invalid lab name: sat o2 cordon art
+Invalid lab name: hco3 act.sg c.
+Invalid lab name: po2 sg cord.v.tc
+Invalid lab name: pco2 sg cord.tc
+Invalid lab name: sat o2 cordon vein
+Invalid lab name: hco3 act.sg c.v.
+Invalid lab name: bil.t.cordon
+Invalid lab name: ex.base sg cord.
+Invalid lab name: ex.base sg c. v.
+Invalid lab name: éthanol (p)
+Invalid lab name: amylase, mict.
