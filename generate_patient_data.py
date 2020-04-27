@@ -87,7 +87,7 @@ for patient_mrn in patient_data:
         filtered_patient_data.append(patient_row)
         found_positive = True
 
-# Add death status
+# Add vital status
 df = sql_query("SELECT DISTINCT * FROM dw_test.orcl_cichum_bendeces_live WHERE " + \
   "dossier in ('" + "', '".join(patient_mrns) + "') " + \
   "AND dhredeces > '2020-01-01'")

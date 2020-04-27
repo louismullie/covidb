@@ -7,6 +7,17 @@ def map_time(time):
   if time is None: return ''
   return str(time).strip().lower()
 
+def map_float_value(float_value):
+  if float_value is None: return ''
+  float_value_str = str(float_value).strip()
+  float_value_str = float_value_str.replace(',', '.')
+  try:
+    val = float(float_value_str)
+    return str(val)
+  except:
+    print('Invalid float value: %s' % float_value_str)
+    exit()
+
 def map_patient_ramq(ramq):
   ramq_str = str(ramq).strip()
   if not re.match("[A-Z]{4}[0-9]{8}", ramq_str):
@@ -57,6 +68,7 @@ def map_lab_sample_site(code):
     return ''
 
 def map_lab_result_value(result_string):
+  if result_string is None: return ''
   result_string = str(result_string) \
     .replace('<', '') \
     .replace('>', '') \
@@ -145,10 +157,18 @@ def map_episode_unit_type(unit_code):
     return 'inpatient_ward'
 
 def map_observation_name(name):
-  if name == 'FIO2': return 'fraction_inspired_oxygen'
-  if name == 'Sat O2 Art': return 'arterial_oxygen_saturation'
-  if name == 'Température': return 'temperature'
-  return None
+  name_str = str(name).lower().strip()
+  if name_str == 'fio2': return 'fraction_inspired_oxygen'
+  if name_str == 'sat o2 art': return 'oxygen_saturation'
+  if name_str == 'sat_o2': return 'oxygen_saturation'
+  if name_str == 'température': return 'temperature'
+  if name_str == 'tension_systol': return 'systolic_blood_pressure'
+  if name_str == 'tension_diastol': return 'diastolic_blood_pressure'
+  if name_str == 'rythme_resp': return 'respiratory_rate'
+  if name_str == 'pouls': return 'heart_rate'
+  if name_str == 'temp': return 'temperature'
+  print('Unrecognized observation: ' + name_str)
+  exit()
 
 def map_drug_name(name):
   name_str = str(name).strip().lower()
@@ -271,3 +291,9 @@ def map_drug_frequency(frequency_code):
   else: 
     return None
     print('Invalid drug frequency: %s' % cd)
+
+def map_diagnosis_type(type):
+  type_str = str(type).lower().strip()
+  if 'diagnostic principal' in type_str:
+    return 'principal'
+  else: return 'secondary'

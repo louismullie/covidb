@@ -17,8 +17,8 @@ from file_utils import read_csv, write_csv
 from time_utils import get_hours_between_datetimes
 from identity_utils import generate_patient_uid, generate_patient_site_uid
 
-from mappers import ma_time, map_lab_name, map_lab_sample_site, \
-  map_lab_result_value, map_observation_name
+from mappers import map_float_value, map_time, map_lab_name, \
+  map_lab_sample_site, map_lab_result_value, map_observation_name
 
 row_count = 0
 patient_data_rows = []

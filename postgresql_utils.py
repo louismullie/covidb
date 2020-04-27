@@ -9,10 +9,18 @@ def list_columns(table_name):
 
 def list_tables(table_schema, table_name):
   df = connectDB_returnDF("SELECT * from information_schema.tables " + \
-    "WHERE table_schema='" + table_schema + \
-    "' AND table_name LIKE '%" + table_name + "%'")
+    "WHERE table_name LIKE '%" + table_name + "%'")
   for row in df.iterrows():
     print(row)
 
-#list_tables('dw_v01', 'rx')
-#list_columns('oacis_rx')
+#list_tables('dw_v01', 'episod_sv')
+#list_columns('icd10_codes')
+
+##df = sql_query("SELECT * from dw_test.orcl_cichum_sejurg_live LIMIT 1")
+#episode_id = df.iloc[0].noadm
+#print(episode_id)
+
+#df2 = sql_query('SELECT * from dw_v01.icd10_codes')
+#print(df2.iloc[0])
+
+

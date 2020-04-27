@@ -2,14 +2,14 @@ import pandas as pd
 import numpy as np
 from matplotlib import pyplot as plt 
 
-def plot_compare_kde(var_name, comparator_name, values_pos, values_neg, min_value, max_value):
+def plot_compare_kde(var_name, comparator_name, label_pos, label_neg, values_pos, values_neg, min_value, max_value):
 
   ax = plt.gca()
 
   plt.title(var_name + ' according to ' + comparator_name)
 
-  col_pos = '%s positive (n=%d samples)' % (comparator_name, len(values_pos))
-  col_neg = '%s negative (n=%d samples)' % (comparator_name, len(values_neg))
+  col_pos = '%s (n=%d samples)' % (label_pos, len(values_pos))
+  col_neg = '%s (n=%d samples)' % (label_neg, len(values_neg))
 
   df_pos = pd.DataFrame(values_pos, columns=[col_pos])
   df_neg = pd.DataFrame(values_neg, columns=[col_neg])

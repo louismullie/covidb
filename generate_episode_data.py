@@ -38,7 +38,7 @@ episode_data_rows = []
 # Add episode visits
 for index, row in df.iterrows():
   patient_mrn = str(row.dossier)
-
+  episode_id = str(int(row.noadm))
   episode_unit_type = map_episode_unit_type('ER')
   episode_start_time = map_time(row.dhreadm)
   episode_end_time = map_time(row.dhredep)
@@ -51,7 +51,7 @@ for index, row in df.iterrows():
     episode_description = ''
 
   episode_data_rows.append([
-    patient_mrn, episode_unit_type, 
+    patient_mrn, episode_id, episode_unit_type, 
     episode_start_time, episode_end_time,
     episode_description
   ])
@@ -64,10 +64,10 @@ df = sql_query("SELECT DISTINCT * FROM dw_test.ci_sejhosp_lit_live WHERE " + \
 # Add admission episodes
 for index, row in df.iterrows():
   patient_mrn = str(row.dossier)
-  
+
+  episode_id = str(int(row.noadm))
   episode_start_time = str(row.dhredeb)
   
-
   if row.dhrefin is None:
     episode_end_time = ''
   else:
@@ -84,6 +84,7 @@ for index, row in df.iterrows():
   
   episode_data_rows.append([
     patient_mrn, 
+    episode_id,
     map_episode_unit_type(ward_code_str),
     episode_start_time, 
     episode_end_time,

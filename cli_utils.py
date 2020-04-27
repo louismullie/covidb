@@ -9,7 +9,7 @@ def ellipsize(string, length):
     return string
   else: 
     first_half = string[0:int(length/2-2)]
-    second_half = string[-int(length/2-2):-1]
+    second_half = string[-int(length/2-2):]
     return first_half + '(..)' + second_half
 
 def most_frequent(data):

@@ -29,18 +29,18 @@ TABLE_COLUMNS = {
 
   'patient_data': [
     'patient_site_uid', 'patient_uid', 'pcr_sample_time', 
-    'patient_site_code',
-    'patient_covid_status', 'patient_age', 'patient_sex',
-    'patient_death_status'
+    'patient_site_code', 'patient_covid_status', 'patient_age', 
+    'patient_sex', 'patient_vital_status'
   ],
 
   'episode_data': [
-    'patient_site_uid', 'episode_unit_type', 'episode_start_time', 
+    'patient_site_uid', 'episode_id', 'episode_unit_type', 'episode_start_time', 
     'episode_end_time', 'episode_description',
   ],
 
   'diagnosis_data': [
-    'patient_site_uid', 'diagnosis_type', 'diagnosis_time'
+    'patient_site_uid', 'episode_id', 'diagnosis_type',
+    'diagnosis_name', 'diagnosis_icd_code', 'diagnosis_time'
   ],
 
   'drug_data': [
@@ -100,7 +100,7 @@ DRUG_ROUTE_MAP = {
   'dans les yeux': 'i-ocul',
   'dans l\'oeil droit': 'i-ocul',
   'dans l\'oeil gauche': 'i-ocul',
-  'per os': 'p',
+  'per os': 'po',
   'per os ou sublingual': 'po/sl',
   'via jéjunostomie': 'ng',
   'via gastrostomie': 'ng',
@@ -149,10 +149,19 @@ DRUG_ROUTE_MAP = {
   'dans le dialysat': 'hemo',
 }
 
+SIURG_OBSERVATION_NAMES = [
+  'temperature', 'pouls', 'tension_systol', 
+  'tension_diastol', 'sat_o2', 'rythme_resp'
+]
+
+LAB_PENDING_FLAGS = [
+  'En attente'
+]
+
 LAB_CANCELLED_FLAGS = [
   'Test annulé', 'Test Annulé', 'ANN', 
   'ann', 'annulé', 'ANNULE', 'ANNULÉ',
-  'test annulé', 'Annulé', 'ANNULe'
+  'test annulé', 'Annulé', 'ANNULe', 'annule'
 ]
 
 LAB_SKIP_VALUES = ['.', '..', '*00.0', '9*', '*9', 'Att. Hémolyse']
@@ -183,7 +192,7 @@ LAB_NAMES_MAP = {
   'Acides Biliaires': 'acides biliaires', 
   'Act. Anti-Xa BPM': 'act. anti-xa bpm', 
   'Act. Anti-Xa Rivaro.': 'act. anti-xa rivaro.', 
-  'Acétaminophène': 'acétaminophène', 
+  'Acétaminophène': 'acetaminophen', 
   'Ag Carcino Emb.': 'ag carcino emb.', 
   'Albumine': 'albumine', 
   'Albumine %': 'albumine %', 
@@ -300,9 +309,9 @@ LAB_NAMES_MAP = {
   'Gl.Rou.L.Asc': 'gl.rou.l.asc', 
   'Globulines': 'globulines', 
   'Glucose': 'glucose', 
-  'Glucose (LCR)': 'glucose (lcr)', 
-  'Glucose AC': 'glucose ac', 
-  'Glucose ADBD': 'glucose adbd', 
+  'Glucose (LCR)': 'glucose', 
+  'Glucose AC': 'glucose', 
+  'Glucose ADBD': 'glucose', 
   'Glucose, Liq.': 'glucose, liq.', 
   'HBV DNA': 'hbv dna', 
   'HCO3 Actuel': 'hco3 actuel', 

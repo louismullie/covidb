@@ -93,8 +93,8 @@ for row in live_sheet_rows:
       pcr_sample_times[patient_mrn].append(str(pcr_sample_time))
 
     pcr_data_rows.append([
-      patient_mrn, 'COVID-19 PCR', map_pcr_sample_site('autres'), pcr_sample_time, 
-      pcr_result_time, pcr_result_value
+      patient_mrn, 'covid-19 pcr', '', 
+      pcr_sample_time, pcr_result_time, pcr_result_value
     ])
 
 print('Total rows: %d' % len(pcr_data_rows))
