@@ -15,7 +15,7 @@ from file_utils import write_csv, read_csv
 from time_utils import get_hours_between_datetimes
 from identity_utils import generate_patient_uid, generate_patient_site_uid
 from mappers import map_culture_type, map_culture_specimen_type, \
-  map_culture_growth_value
+  map_culture_growth_value, map_culture_result_status
 
 row_count = 0
 patient_data_rows = []
@@ -42,9 +42,10 @@ culture_data_rows = []
 for index, row in df.iterrows():
 
   patient_mrn = str(row.dossier)
-  culture_type = row.longdesc
+  culture_type = str(row.longdesc).lower() 
 
-  if 'non disponible' in str(culture_type).lower():
+  # Skip analyses that were flagged as unavailable
+  if 'non disponible' in culture_type:
     continue
 
   culture_sample_site = row.specimencollectionmethodcd
@@ -52,13 +53,17 @@ for index, row in df.iterrows():
   culture_result_time = row.resultdtm
   culture_growth_value = row.growthcd
 
+  if row.growthcd is not None and 'pos' in row.growthcd.lower():
+    print(row)
+
   culture_data_rows.append([
     patient_mrn, 
-    map_culture_type(culture_type), 
+    map_culture_type(row.longdesc), 
     map_culture_specimen_type(culture_type, culture_sample_site),
     culture_sample_time, 
     culture_result_time, 
-    map_culture_growth_value(culture_growth_value)
+    map_culture_growth_value(culture_growth_value),
+    map_culture_result_status(culture_growth_value)
   ])
 
 print('Total rows: %d' % len(culture_data_rows))

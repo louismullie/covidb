@@ -27,8 +27,8 @@ def run_step(step_name):
 print('\n\n* Generating patient data...')
 run_step('patient_data')
 
-#print('\n\n* Generating imaging data...')
-#run_step('imaging_data')
+print('\n\n* Generating imaging data...')
+run_step('imaging_data')
 
 print('\n\n* Generating episode data...')
 run_step('episode_data')

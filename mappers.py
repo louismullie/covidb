@@ -1,5 +1,5 @@
 import re
-
+import numpy as np
 from constants import DRUG_ROUTE_MAP #, DRUG_FREQUENCY_MAP
 from lang_utils import transliterate_string
 
@@ -11,6 +11,7 @@ def map_float_value(float_value):
   if float_value is None: return ''
   float_value_str = str(float_value).strip()
   float_value_str = float_value_str.replace(',', '.')
+  if float_value_str == 'nan': return ''
   try:
     val = float(float_value_str)
     return str(val)
@@ -56,13 +57,15 @@ def map_lab_name(name):
   name_str = transliterate_string(name_str)
   return name_str
   
-def map_lab_sample_site(code):
-  if code is None: return ''
-  code = (str(code).strip()).lower()
-  if 'veineux' in code: return 'venous_blood'
-  elif 'art' in code: return 'arterial_blood'
-  elif 'urine' in code: return 'urine'
-  elif 'autres' in code: return 'other'
+def map_lab_sample_site(name, code):
+  name_str = str(name).strip().lower()
+  code_str = (str(code).strip()).lower()
+  
+  if 'abdb' in name_str: return 'capillary_blood'
+  if 'veineux' in code_str: return 'venous_blood'
+  elif 'art' in code_str: return 'arterial_blood'
+  elif 'urine' in code_str: return 'urine'
+  elif 'autres' in code_str: return 'other'
   else:
     print('Unrecognized sample site: ' + code)
     return ''
@@ -79,16 +82,64 @@ def map_lab_result_value(result_string):
   else:
     return float(result_string)
 
-def map_pcr_sample_site(code):
+def map_pcr_name(name):
+  name_str = str(name).lower().strip()
+  if 'chlamydia' in name_str: return 'chlamydia'
+  if 'gonocoque' in name_str: return 'gonorrhea'
+  if 'l. monocytogenes' in name_str: return 'listeria_monocytogenes'
+  if 'covid' in name_str: return 'sars_cov2'
+  if 'herpès' in name_str: return 'herpes_simplex_virus'
+  if 'influenza a' in name_str: return 'influenza_a'
+  if 'influenza b' in name_str: return 'influenza_b'
+  if 'rsv' in name_str: return 'respiratory_syncytial_virus'
+  if 'virus jc' in name_str: return 'jc_virus'
+  if 'vbk' in name_str: return 'bk_virus'
+  if 'vzv' in name_str: return 'varicella_zoster_virus'
+  print('Invalid PCR name: %s' % name_str)
+
+def map_pcr_result_value(result):
+  result_str = str(result).strip().lower()
+  if 'positif' in result_str:  return 'positive'
+  if 'négatif' in result_str: return 'negative'
+  if 'non détecté' in result_str: return 'negative'
+  if result_str == 'test annulé': return ''
+  if result_str == 'annulé': return ''
+  if result_str == 'non valide': return ''
+  if result_str == 'en attente': return ''
+  if result_str == 'rapp. numérisé': return ''
+  #print('Invalid PCR result value: %s' % result_str)
+  return ''
+
+def map_pcr_result_status(result):
+  if result is None: return ''
+  result_str = str(result).lower().strip()
+  if result_str == 'test annulé': return 'cancelled'
+  if result_str == 'annulé': return 'cancelled'
+  if result_str == 'non valide': return 'cancelled'
+  if result_str == 'en attente': return 'pending'
+  if result_str == 'rapp. numérisé': return 'resulted'
+  if 'positif' in result_str: return 'resulted'
+  if 'négatif' in result_str: return 'resulted'
+  if 'détecté' in result_str: return 'resulted'
+  print('Invalid PCR result status: %s' % result_str)
+  return ''
+
+def map_pcr_sample_site(name, code):
+  name = (str(name).strip()).lower()
   code = (str(code).strip()).lower()
-  if 'couvillon' in code: return 'nasopharyngeal_swab'
-  elif 'urine' in code: return 'urine'
-  elif 'sang' in code: return 'blood'
-  elif 'autres' in code: return 'other'
-  elif 'micro' in code: return ''
-  elif 'none' in code: return ''
+  
+  if 'écouvillon' in code: return 'nasopharyngeal_swab'
+  if 'urine' in code: return 'urine'
+  if 'sang' in code: return 'blood'
+  if ('rsv' in name or 'flu' in name) and 'micro' in code: 
+    return 'nasopharyngeal_swab'
+  if ('vzv pcr' in name or 'herpès pcr' in name or 'virus jc' in name or \
+   'l. monocytogenes pcr' in name or 'vbk' in name ) and 'autres' in code:
+    return 'cerebrospinal_fluid'
+  if 'n.2019-ncov (covid-19)' in name and 'autres' in code:
+    return 'nasopharyngeal_swab'
   else:
-    print('Unrecognized sample site: ' + code)
+    print('Unrecognized sample site: %s, %s' % (code, name))
     return ''
 
 def map_culture_type(culture_type):
@@ -137,6 +188,15 @@ def map_culture_specimen_type(type_desc, site_desc):
   else:
     print('Unrecognized sample site: ' + desc)
     exit()
+
+def map_culture_result_status(value):
+  if value is None: return 'pending'
+  value_str = str(value).strip().lower()
+  if value_str == 'pos': return 'resulted'
+  elif value_str == 'neg': return 'resulted'
+  else: 
+    print('Unrecognized culture status')
+    return ''
 
 def map_culture_growth_value(value):
   if value is None: return ''

@@ -50,6 +50,9 @@ for i, row in df.iterrows():
 icd10_codes['U07.1'] = 'COVID-19, virus identified'
 icd10_codes['U07.2'] = 'COVID-19, virus not identified'
 
+for code in icd10_codes:
+  icd10_codes[code] = icd10_codes[code].lower()
+
 patient_data_rows = read_csv(os.path.join(CSV_DIRECTORY, 'patient_data.csv'))
 patient_mrns = [str(row[0]) for row in patient_data_rows]
 padded_patient_mrns = [pad_mrn(x) for x in patient_mrns]

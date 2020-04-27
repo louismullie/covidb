@@ -75,7 +75,7 @@ for index, row in df.iterrows():
     lab_data_rows.append([
       patient_mrn, 
       map_lab_name(lab_name), 
-      map_lab_sample_site(lab_sample_site), 
+      map_lab_sample_site(lab_name, lab_sample_site), 
       map_time(lab_sample_time), 
       map_time(lab_result_time), 
       lab_result_status,

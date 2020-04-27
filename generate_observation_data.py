@@ -10,7 +10,7 @@ import numpy as np
 import pandas as pd
 
 from constants import DEBUG, TABLE_COLUMNS, CSV_DIRECTORY, \
- LAB_PENDING_FLAGS, LAB_CANCELLED_FLAGS, SIURG_OBSERVATION_NAMES
+ LAB_PENDING_FLAGS, LAB_CANCELLED_FLAGS, SIURG_OBSERVATION_NAMES, NP_TO_FIO2_MAP
 from postgresql_utils import sql_query
 from file_utils import read_csv, write_csv
 from time_utils import get_hours_between_datetimes
@@ -46,6 +46,7 @@ for index, row in df.iterrows():
   observation_value = row.lbres_ck
 
   if observation_value is None or \
+     str(observation_value) == 'nan' or \
      observation_value in LAB_PENDING_FLAGS or \
      observation_value in LAB_CANCELLED_FLAGS:
     continue
@@ -54,6 +55,7 @@ for index, row in df.iterrows():
     pcr_sample_times[str(patient_mrn)], str(observation_time))
   
   if delta_hours > -48:
+
     observation_data_rows.append([
       patient_mrn, 
       map_observation_name(row.longdesc),
@@ -98,18 +100,65 @@ for index, row in df.iterrows():
     pcr_sample_times[patient_mrn], observation_time)
   
   if delta_hours < -48: continue
-
+  
   for observation_name in SIURG_OBSERVATION_NAMES:
     if observation_name not in row: continue
     observation_value = row.get(observation_name)
-    if str(observation_value) == 'nan':
-      continue
+
     observation_data_rows.append([
       patient_mrn, 
       map_observation_name(observation_name), 
       map_time(observation_time),
       map_float_value(observation_value)
     ])
+ 
+  if row.sat_o2_cod is not None and row.sat_o2_cod != 'ND':
+    oxygen_flow_rate, oxygenation_device, \
+      fraction_inspired_oxygen = None, None, None
+    if row.sat_o2_cod == 'AA':
+      fraction_inspired_oxygen = '21.0'
+      oxygenation_device = 'AA'
+      oxygen_flow_rate = None
+    elif row.sat_o2_cod == 'LN':
+      oxygenation_device = 'LN'
+      oxygen_flow_rate = str(row.sat_o2_qte_recue)
+      if row.sat_o2_qte_recue > 10: 
+        oxygen_flow_rate = '10.0'
+      if oxygen_flow_rate == 'nan':
+        oxygen_flow_rate = None
+        fraction_inspired_oxygen = None
+      else:
+        fraction_inspired_oxygen = NP_TO_FIO2_MAP[oxygen_flow_rate]
+    elif row.sat_o2_cod == 'VM':
+      fraction_inspired_oxygen = str(row.sat_o2_qte_recue)
+      oxygenation_device = 'VM'
+      oxygen_flow_rate = None
+    elif row.sat_o2_cod in ['VE', 'MA', 'BP']: # VE, MA, BP ?
+      fraction_inspired_oxygen = str(row.sat_o2_qte_recue)
+      oxygenation_device = None
+      oxygen_flow_rate = None
+    else:
+      print('Invalid oxygenation parameters')
+      exit()
+
+    if fraction_inspired_oxygen is not None:
+      observation_data_rows.append([
+        patient_mrn, 
+        'fraction_inspired_oxygen', 
+        map_time(observation_time),
+        map_float_value(fraction_inspired_oxygen)
+      ])
+
+    if oxygen_flow_rate is not None:
+      
+      observation_data_rows.append([
+        patient_mrn, 
+        'oxygen_flow_rate', 
+        map_time(observation_time),
+        map_float_value(oxygen_flow_rate)
+      ])
+
+    #print(oxygenation_device, oxygen_flow_rate, fraction_inspired_oxygen)
 
 #df = sql_query("SELECT * FROM dw_v01.oacis_ob WHERE " +
 #    "rsltvalue IS NOT NULL AND " +

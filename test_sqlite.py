@@ -32,14 +32,18 @@ def compare_obs_by(conn, col, val_pos, val_neg, obs_name, min_value=0, max_value
     " INNER JOIN patient_data ON " + \
     " observation_data.patient_site_uid = patient_data.patient_site_uid WHERE " + \
     " observation_data.observation_name = '"+obs_name+"' AND " + \
+    " observation_data.observation_value NOT NULL AND " + \
     " patient_data." + col + " = "
   
   res = sql_fetch_all(conn, query + " '" + val_pos + "' " + query_tail)
+
   values_pos = [float(value[0]) for value in res]
   
   res = sql_fetch_all(conn, query + " '" + val_neg + "' " + query_tail)
+  print(query + " '" + val_neg + "' " + query_tail)
+  print(res)
   values_neg = [float(value[0]) for value in res]
-
+  
   plot_compare_kde(obs_name, col, val_pos, val_neg, values_pos, \
     values_neg, min_value, max_value)
 
@@ -82,7 +86,9 @@ res = sql_fetch_all(conn, "SELECT * from patient_data")
 #compare_by_covid(conn, 'D-Dimère', max_value=50000)
 
 #compare_labs_by_death(conn, 'lympho #')
-compare_obs_by_death(conn, 'temperature')
+compare_obs_by_covid(conn, 'fraction_inspired_oxygen')
+compare_obs_by_death(conn, 'fraction_inspired_oxygen')
+compare_obs_by_death(conn, 'systolic_blood_pressure')
 
 #query = "SELECT imaging_accession_uid from imaging_data " + \
 #    " INNER JOIN patient_data ON " + \
@@ -96,8 +102,8 @@ res = sql_fetch_all(conn, "SELECT * from patient_data WHERE patient_vital_status
 #imaging_accession_uid = res[1]
 
 # Fetch all imaging tests
-res = sql_fetch_one(conn, "SELECT * from slice_data")
-file = res[-13]
+#res = sql_fetch_one(conn, "SELECT * from slice_data")
+#file = res[-13]
 
 import numpy as np
 pix = pd.read_csv(file).to_numpy()

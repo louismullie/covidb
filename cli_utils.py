@@ -161,6 +161,11 @@ def analyze_column(col_name, rows, col_index):
   
   lines.append('total no. of values: %d' % len(col_data))
   lines.append('no. illegal values: %d' % no_outside)
+  if no_outside == 40:
+    for el in col_data:
+      if el != '' and not re.compile('^[0-9]+\.[0-9]+$').match(el):
+        print(el)
+        exit()
   lines.append('no. empty values: %d' % np.count_nonzero(empty_col_data))
 
   # Sample the first 50 to avoid computationally intensive calculations

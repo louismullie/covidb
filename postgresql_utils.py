@@ -13,14 +13,14 @@ def list_tables(table_schema, table_name):
   for row in df.iterrows():
     print(row)
 
-#list_tables('dw_v01', 'episod_sv')
-#list_columns('icd10_codes')
+#list_tables('dw_v01', 'lb_mic_sus_med_result')
+#list_columns('lb_mic_sus_med_result')
 
 ##df = sql_query("SELECT * from dw_test.orcl_cichum_sejurg_live LIMIT 1")
 #episode_id = df.iloc[0].noadm
 #print(episode_id)
 
-#df2 = sql_query('SELECT * from dw_v01.icd10_codes')
+#df2 = sql_query('SELECT * from public.lb_mic_sus_med_result LIMIT 1')
 #print(df2.iloc[0])
 
 

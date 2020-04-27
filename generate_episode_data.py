@@ -43,7 +43,7 @@ for index, row in df.iterrows():
   episode_start_time = map_time(row.dhreadm)
   episode_end_time = map_time(row.dhredep)
   service_code = row.demadmservcode
-  episode_description = row.diagdesc 
+  episode_description = str(row.diagdesc).lower().strip()
 
   #print([row.typedestcode, episode_description])
 
@@ -75,12 +75,12 @@ for index, row in df.iterrows():
 
   room_number_str = str(row.localno)
   ward_code_str = str(row.unitesoinscode)
-  episode_description = row.raison
+  episode_description = None
 
   if row.raison is None:
     episode_description = ''
   else:
-    episode_description = str(row.raison)
+    episode_description = str(row.raison).lower().strip()
   
   episode_data_rows.append([
     patient_mrn, 

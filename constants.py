@@ -62,12 +62,12 @@ TABLE_COLUMNS = {
 
   'pcr_data': [
     'patient_site_uid', 'pcr_name', 'pcr_sample_site', 'pcr_sample_time', 
-    'pcr_result_time', 'pcr_result_value'
+    'pcr_result_time', 'pcr_result_value', 'pcr_result_status'
   ],
 
   'culture_data': [
     'patient_site_uid', 'culture_type', 'culture_specimen_type', 'culture_sample_time', 
-    'culture_result_time', 'culture_growth_positive'
+    'culture_result_time', 'culture_growth_positive', 'culture_result_status'
   ],
 
   'imaging_data': [
@@ -87,6 +87,7 @@ TABLE_COLUMNS = {
 DRUG_SKIP_VALUES = [
   '*** rx a domicile', 
   '*attention: patient anticoagulé*',
+  '*attention: catheter epidural en place*',
   'bilan comparatif des médicaments (bcm) au dossier.'
 ]
 
@@ -455,4 +456,25 @@ LAB_NAMES_MAP = {
   'Éthanol': 'éthanol'
   }
 
-  
+NP_TO_FIO2_MAP = {
+  '0.5': '22',
+  '1.0': '24',
+  '1.5': '26',
+  '2.0': '28',
+  '2.5': '30',
+  '3.0': '32',
+  '3.5': '34',
+  '4.0': '36',
+  '4.5': '38', 
+  '5.0': '40',
+  '5.5': '42',
+  '6.0': '44',
+  '6.5': '46',
+  '7.0': '48',
+  '7.5': '50',
+  '8.0': '52',
+  '8.5': '54',
+  '9.0': '56',
+  '9.5': '58',
+  '10.0': '60'
+}

@@ -43,6 +43,8 @@ imaged_patient_mrns = np.unique(imaged_patient_mrns)
 print("Number of patients with imaging: %d" % len(imaged_patient_mrns))
 
 for table_name in TABLE_COLUMNS:
+  
+  if table_name == 'lab_data': continue
 
   table_file_name = os.path.join(CSV_DIRECTORY, table_name + '.csv')
   csv_rows = read_csv(table_file_name)

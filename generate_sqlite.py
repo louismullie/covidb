@@ -31,6 +31,11 @@ tables = ['patient_data', 'episode_data', 'lab_data', 'observation_data',
 for table in tables:
   file_uri = os.path.join(CSV_DIRECTORY, table + '.csv')
   df = pd.read_csv(file_uri)
+  if table == 'observation_data':
+    for i, row in df.iterrows():
+      if row.observation_name == 'fraction_inspired_oxygen':
+        if row.observation_value is None:
+          print('ALALALALLALALALALA')
   #if 'patient_site_uid' in df.columns:
   #  df['patient_site_uid'] = df['patient_site_uid'].map(lambda x: 
   #  generate_patient_site_uid(x))
