@@ -53,8 +53,8 @@ for index, row in df.iterrows():
   culture_result_time = row.resultdtm
   culture_growth_value = row.growthcd
 
-  if row.growthcd is not None and 'pos' in row.growthcd.lower():
-    print(row)
+  #if row.growthcd is not None and 'pos' in row.growthcd.lower():
+  #  print(row)
 
   culture_data_rows.append([
     patient_mrn, 

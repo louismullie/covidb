@@ -137,7 +137,10 @@ for index, row in df.iterrows():
       fraction_inspired_oxygen = str(row.sat_o2_qte_recue)
       oxygenation_device = None
       oxygen_flow_rate = None
+    elif row.sat_o2_cod == 'OF':
+      continue # tbd
     else:
+      print(row)
       print('Invalid oxygenation parameters')
       exit()
 

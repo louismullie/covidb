@@ -45,11 +45,14 @@ run_step('lab_data')
 print('\n\n* Generating PCR data...')
 run_step('pcr_data')
 
+print('\n\n* Generating observation data...')
+run_step('observation_data')
+
 print('\n\n* Generating culture data...')
 run_step('culture_data')
 
-print('\n\n* Generating slice data...')
-run_step('slice_data')
+#print('\n\n* Generating slice data...')
+#run_step('slice_data')
 
 print('\n\n* Generating SQLite data...')
 subprocess.call([

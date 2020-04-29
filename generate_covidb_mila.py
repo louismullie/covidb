@@ -5,7 +5,7 @@ import numpy as np
 from postgresql_utils import sql_query
 from file_utils import read_csv, write_csv
 from time_utils import get_hours_between_datetimes
-from constants import CSV_DIRECTORY, TABLE_COLUMNS
+from constants import CSV_DIRECTORY, TABLE_COLUMNS, CENSOR_COLUMNS
 from cli_utils import tabulate_columns
 
 MILA_CSV_DIRECTORY = '/data8/projets/Mila_covid19/output/covidb_mila/csv'
@@ -44,53 +44,54 @@ print("Number of patients with imaging: %d" % len(imaged_patient_mrns))
 
 for table_name in TABLE_COLUMNS:
   
-  if table_name == 'lab_data': continue
-
   table_file_name = os.path.join(CSV_DIRECTORY, table_name + '.csv')
   csv_rows = read_csv(table_file_name)
   column_names = TABLE_COLUMNS[table_name]
   filtered_csv_rows = [row for row in csv_rows if row[0] in imaged_patient_mrns]
-
+  
   column_index = 0
   excluded_values_by_column = {}
 
   for column_name in column_names:
-    excluded_values_by_column[column_name] = []
 
+    excluded_values_by_column[column_name] = []
+    if column_name not in CENSOR_COLUMNS[table_name]: 
+      column_index += 1
+      continue
+    
     column = np.asarray(
       [row[column_index] for row in filtered_csv_rows]
     )
 
     unique_values = np.unique(column)
     
-    if len(unique_values) < 100: # to improve
-      for unique_value in unique_values:
-        count = np.count_nonzero(column == unique_value)
-        if count < 5:
-          #print(unique_value)
-          #print('LOW ELEMENT COUNT: ' + str(count))
-          excluded_values_by_column[column_name].append(unique_value)
+    for unique_value in unique_values:
+      count = np.count_nonzero(column == unique_value)
+      if count < 5:
+        excluded_values_by_column[column_name].append(unique_value)
 
     column_index += 1
   
   censored_csv_rows = []
+
   for filtered_csv_row in filtered_csv_rows:
-    censored_csv_row = []
+    is_censored = False
     column_index = 0
     for column_name in column_names:
       item = filtered_csv_row[column_index]
-      #if item in excluded_values_by_column[column_name]:
-      #  item = 'XX'
-      censored_csv_row.append(item)
+      if item in excluded_values_by_column[column_name]:
+        is_censored = True
       column_index += 1
-    censored_csv_rows.append(censored_csv_row)
+    if not is_censored:
+      censored_csv_rows.append(filtered_csv_row)
   
   print('\n\n' + table_name + '\n\n')
-  tabulate_columns(column_names[0:5], censored_csv_rows)
 
-  if len(column_names) > 5:
-    tabulate_columns(column_names[5:], censored_csv_rows, offset=5)
-
+  for i in range(0, int(np.ceil(len(column_names) / 3))):
+    interval_start = i*3
+    interval_end = np.min([i*3+2, len(column_names)-1])
+    columns = column_names[interval_start:interval_end+1]
+    tabulate_columns(columns, censored_csv_rows, offset=interval_start)
+  
   filtered_table_file_name = os.path.join(MILA_CSV_DIRECTORY, table_name + '.csv')
-  #print(censored_csv_rows)
   write_csv(column_names, censored_csv_rows, filtered_table_file_name)

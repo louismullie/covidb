@@ -63,14 +63,16 @@ def map_lab_sample_site(name, code):
   name_str = str(name).strip().lower()
   code_str = (str(code).strip()).lower()
   
-  if 'adbd' in name_str: return 'blood'
-  if 'veineux' in code_str: return 'blood'
-  elif 'art' in code_str: return 'blood'
-  elif 'urine' in code_str: return 'urine'
-  elif '(ur)' in name_str: return 'urine'
-  elif 'mict' in name_str: return 'urine'
-  elif 'selle' in name_str: return 'stool'
-  elif 'autres' in code_str: return 'other'
+  if 'adbd' in name_str: return 'capillary_blood'
+  if 'vein' in code_str: return 'venous_blood'
+  if 'vein' in name_str: return 'venous_blood'
+  if 'art' in code_str: return 'arterial_blood'
+  if 'art' in name_str: return 'arterial_blood'
+  if 'urine' in code_str: return 'urine'
+  if '(ur)' in name_str: return 'urine'
+  if 'mict' in name_str: return 'urine'
+  if 'selle' in name_str: return 'stool'
+  if 'autres' in code_str: return 'other'
   else:
     #print('Unrecognized sample site: ', name_str, code_str)
     return 'blood'

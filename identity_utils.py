@@ -7,7 +7,10 @@ def get_patient_mrn_from_dicom_study_id(dicom_study_id):
   if not dicom_id_str in DICOM_PATIENT_ID_MAP:
     print('Fatal: DICOM ID not found in map.')
     exit()
-  return DICOM_PATIENT_ID_MAP[dicom_id_str]
+  patient_mrn = DICOM_PATIENT_ID_MAP[dicom_id_str]
+  if patient_mrn[0] == 'S': 
+    patient_mrn = patient_mrn[1:]
+  return patient_mrn
 
 def get_accession_number_from_dicom_study_id(dicom_study_id):
   dicom_id_str = str(dicom_study_id)

@@ -12,7 +12,7 @@ CSV_DIRECTORY = "/data8/projets/Mila_covid19/output/covidb_full/csv"
 BLOB_DIRECTORY = "/data8/projets/Mila_covid19/output/covidb_full/blob"
 IMAGING_LIST_FILENAME = "/data8/projets/Mila_covid19/data/studies_to_extract.csv"
 DICOM_MAP_FILENAME = "/data8/projets/Mila_covid19/data/patient_infos/dicom_id_map_v2.csv"
-DICOM_DIRECTORY = "/data8/projets/Mila_covid19/data/covid_citadel_pacs_v1"
+DICOM_DIRECTORY = "/data8/projets/Mila_covid19/data/covid_citadel_pacs_v2/covid_citadel_pacs_take2"
 SQLITE_DIRECTORY = "/data8/projets/Mila_covid19/output/covidb_full/sqlite"
 CODE_DIRECTORY = "/data8/projets/Mila_covid19/code/lmullie/git_Mila_covid19"
 
@@ -44,7 +44,7 @@ TABLE_COLUMNS = {
   ],
 
   'drug_data': [
-    'patient_mrn', 'drug_name', 
+    'patient_site_uid', 'drug_name', 
     'drug_start_time', 'drug_end_time',
     'drug_frequency', 'drug_roa'
   ],
@@ -84,11 +84,25 @@ TABLE_COLUMNS = {
   ]
 }
 
+CENSOR_COLUMNS = {
+  'patient_data': [],
+  'episode_data': ['episode_description'],
+  'diagnosis_data': ['diagnosis_name', 'diagnosis_icd_code'],
+  'drug_data': ['drug_name', 'drug_frequency', 'drug_roa'],
+  'lab_data': ['lab_name', 'lab_sample_site'],
+  'observation_data': ['observation_name'],
+  'pcr_data': ['pcr_name', 'pcr_sample_site'],
+  'culture_data': ['culture_type', 'culture_specimen_type'],
+  'imaging_data': ['imaging_modality', 'imaging_site'],
+  'slice_data': []
+}
+
 DRUG_SKIP_VALUES = [
   '*** rx a domicile', 
   '*attention: patient anticoagulé*',
   '*attention: catheter epidural en place*',
-  'bilan comparatif des médicaments (bcm) au dossier.'
+  'bilan comparatif des médicaments (bcm) au dossier.',
+  '** protocole remap-cap (covid-19) **'
 ]
 
 DRUG_ROUTE_MAP = {
@@ -509,6 +523,7 @@ LAB_NAMES_MAP = {
   'po2 art ecmo': 'po2',
   'pco2 art ecmo': 'pco2',
   'sat o2 art ecmo': 'arterial_o2_sat',
+  'excès base art ecmo': 'base_excess',
   'excès base vein ecmo': 'base_excess',
   'po2 art ecmo': 'po2',
   'pco2 art ecmo': 'pco2',
@@ -519,6 +534,7 @@ LAB_NAMES_MAP = {
   'sat o2 vein ecmo': 'venous_o2_sat',
   'hco3 vein ecmo': 'bicarbonate',
   'g6pd quantit.': 'g6pd_quantitative',
+  '6pgd quantit.': 'g6pd_quantitative',
   'enz.conversion': 'angiotensin_converting_enzyme',
   'éthanol (p)': 'ethanol',
   'amylase, mict.': 'amylase'

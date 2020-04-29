@@ -2,6 +2,8 @@ import pandas as pd
 import numpy as np
 import re
 
+from time_utils import get_datetime_seconds
+
 COLUMN_WIDTH = 40
 
 def ellipsize(string, length):
@@ -90,6 +92,10 @@ def tabulate_columns(column_names, rows, offset=0):
   print('\n'.join(text_lines))
 
 def tabulate_column(col_name, rows, col_index, default='missing data'):
+
+  if '_id' in col_name  or '_uid' in col_name:
+    return [pad_whitespace('[NOT SHOWN]', COLUMN_WIDTH)]
+  
   values = []
   for row in rows:
     if row[col_index] == '':
@@ -167,6 +173,14 @@ def analyze_column(col_name, rows, col_index):
         print(el)
         exit()
   lines.append('no. empty values: %d' % np.count_nonzero(empty_col_data))
+
+  if validation_pattern == 'datetime':
+    nonempty_data = [x for x in col_data if x != '']
+    nonempty_data.sort(key=lambda x: get_datetime_seconds(x))
+    lines.append('smallest value: ' + nonempty_data[0])
+    lines.append('largest value: ' + nonempty_data[-1] )
+
+    return [pad_whitespace(line, COLUMN_WIDTH) for line in lines]
 
   # Sample the first 50 to avoid computationally intensive calculations
   uniq_col_data = np.unique(col_data[0:50])

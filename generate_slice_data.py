@@ -8,6 +8,8 @@
 import os
 import numpy as np
 import pandas as pd
+import matplotlib.pyplot as plt
+import h5py
 
 from constants import DEBUG, TABLE_COLUMNS, BLOB_DIRECTORY, \
   LIVE_SHEET_FILENAME, CSV_DIRECTORY, DICOM_DIRECTORY
@@ -28,23 +30,28 @@ i = 0
 
 for r, d, files in os.walk(DICOM_DIRECTORY):
   for f in files:
-    dicom_file_path = os.path.join(r, f)
-    dicom = read_dcm(dicom_file_path)
 
+    dicom_file_path = os.path.join(r, f)
+
+    if 'KO' in dicom_file_path \
+      or 'PR' in dicom_file_path \
+      or 'SR' in dicom_file_path:
+      continue
+    
+    i += 1
+    print('Parsing DICOM file %d' % i)
+
+    dicom = read_dcm(dicom_file_path)
     transfer_syntax = dicom.file_meta.TransferSyntaxUID
     
     pixel_data = None
 
     try:
       pixel_data = dicom.get('PixelData')
-      if pixel_data == None:
-        raise
+      if pixel_data == None: raise
     except:
-      if 'KO' not in dicom_file_path \
-        and 'PR' not in dicom_file_path \
-        and 'SR' not in dicom_file_path:
-          if DEBUG: print('Skipping slice %s: no pixel data' % dicom_file_path)
-      else: continue # skip metadata files
+      print('Skipping slice %s: no pixel data' % dicom_file_path)
+      continue
     
     pixel_array = None
 
@@ -56,12 +63,13 @@ for r, d, files in os.walk(DICOM_DIRECTORY):
         print(transfer_syntax)
       continue
     
-    dicom_study_id = str(dicom.get('PatientID'))
-    #print(dicom_study_id)
+    dicom_study_id = str(dicom.get('StudyID'))
+    
     patient_mrn = get_patient_mrn_from_dicom_study_id(dicom_study_id)
+    
     accession_number = get_accession_number_from_dicom_study_id(dicom_study_id)
     imaging_accession_uid = generate_accession_uid(accession_number)
-
+    
     slice_study_instance_uid = dicom.get('StudyInstanceUID')
     slice_series_instance_uid = dicom.get('SeriesInstanceUID')
     slice_view_position = dicom.get('ViewPosition')
@@ -83,7 +91,8 @@ for r, d, files in os.walk(DICOM_DIRECTORY):
     pixel_array = slice_rescale_slope * \
       pixel_array.astype(np.float64) + slice_rescale_intercept
     
-    pixel_array = (pixel_array).astype(np.int16)
+    pixel_array = pixel_array / np.max(pixel_array) * 255
+    pixel_array = (pixel_array).astype(np.uint8)
 
     slice_study_instance_uid = generate_slice_study_uid(slice_study_instance_uid)
     slice_series_instance_uid = generate_slice_series_uid(slice_series_instance_uid)
@@ -100,7 +109,7 @@ for r, d, files in os.walk(DICOM_DIRECTORY):
 
     slice_data_file_path = os.path.join(BLOB_DIRECTORY, imaging_accession_uid, \
       slice_study_instance_uid, slice_series_instance_uid)
-    slice_data_file_name = 'slice_' + str(slice_num) + '.csv'
+    slice_data_file_name = 'slice_' + str(slice_num) + '.h5'
 
     os.makedirs(slice_data_file_path, exist_ok=True)
 
@@ -126,15 +135,27 @@ for r, d, files in os.walk(DICOM_DIRECTORY):
       slice_rescale_intercept,
       slice_rescale_slope
     ]])
+    
+    #df = pd.DataFrame(data=pixel_array)
+    #csv = df.to_csv()
+   
+    with h5py.File(slice_data_uri, 'w') as data_file:
+      data_file.create_dataset('dicom', data=pixel_array)
+    #print('wrote')
+    
+    #pix = None
+    #with h5py.File(slice_data_uri, 'r') as data_file:
+    #  pix = data_file['dicom'][:]
+    #  print('read')
+    
+    #print(pix)
+    #from PIL import Image
+    #dat = (pix / (np.max(pix)) * 255).astype(np.uint8)
+    #im = Image.fromarray(dat)
+    #im.save('test2.jpeg')
 
-    print('.')
-
-    df = pd.DataFrame(data=pixel_array)
-    csv = df.to_csv()
-
-    with open(slice_data_uri, 'w') as data_file:
-      data_file.write(csv)
-
+    #plt.imshow(pix, cmap='gray')
+    #plt.show()
 
 print('Total rows: %d' % len(slice_data_rows))
 write_csv(TABLE_COLUMNS['slice_data'], slice_data_rows, 

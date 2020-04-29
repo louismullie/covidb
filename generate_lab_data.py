@@ -59,8 +59,8 @@ for index, row in df.iterrows():
   lab_result_string = row.lbres_ck
   lab_result_units = row.resultunit
   
-  if lab_name in LAB_SKIP_VALUES or \
-     lab_result_string in LAB_SKIP_VALUES:
+  if lab_name.lower() in LAB_SKIP_VALUES or \
+     lab_result_string.lower() in LAB_SKIP_VALUES:
     continue
 
   if lab_result_string in LAB_CANCELLED_FLAGS:
