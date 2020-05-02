@@ -62,16 +62,24 @@ def map_lab_name(name):
 def map_lab_sample_site(name, code):
   name_str = str(name).strip().lower()
   code_str = (str(code).strip()).lower()
-  
+
+  if 'ecmo' in name_str: return 'ecmo_blood'
   if 'adbd' in name_str: return 'capillary_blood'
   if 'vein' in code_str: return 'venous_blood'
   if 'vein' in name_str: return 'venous_blood'
+  if '(v)' in name_str: return 'venous_blood'
   if 'art' in code_str: return 'arterial_blood'
   if 'art' in name_str: return 'arterial_blood'
   if 'urine' in code_str: return 'urine'
   if '(ur)' in name_str: return 'urine'
   if 'mict' in name_str: return 'urine'
-  if 'selle' in name_str: return 'stool'
+  if 'lcr' in name_str: return 'cerebrospinal_fluid'
+  if 'l.périt' in name_str: return 'peritoneal_fluid'
+  if 'l.asc' in name_str: return 'peritoneal_fluid'
+  if 'l.ple' in name_str: return 'pleural_fluid'
+  if 'lba' in name_str: return 'bronchoalveolar_lavage_fluid'
+  if 'l.bio' in name_str: return 'unspecified_fluid'
+  if 'liq' in name_str: return 'unspecified_fluid'
   if 'autres' in code_str: return 'other'
   else:
     #print('Unrecognized sample site: ', name_str, code_str)
@@ -239,6 +247,9 @@ def map_observation_name(name):
 def map_drug_name(name):
   name_str = str(name).strip().lower()
   name_str = transliterate_string(name_str)
+  name_str = name_str.replace('/ ', '/')
+  name_str = name_str.replace(' +', '+')
+  name_str = name_str.replace('+ ', '+')
   return name_str
   
 def map_drug_route(route_code):

@@ -49,6 +49,10 @@ for i, row in df.iterrows():
 
 icd10_codes['U07.1'] = 'COVID-19, virus identified'
 icd10_codes['U07.2'] = 'COVID-19, virus not identified'
+icd10_codes['I64'] = 'Stroke, not specified as hemorrhage or infarction'
+icd10_codes['T13.0'] = 'Superficial injury of lower limb, level unspecified'
+icd10_codes['T13.1'] = 'Open wound of lower limb, level unspecified'
+icd10_codes['T35.7'] = 'Unspecified frostbite of unspecified site'
 
 for code in icd10_codes:
   icd10_codes[code] = icd10_codes[code].lower()

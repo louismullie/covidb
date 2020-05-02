@@ -51,7 +51,7 @@ for index, row in df.iterrows():
     pass
   
   patient_mrn = str(row.dossier)
-  lab_name = row.longdesc
+  lab_name = str(row.longdesc).strip()
  
   lab_sample_site = row.specimencollectionmethodcd
   lab_sample_time = row.specimencollectiondtm

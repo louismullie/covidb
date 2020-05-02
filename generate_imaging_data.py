@@ -14,6 +14,7 @@ from postgresql_utils import sql_query
 from file_utils import read_csv, write_csv
 from time_utils import get_hours_between_datetimes
 from identity_utils import generate_accession_uid
+from mappers import map_time
 
 patient_data_rows = read_csv(os.path.join(CSV_DIRECTORY, 'patient_data.csv'))
 
@@ -36,7 +37,7 @@ imaging_accession_numbers = []
 for index, row in df.iterrows():
   lower_desc = row.description.lower()
   row_patient_mrn = str(row.dossier)[1:]
-
+  
   if ('rx' in lower_desc and 'poumon' in lower_desc): #or \
      #('scan' in lower_desc and 'thorax' in lower_desc):
      #('scan' in lower_desc and 'abdo' in lower_desc):
@@ -44,16 +45,18 @@ for index, row in df.iterrows():
       pcr_sample_times[row_patient_mrn], row.date_heure_exam)
     
     if hours < -48: continue
-
+    
     patients_with_imaging.append(row_patient_mrn)
     imaging_accession_numbers.append(row.accession_number)
       
     imaging_accession_uid = generate_accession_uid(row.accession_number)
+    imaging_acquired_time = row.date_heure_debut_examen
 
     imaging_data_rows.append([
       row_patient_mrn,
       imaging_accession_uid,
-      'xr', 'chest'
+      'xr', 'chest',
+      map_time(imaging_acquired_time)
     ])
 
 patients_with_imaging = np.unique(patients_with_imaging)

@@ -163,6 +163,10 @@ for index, row in df.iterrows():
 
     #print(oxygenation_device, oxygen_flow_rate, fraction_inspired_oxygen)
 
+#df2 = sql_query(
+# "SELECT * from public.urgchum_episod_sn LIMIT 100 "
+#)
+
 #df = sql_query("SELECT * FROM dw_v01.oacis_ob WHERE " +
 #    "rsltvalue IS NOT NULL AND " +
 #    "dossier in (" + ", ".join(patient_mrns) + ") LIMIT 100")
