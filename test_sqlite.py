@@ -17,7 +17,7 @@ def compute_drug_odds_ratios(conn):
   odds_ratios = []
   for drug in drugs:
     if "'" in drug: continue
-    odds = compare_drugs_by_death(conn, drug)
+    odds = compare_drugs_by_death(conn, [drug])
     if odds[0] == -1: continue
     if odds[-1] < 5: continue
     odds_ratios.append([drug, odds])
@@ -27,6 +27,15 @@ def compute_drug_odds_ratios(conn):
   for drug, odds in odds_ratios:
     print('%s - OR = %.2f (%.2f-%.2f), N exposed = %d' % \
          (drug, odds[0], odds[1], odds[2], odds[3]) )
+
+def compare_labs_by_admit(conn, lab_name, min_value=0, max_value=999999):
+  return compare_labs_by(conn, 'patient_was_admitted', 'yes', 'no', lab_name, \
+                    min_value=min_value, max_value=max_value, \
+                    query_tail = 'AND patient_data.patient_covid_status = \'positive\'')
+
+def compare_obs_by_admit(conn, obs_name, min_value=0, max_value=999999):
+  return compare_obs_by(conn, 'patient_was_admitted', 'yes', 'no', obs_name, \
+                    min_value=min_value, max_value=max_value)
 
 def compare_labs_by_covid(conn, lab_name, min_value=0, max_value=999999):
   return compare_labs_by(conn, 'patient_covid_status', 'positive', 'negative', lab_name, \
@@ -84,7 +93,7 @@ def compare_labs_by(conn, col, val_pos, val_neg, lab_name, min_value=0, max_valu
   plot_compare_kde(lab_name, col, val_pos, val_neg, values_pos, \
     values_neg, min_value, max_value)
 
-def compare_drugs_by_death(conn, drug_name):
+def compare_drugs_by_death(conn, drug_names):
   
   query = "SELECT patient_site_uid from patient_data WHERE " + \
           "patient_covid_status = 'positive'"
@@ -99,7 +108,7 @@ def compare_drugs_by_death(conn, drug_name):
           " patient_data ON patient_data.patient_site_uid = " + \
           " drug_data.patient_site_uid WHERE " + \
           " patient_data.patient_covid_status = 'positive' AND " + \
-          " drug_name = '" + drug_name + "'"
+          " drug_name IN ('" + "', '".join(drug_names) + "')"
   
   exposed_patients = set([rec[0] for rec in sql_fetch_all(conn, query)])
   
@@ -128,14 +137,18 @@ def compare_drugs_by_death(conn, drug_name):
 db_file_name = os.path.join(SQLITE_DIRECTORY, 'covidb_version-1.0.0.db')
 conn = sqlite3.connect(db_file_name)
 
-compute_drug_odds_ratios(conn)
+#compute_drug_odds_ratios(conn)
 
 #tabulate_column('patient_age', res, -3)
 #tabulate_column('patient_sex', res, -2)
 #tabulate_column('patient_covid_status', res, -4)
 #tabulate_column('patient_death_status', res, -1)
 
-#compare_by_covid(conn, 'Température', min_value=35, max_value=40)
+compare_labs_by_admit(conn, 'lymphocyte_count')
+compare_labs_by_admit(conn, 'd_dimer')
+compare_obs_by_admit(conn, 'fraction_inspired_oxygen')
+compare_obs_by_admit(conn, 'temperature')
+
 compare_labs_by_covid(conn, 'c_reactive_protein', max_value=500)
 compare_labs_by_covid(conn, 'd_dimer', max_value=30000)
 compare_labs_by_covid(conn, 'lactate_dehydrogenase', max_value=10000)
@@ -143,11 +156,6 @@ compare_labs_by_covid(conn, 'ferritin', min_value=5, max_value=10000)
 compare_labs_by_covid(conn, 'lymphocyte_count', max_value=10)
 compare_labs_by_covid(conn, 'phosphate', max_value=5)
 compare_labs_by_covid(conn, 'mean_platelet_volume', max_value=10)
-
-#compare_by_covid(conn, 'VPM', max_value=18)
-#compare_by_covid(conn, 'Protéine C Réac.', max_value=500)
-#compare_by_covid(conn, 'Procalcitonine', max_value=100)
-#compare_by_covid(conn, 'D-Dimère', max_value=50000)
 
 compare_obs_by_covid(conn, 'fraction_inspired_oxygen')
 compare_obs_by_death(conn, 'fraction_inspired_oxygen')

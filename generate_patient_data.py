@@ -154,6 +154,10 @@ for row in filtered_patient_data:
     final_row = final_row + ['dead']
   else:
     final_row = final_row + ['alive']
+  if row[0] in admitted_mrns:
+    final_row = final_row + ['yes']
+  else:
+    final_row = final_row + ['no']
   final_patient_data.append(final_row)
 
 write_csv(TABLE_COLUMNS['patient_data'], final_patient_data, 

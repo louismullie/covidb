@@ -1,6 +1,6 @@
 import re
 import numpy as np
-from constants import DRUG_ROUTE_MAP, LAB_NAMES_MAP
+from constants import DRUG_NAME_MAP, DRUG_ROUTE_MAP, LAB_NAMES_MAP
 from lang_utils import transliterate_string
 
 def map_time(time):
@@ -250,6 +250,12 @@ def map_drug_name(name):
   name_str = name_str.replace('/ ', '/')
   name_str = name_str.replace(' +', '+')
   name_str = name_str.replace('+ ', '+')
+  if name_str in DRUG_NAME_MAP:
+    return DRUG_NAME_MAP[name_str]
+
+  if '*' in name_str:
+    print('Unrecognized drug name: %s' % name_str)
+
   return name_str
   
 def map_drug_route(route_code):
