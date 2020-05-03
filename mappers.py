@@ -248,12 +248,13 @@ def map_drug_name(name):
   name_str = str(name).strip().lower()
   name_str = transliterate_string(name_str)
   name_str = name_str.replace('/ ', '/')
+  name_str = name_str.replace(' /', '/')
   name_str = name_str.replace(' +', '+')
   name_str = name_str.replace('+ ', '+')
   if name_str in DRUG_NAME_MAP:
     return DRUG_NAME_MAP[name_str]
 
-  if '*' in name_str:
+  if '*' in name_str or ',' in name_str or '(' in name_str:
     print('Unrecognized drug name: %s' % name_str)
 
   return name_str

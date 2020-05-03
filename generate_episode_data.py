@@ -43,12 +43,13 @@ for index, row in df.iterrows():
   episode_start_time = map_time(row.dhreadm)
   episode_end_time = map_time(row.dhredep)
   service_code = row.demadmservcode
-  episode_description = str(row.diagdesc).lower().strip()
 
   #print([row.typedestcode, episode_description])
 
-  if episode_description is None:
+  if row.diagdesc is None:
     episode_description = ''
+  else:
+    episode_description = str(row.diagdesc).lower().strip()
 
   episode_data_rows.append([
     patient_mrn, episode_id, episode_unit_type, 

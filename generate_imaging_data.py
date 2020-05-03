@@ -51,7 +51,7 @@ for index, row in df.iterrows():
       
     imaging_accession_uid = generate_accession_uid(row.accession_number)
     imaging_acquired_time = row.date_heure_debut_examen
-
+    # check imaging acquired time
     imaging_data_rows.append([
       row_patient_mrn,
       imaging_accession_uid,

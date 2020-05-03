@@ -34,7 +34,7 @@ df = sql_query("SELECT dossier, longdesc, orderstartdtm, componentstrengthnm, " 
   "orderstartdtm > '2020-01-01' AND dossier in (" + ", ".join(patient_mrns) + ")")
 
 drug_data_rows = []
-a = []
+
 for index, row in df.iterrows():
 
   if row.longdesc.lower() in DRUG_SKIP_VALUES:
@@ -42,7 +42,10 @@ for index, row in df.iterrows():
 
   patient_mrn = row.dossier
   drug_name = map_drug_name(row.longdesc)
-  a.append(drug_name)
+
+  if 'ou placebo' in drug_name:
+    continue
+  
   drug_start_time = row.orderstartdtm
   drug_end_time = row.orderstopdtm
   
@@ -60,8 +63,6 @@ for index, row in df.iterrows():
     map_drug_route(row.routecd)
   ])
 
-print(np.unique(a))
-#print(drug_data_rows)
 print('Total rows: %d' % len(drug_data_rows))
 
 write_csv(TABLE_COLUMNS['drug_data'], drug_data_rows, 

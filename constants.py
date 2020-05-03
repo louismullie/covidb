@@ -124,16 +124,33 @@ DRUG_SKIP_VALUES = [
   'agitation importante',
   'convulsion',
   'rales bronchiques terminaux',
-  'hors form: inscrire nom générique+ dosage',
+  'allergie au latex',
+  'hors form: inscrire nom generique+ dosage',
   '*attention: catheter épidural en place*',
-  'warfarine: ne pas donner ce jour'
+  'warfarine: ne pas donner ce jour',
+  'nicotine timbre(s): retrait du ou des timbre(s)',
+  'pharmacocinétique (pharmacie)',
+  'hors form: inscrire nom générique+dosage',
+  'diluant  sterile pour  injection (epoprostenol)',
+  'vehicule-magistrale'
 ]
 
 DRUG_NAME_MAP = {
   'acide acetylsalicylique': 'aspirin',
+  'dextrose 5% sans pvc': 'dextrose 5%',
+  'bupivacaine 0,0625% dans nacl 0,9%': 'bupivacaine 0,0625%',
+  'bupivacaine 0,1% dans nacl 0,9%': 'bupivacaine 0.1%',
+  'bupivacaine 0,125% dans nacl 0,9%': 'bupivacaine 0.125%',
+  'bupivacaine 0,0625%+fentanyl 2 mcg/ml dans nacl 0,9%': 'bupivacaine 0.0625% + fentanyl 2 mcg/ml',
+  'bupivacaine 0,1%+fentanyl 2 mcg/ml dans nacl 0,9%': 'bupivacaine 0.1% + fentanyl 2 mcg/ml',
+  'sodium chlorure 0,9% sans pvc': 'sodium chloride 0.9%',
+  'sodium chlorure 0,9%': 'sodium chloride 0.9%',
+  'hydromorphone ds nacl 0.9% (acp)': 'hydromorphone',
+  'morphine ds nacl 0.9% (acp)': 'morphine',
   'midazolam inj 1 mg/ml (100 ml)': 'midazolam',
   'hydrocortisone *solu-cortef*': 'hydrocortisone',
   'methylprednisolone *solu-medrol*': 'methylprednisolone',
+  'clotrimazole 0,5%/hydrocortisone 0,5%': 'clotrimazole 0.5%/hydrocortisone 0.5%',
   'filgrastim ** grastofil **': 'filgrastim',
   'filgrastim ** neupogen **': 'filgrastim',
   'mofetil mycophenolate *cellcept*': 'mycophenolate mofetil',
@@ -153,197 +170,53 @@ DRUG_NAME_MAP = {
   'indacaterol inh *ensaposs*': 'indacaterol',
   'formoterol/mometasone inh 5+200mcg/inh*zenhal': 'formoterol/mometasone',
   'glycopyrronium bromure caps.inh 50 mcg   *ens': 'glycopyrronium bromide',
+  'glycopyrronium bromure': 'glycopyrronium bromide',
   'salbutamol inh 100 mcg/dose *ensaposs*': 'salbutamol',
   'salmeterol/fluticasone inh 25+125 mcg/inh *en': 'salmeterol/fluticasone',
   'formoterol inh 12 mcg/inh *ensaposs*': 'formoterol',
-  'lenalidomide caps 25 mg *ensaposs*': 'lenalidomide'
+  'lenalidomide caps 25 mg *ensaposs*': 'lenalidomide',
+  'vemlidy (tenofovir alafenamide)': 'tenofovir alafenamide',
+  'viread (tenofovir disoproxil)': 'tenofovir disoproxil',
+  'phytonadione (vit k)': 'vitamin k',
+  'ergocalciferol (vitamine d)': 'vitamin d',
+  'cholecalciferol (vitamine d3)': 'vitamin d3',
+  'tocopheryle  (vit e)': 'vitamin e',
+  'thiamine (vit b1)': 'vitamin b1',
+  'pyridoxine (vitamine b6)': 'vitamin b6',
+  'ascorbique acide (vit. c)': 'vitamin c',
+  'phenylephrine inj 50 mcg/ml (seringue)': 'phenylephrine',
+  'etomidate (p.a.s.)': 'etomidate',
+  'prasugrel (p.a.s.)': 'prasugrel',
+  'rifampine (p.a.s.)': 'rifampin',
+  'nicardipine (p.a.s)': 'nicardipine',
+  'foscarnet (p.a.s.)': 'foscarnet',
+  'clevidipine (p.a.s)': 'clevidipine',
+  'doxycycline (p.a.s.)': 'doxycyline',
+  '#lopinavir+ritonavir co 80+20 mg/ml (160 ml': 'lopinavir+ritonavir',
+  '#lopinavir+ritonavir co 200+50 mg': 'lopinavir/ritonavir',
+  'novorapid (aspart)': 'insulin aspart',
+  'humalog (lispro)': 'insulin lispro',
+  'apidra (glulisine)': 'insulin glulisine',
+  'tresiba (degludec)': 'insulin degludec',
+  'lantus (glargine)': 'insulin glargine',
+  'toujeo (glargine)': 'insulin glargine',
+  'basaglar (glargine)': 'insulin glargine',
+  'levemir (detemir)': 'insulin detemir',
+  'novomix (aspart+aspart-protamine)': 'insulin aspart/aspart-protamine',
+  'humalog mix 25 (lispro+lispro-protamine)': 'insulin lispro/lispro-protamine',
+  'folinique acide (leucovorin)': 'folinic acid',
+  'dextromethorphane (sans sucre)': 'dextromethorphan',
+  'lipides (smoflipid)': 'lipid injectable emulsion',
+  'lipides (intralipid)': 'lipid injectable emulsion',
+  'zoledronique acide (aclasta)': 'zoledronic acid',
+  'zoledronate (zometa)': 'zoledronate',
+  'stalevo 75/18,75/200 mg': 'levodopa/carbidopa/entacapone 75/18.75/200 mg',
+  'stalevo 150/37,5/200 mg': 'levodopa/carbidopa/entacapone 150/37.5/200 mg',
+  'tuberculine derivee (ppd)': 'tuberculin',
+  'amphetamines (sels mixtes)': 'amphetamines (mixed salts)',
+  'atgam 0,05 mg/ml (5 ml)': 'anti-thymocyte globulin',
+  'oligo-elements (cr/cu/ma/zn/se/i)': 'oligo-elements'
 }
-
-#['#lopinavir+ritonavir co 200+50 mg'
-# '#lopinavir+ritonavir co 80+20 mg/ml (160 ml' '#pantoprazole ou placebo'
-#  '#vitamine c ou placebo' '5-aminosalicylique acide'
-#  'aa-dextrose-lipides sac calea' 'aas+butalbital+cafeine'
-#  'abacavir+lamivudine' 'abiraterone' 'acarbose' 'acebutolol'
-# 'acetaminophene' 'acetaminophene/codeine' 'acetazolamide'
-# 'acetylcysteine' 'acide acetique' 'acide salicylique'
-# 'acides amines+dextrose' 'aclidinium' 'acyclovir' 'adalimumab'
-# 'adenosine' 'alendronate' 'alfacalcidol' 'alfuzosine' 'allergie au latex'
-# 'allopurinol' 'alogliptine' 'alprazolam' 'alteplase' 'aluminium'
-# 'aluminium/magnesium' 'amiloride' 'amiodarone' 'amitriptyline'
-# 'amlodipine' 'amoxicilline' 'amoxicilline/clavulanate'
-# 'amphetamines (sels mixtes)' 'amphotericine b' 'ampicilline'
-# 'anastrozole' 'anidulafungine' 'apidra (glulisine)' 'apixaban'
-# 'apremilast co 30 mg' 'aprepitant' 'argatroban' 'aripiprazole'
-# 'ascorbique acide (vit. c)' 'aspirin' 'atenolol'
-# 'atgam 0,05 mg/ml (5 ml)' 'atomoxetine' 'atorvastatine' 'atovaquone'
-# 'atropine' 'atropine sulfate' 'azathioprine' 'azithromycine' 'aztreonam'
-# 'bacitracine' 'baclofene' 'basaglar (glargine)' 'base dermique'
-# 'basiliximab' 'beclomethasone' 'benzoate de potassium'
-# 'benzoate de sodium' 'benzocaine' 'benztropine' 'betahistine'
-# 'betamethasone dipropionate' 'betamethasone phosphate+acetate'
-# 'betamethasone valerate' 'betaxolol' 'bicalutamide' 'bicarbonate sodium'
-# 'biktarvy' 'biphosphate/phosphate de sodium' 'bisacodyl' 'bisoprolol'
-# 'brimonidine' 'brinzolamide' 'brinzolamide /timolol' 'brivaracetam'
-# 'bromocriptine' 'budesonide' 'bupivacaine 0,0625% dans nacl 0,9%'
-# 'bupivacaine 0,0625%+fentanyl 2 mcg/ml dans nacl 0,9%'
-# 'bupivacaine 0,1% dans nacl 0,9%'
-# 'bupivacaine 0,1%+fentanyl 2 mcg/ml dans nacl 0,9%'
-# 'bupivacaine 0,125% dans nacl 0,9%' 'buprenorphine'
-# 'buprenorphine et naloxone' 'bupropion' 'buspirone' 'cabergoline'
-# 'calciferol' 'calcipotriol' 'calcitonine' 'calcitriol'
-# 'calcium carbonate' 'calcium chlorure' 'calcium gluconate'
-# 'calcium gluconate+carbonate' 'calcium-sels' 'canagliflozine'
-# 'candesartan' 'capecitabine' 'capsaicine' 'captopril' 'carbamazepine'
-# 'carboxymethylcellulose' 'carvedilol' 'caspofongine' 'cefadroxil'
-# 'cefazoline' 'cefepime' 'cefixime' 'cefotaxime' 'cefoxitine'
-# 'ceftazidime' 'ceftobiprole' 'ceftolozane/tazobactam' 'ceftriaxone'
-# 'cefuroxime axetil' 'celecoxib' 'cetylpyridinium' 'chlorhexidine'
-# 'chlorhexidine+alcool' 'chlorhexidine-buccale' 'chlorpromazine'
-# 'chlorthalidone' 'cholecalciferol (vitamine d3)' 'cholestyramine'
-# 'ciclesonide' 'ciclopirox' 'cinacalcet' 'ciprofloxacine' 'cisatracurium'
-# 'citalopram' 'citrate de magnesium' 'citrate de sodium' 'clarithromycine'
-# 'clevidipine (p.a.s)' 'clindamycine' 'clobazam' 'clobetasol propionate'
-# 'clonazepam' 'clonidine' 'clopidogrel' 'clotrimazole'
-# 'clotrimazole 0,5%/hydrocortisone 0,5%' 'cloxacilline' 'clozapine'
-# 'co-trimoxazole' 'codeine' 'colchicine' 'colistimethate' 'collagenase'
-# 'cosyntropine' 'cyanocobalamine' 'cyclobenzaprine' 'cyclopentolate'
-# 'cyclophosphamide' 'cyclosporine' 'cyproterone' 'dabigatran'
-# 'dalteparine' 'danaparoide' 'dantrolene' 'dapagliflozine' 'dapsone'
-# 'daptomycine' 'darbepoetine alfa' 'darunavir' 'dasatinib' 'deferasirox'
-# 'degarelix' 'denosumab' 'descovy' 'desmopressine' 'desonide'
-# 'desvenlafaxine' 'dexamethasone' 'dexlansoprazole' 'dexmedetomidine'
-# 'dextromethorphane (sans sucre)' 'dextrose' 'dextrose 5%'
-# 'dextrose 5% sans pvc' 'diazepam' 'diclofenac' 'dicyclomine' 'dienogest'
-# 'digoxine' 'diltiazem' 'diluant  sterile pour  injection (epoprostenol)'
-# 'dimenhydrinate' 'diphenhydramine' 'diphenoxylate/atropine' 'divalproex'
-# 'dobutamine' 'docusate sodique' 'dolutegravir' 'domperidone' 'donepezil'
-# 'doravirine' 'dornase alfa' 'dorzolamide' 'doxepine' 'doxycycline'
-# 'doxycycline (p.a.s.)' 'doxylamine/pyridoxine' 'dronedarone'
-# 'dulaglutide' 'duloxetine' 'dutasteride' 'edoxaban' 'eltrombopag'
-# 'empagliflozine' 'en sa possession: nom generique+dosage' 'enalapril'
-# 'enalaprilat' 'enoxaparine' 'entacapone' 'entecavir' 'epinephrine'
-# 'epirubicine' 'epoetine alfa' 'epoprostenol'
-# 'ergocalciferol (vitamine d)' 'ertapenem' 'erythromycine base'
-# 'erythromycine gluceptate' 'erythromycine lactobionate' 'escitalopram'
-# 'esmolol' 'esomeprazole' 'estradiol' 'ethacrynique acide' 'ethambutol'
-# 'ethinylestradiol+norethindrone' 'etomidate (p.a.s.)' 'etravirine'
-# 'everolimus' 'evolocumab' 'exemestane' 'ezetimibe' 'famciclovir'
-# 'famotidine' 'febuxostat' 'felodipine' 'fenofibrate' 'fentanyl'
-# 'fer gluconate' 'fer saccharose' 'fer sulfate' 'fidaxomicine'
-# 'filgrastim' 'finasteride' 'flecainide' 'fluconazole' 'fludrocortisone'
-# 'flumazenil' 'fluocinonide' 'fluorouracile' 'fluoxetine' 'flupenthixol'
-# 'fluticasone' 'fluticasone-furoate' 'fluvoxamine'
-# 'folinique acide (leucovorin)' 'folique acide' 'fondaparinux'
-# 'formoterol' 'formoterol/budesonide' 'formoterol/mometasone'
-# 'foscarnet (p.a.s.)' 'fosfomycine' 'furosemide' 'gabapentine'
-# 'ganciclovir' 'genvoya' 'glatiramer' 'gliclazide'
-# 'globuline anti-thymocytes equine' 'globuline anti-thymocytes lapin'
-# 'glucagon' 'glyburide' 'glycerine' 'glycopyrrolate'
-# 'glycopyrronium bromide' 'glycopyrronium bromure'
-# 'glycopyrronium+indacaterol'
-# 'glycopyrronium+indacaterol caps.inh 50+110mcg' 'granisetron'
-# 'haloperidol' 'heparine' 'hors form: inscrire nom generique+dosage'
-# 'huile minerale lourde' 'humalog (lispro)'
-# 'humalog mix 25 (lispro+lispro-protamine)' 'humulin 30/70' 'humulin n'
-# 'humulin r' 'hydralazine' 'hydratation' 'hydrochlorothiazide'
-# 'hydrocortisone' 'hydrocortisone /zinc' 'hydrocortisone valerate'
-# 'hydromorphone' 'hydromorphone ds nacl 0.9% (acp)' 'hydroxychloroquine'
-# 'hydroxyuree' 'hydroxyzine' 'hypochlorite de sodium' 'hypromellose'
-# 'hypromellose+dextran' 'ibrutinib' 'ibuprofene' 'icatibant'
-# 'imipenem/cilastatine' 'indacaterol' 'indapamide' 'indomethacine'
-# 'infliximab' 'interferon beta-1a' 'intrasite gel' 'iode/povidone'
-# 'ipratropium' 'ipratropium/salbutamol' 'irbesartan' 'isoniazide'
-# 'isoproterenol' 'isosorbide mononitrate' 'itraconazole' 'ivabradine'
-# 'ivacaftor+lumacaftor' 'ivermectin' 'ketamine' 'ketorolac' 'l-arginine'
-# 'l-tryptophane' 'labetalol' 'lacosamide' 'lactase' 'lactulose'
-# 'lamivudine' 'lamotrigine' 'lanthane hydrate' 'lantus (glargine)'
-# 'latanoprost' 'leflunomide' 'lenalidomide' 'letrozole' 'leuprolide'
-# 'levemir (detemir)' 'levetiracetam' 'levocarnitine'
-# 'levodopa/benserazide' 'levodopa/carbidopa' 'levofloxacine'
-# 'levothyroxine' 'lidocaine' 'lidocaine hydrochloride'
-# 'lidocaine+chlorhexidine' 'lidocaine+prilocaine' 'linagliptine'
-# 'linezolide' 'lipides (intralipid)' 'lipides (smoflipid)' 'liraglutide'
-# 'lisdexamfetamine' 'lisinopril' 'lithium carbonate' 'loperamide'
-# 'loratadine' 'lorazepam' 'losartan' 'loxapine' 'lurasidone'
-# 'magique gargarisme' 'magnesium glucoheptonate' 'magnesium gluconate'
-# 'magnesium hydroxyde' 'magnesium sulfate' 'mannitol' 'maraviroc'
-# 'medroxyprogesterone' 'megestrol' 'memantine' 'menthol' 'meperidine'
-# 'mercaptopurine' 'meropenem' 'metformine' 'methadone' 'methimazole'
-# 'methotrexate' 'methotrimeprazine' 'methylphenidate' 'methylprednisolone'
-# 'metoclopramide' 'metolazone' 'metoprolol' 'metronidazole' 'mexiletine'
-# 'midazolam' 'midodrine' 'milrinone' 'minoxidil' 'mirabegron'
-# 'mirtazapine' 'misoprostol' 'moclobemide' 'modafinil' 'montelukast'
-# 'morphine' 'morphine ds nacl 0.9% (acp)' 'moxifloxacine' 'multivitamines'
-# 'multivitamines hydrosolubles' 'mupirocine' 'mycophenolate mofetil'
-# 'mycophenolate sodium' 'nabilone' 'nadolol' 'nalbuphine' 'naloxone'
-# 'naltrexone' 'naproxene' 'neostigmine' 'nicardipine (p.a.s)' 'nicotine'
-# 'nicotine timbre(s): retrait du ou des timbre(s)' 'nifedipine'
-# 'nimodipine' "nitrate d'argent" 'nitrofurantoine' 'nitroglycerine'
-# 'nitroprussiate' 'norepinephrine' 'nortriptyline' 'novolin ge 30/70'
-# 'novolin ge 50/50' 'novolin ge nph' 'novolin ge toronto'
-# 'novomix (aspart+aspart-protamine)' 'novorapid (aspart)' 'nystatine'
-# 'octreotide' 'oestrogenes' 'olanzapine'
-# 'oligo-elements (cr/cu/ma/zn/se/i)' 'olmesartan medoxomil' 'ondansetron'
-# 'orphenadrine citrate' 'oseltamivir' 'osimertinib' 'oxazepam'
-# 'oxcarbazepine' 'oxybutynine' 'oxycodone' 'palbociclib' 'paliperidone'
-# 'pamidronate disodique' 'pancrelipase' 'pantoprazole'
-# 'paraffine+huile minerale' 'paroxetine' 'penicilline g sodique'
-# 'penicilline v' 'pentosan' 'pentoxifylline' 'perampanel' 'perindopril'
-# 'permethrine' 'perphenazine' 'petrolatum blanc'
-# 'petrolatum-huile minerale-lanoline' 'pharmacocinetique (pharmacie)'
-# 'phenobarbital' 'phenylephrine' 'phenylephrine inj 50 mcg/ml (seringue)'
-# 'phenytoine' 'phosphate acide de sodium' 'phosphate de potassium'
-# 'phosphate de sodium' 'phytonadione (vit k)' 'pilocarpine' 'pinaverium'
-# 'pioglitazone' 'piperacilline/tazobactam' 'pirfenidone'
-# 'polyethylene glycol' 'polyethylene glycol et electrolytes'
-# 'polymyxine-b/bacitracine' 'polymyxine-b/gramicidine'
-# 'polystyrene sulfonate' 'ponatinib' 'posaconazole' 'potassium chlorure'
-# 'pramipexole' 'prasugrel (p.a.s.)' 'pravastatine' 'prazosine'
-# 'prednisolone' 'prednisone' 'pregabaline' 'primaquine phosphate'
-# 'primidone' 'procarbazine' 'prochlorperazine' 'procyclidine'
-# 'progesterone' 'propafenone' 'propofol' 'propranolol' 'protamine'
-# 'prucalopride' 'psyllium' 'pyrazinamide' 'pyridostigmine'
-# 'pyridoxine (vitamine b6)' 'quetiapine' 'quinine sulfate' 'raloxifene'
-# 'raltegravir' 'ramipril' 'ranitidine' 'rasagiline' 'rasburicase'
-# 'repaglinide' 'ribavirine' 'rifabutine' 'rifampine' 'rifampine (p.a.s.)'
-# 'rifaximine' 'rilpivirine' 'riluzole' 'risedronate' 'risperidone'
-# 'ritonavir' 'rituximab' 'rivaroxaban' 'rivastigmine' 'rocuronium'
-# 'romiplostim' 'rosuvastatine' 'rotigotine' 'ruxolitinib'
-# 'sacubitril/valsartan' 'salbutamol' 'salive artificielle' 'salmeterol'
-# 'salmeterol/fluticasone' 'saxagliptine' 'scopolamine bromhydrate'
-# 'scopolamine butylbromure' 'selenium sulfure' 'semaglutide'
-# 'sennosides a-b' 'sertraline' 'sevelamer carbonate'
-# 'sevelamer chlorhydrate' 'sildenafil' 'silodosine' 'simvastatine'
-# 'sirolimus' 'sitagliptine' 'sodium chlorure' 'sodium chlorure 0,9%'
-# 'sodium chlorure 0,9% sans pvc' 'sodium citrate' 'sofosbuvir+velpatasvir'
-# 'solifenacine' "solution d'hydratation+electrolytes" 'sotalol'
-# 'spironolactone' 'stalevo 150/37,5/200 mg' 'stalevo 75/18,75/200 mg'
-# 'sucralfate' "sulfadiazine d'argent" 'sulfasalazine' 'tacrolimus'
-# 'tamoxifene' 'tamsulosine' 'telmisartan' 'temozolomide' 'terazosine'
-# 'terbinafine' 'terbutaline' 'teriparatide' 'testosterone'
-# 'testosterone enanthate' 'tetracycline' 'theophylline'
-# 'thiamine (vit b1)' 'thiosulfate sodium' 'ticagrelor' 'tigecycline'
-# 'timolol' 'timolol /latanoprost' 'tiotropium' 'tizanidine' 'tobramycine'
-# 'tobramycine+ dexamethasone' 'tocopheryle  (vit e)' 'tofacitinib'
-# 'topiramate' 'toujeo (glargine)' 'toxine botulinique type a'
-# 'trandolapril' 'tranexamique acide' 'travoprost' 'trazodone'
-# 'tresiba (degludec)' 'triamcinolone acetonide'
-# 'triamterene/hydrochlorothiazide' 'triethanolamine salicylate'
-# 'trimethoprime' 'truvada' 'tuberculine derivee (ppd)' 'umeclidinium'
-# 'umeclidinium+vilanterol' 'uree' 'ursodiol'
-# 'vaccin coqueluche+diphterie+tetanos' 'vaccin diphterie+tetanos'
-# 'vaccin haemophilus b' 'vaccin hepatite a' 'vaccin hepatite a+hepatite b'
-# 'vaccin hepatite b' 'vaccin influenza' 'vaccin meningococcique'
-# 'vaccin meningococcique groupe b' 'vaccin oreillons+rougeole+rubeole'
-# 'vaccin pneumococcique' 'vaccin varicelle' 'valacyclovir'
-# 'valganciclovir' 'valproique acide' 'valsartan' 'vancomycine'
-# 'varenicline' 'vasopressine' 'vehicule-magistrale'
-# 'vemlidy (tenofovir alafenamide)' 'venetoclax' 'venlafaxine' 'verapamil'
-# 'viaflex vide' 'vilanterol et fluticasone'
-# 'viread (tenofovir disoproxil)' 'vitamine a' 'voriconazole'
-# 'vortioxetine' 'warfarine' 'xylometazoline' 'zinc gluconate' 'zinc oxyde'
-# 'ziprasidone' 'zoledronate (zometa)' 'zoledronique acide (aclasta)'
-# 'zolmitriptan' 'zopiclone' 'zuclopenthixol']
 
 DRUG_ROUTE_MAP = {
   'sous-cutané': 'sc',
@@ -727,7 +600,7 @@ LAB_NAMES_MAP = {
   't.thrombine': 'thrombin_time', 
   't3 libre': 'free_t3', 
   't4 libre': 'free_t4', 
-  'tgmh': 'mean_corpuscular_hemoglobin_concentration', 
+  'tgmh': 'mean_corpuscular_hemoglobin', 
   'tsh': 'thyroid_stimulating_hormone', 
   'tacrolimus': 'tacrolimus', 
   'testostérone t': 'total_testosterone', 
