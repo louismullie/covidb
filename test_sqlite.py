@@ -153,20 +153,20 @@ compare_labs_by_covid(conn, 'lymphocyte_count', min_value=0.1, max_value=10)
 #compare_obs_by_admit(conn, 'temperature', min_value=35, max_value=40)
 
 plt.sca(axs[0, 1])
-compare_labs_by_covid(conn, 'c_reactive_protein', max_value=500)
+compare_labs_by_covid(conn, 'c_reactive_protein', min_value=50, max_value=350)
 
 #compare_labs_by_covid(conn, 'd_dimer', max_value=30000)
 #compare_labs_by_covid(conn, 'lactate_dehydrogenase', max_value=10000)
 #compare_labs_by_covid(conn, 'ferritin', min_value=5, max_value=10000)
 
 plt.sca(axs[0, 2])
-compare_labs_by_covid(conn, 'lymphocyte_count', max_value=10)
+compare_labs_by_covid(conn, 'lactate_dehydrogenase', max_value=10)
 
 plt.sca(axs[0, 3])
-compare_labs_by_covid(conn, 'c_reactive_protein', max_value=500)
+compare_labs_by_covid(conn, 'mean_platelet_volume', min_value=8, max_value=12)
 
 plt.sca(axs[0, 4])
-compare_labs_by_covid(conn, 'phosphate', max_value=2.5)
+compare_labs_by_covid(conn, 'phosphate', min_value=0.5, max_value=2.5)
 
 
 #compare_labs_by_covid(conn, 'mean_platelet_volume', max_value=10)
@@ -186,7 +186,7 @@ plt.sca(axs[1, 3])
 compare_obs_by_covid(conn, 'heart_rate', min_value=40, max_value=180)
 
 plt.sca(axs[2, 0])
-compare_labs_by_death(conn, 'lactic_acid', min_value=1, max_value=15)
+compare_labs_by_death(conn, 'lactic_acid', min_value=1, max_value=10)
 
 plt.sca(axs[2, 1])
 compare_labs_by_death(conn, 'pco2', min_value=35, max_value=100)
