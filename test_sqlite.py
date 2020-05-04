@@ -30,8 +30,7 @@ def compute_drug_odds_ratios(conn):
 
 def compare_labs_by_admit(conn, lab_name, min_value=0, max_value=999999):
   return compare_labs_by(conn, 'patient_was_admitted', 'yes', 'no', lab_name, \
-                    min_value=min_value, max_value=max_value, \
-                    query_tail = 'AND patient_data.patient_covid_status = \'positive\'')
+                    min_value=min_value, max_value=max_value)
 
 def compare_obs_by_admit(conn, obs_name, min_value=0, max_value=999999):
   return compare_obs_by(conn, 'patient_was_admitted', 'yes', 'no', obs_name, \
@@ -145,33 +144,23 @@ conn = sqlite3.connect(db_file_name)
 #tabulate_column('patient_death_status', res, -1)
 
 fig, axs = plt.subplots(5, 5)
+fig.set_figheight(15)
+fig.set_figwidth(15)
 
 plt.sca(axs[0, 0])
 compare_labs_by_covid(conn, 'lymphocyte_count', min_value=0.1, max_value=10)
-#compare_labs_by_admit(conn, 'd_dimer')
-#compare_obs_by_admit(conn, 'fraction_inspired_oxygen', max_value=100)
-#compare_obs_by_admit(conn, 'temperature', min_value=35, max_value=40)
 
 plt.sca(axs[0, 1])
 compare_labs_by_covid(conn, 'c_reactive_protein', min_value=50, max_value=350)
 
-#compare_labs_by_covid(conn, 'd_dimer', max_value=30000)
-#compare_labs_by_covid(conn, 'lactate_dehydrogenase', max_value=10000)
-#compare_labs_by_covid(conn, 'ferritin', min_value=5, max_value=10000)
-
 plt.sca(axs[0, 2])
-compare_labs_by_covid(conn, 'lactate_dehydrogenase', max_value=10)
+compare_labs_by_covid(conn, 'd_dimer', min_value=100, max_value=6000)
 
 plt.sca(axs[0, 3])
 compare_labs_by_covid(conn, 'mean_platelet_volume', min_value=8, max_value=12)
 
 plt.sca(axs[0, 4])
 compare_labs_by_covid(conn, 'phosphate', min_value=0.5, max_value=2.5)
-
-
-#compare_labs_by_covid(conn, 'mean_platelet_volume', max_value=10)
-
-#compare_obs_by_covid(conn, 'fraction_inspired_oxygen')
 
 plt.sca(axs[1, 0])
 compare_obs_by_covid(conn, 'fraction_inspired_oxygen', min_value=21, max_value=100)
@@ -185,6 +174,9 @@ compare_obs_by_covid(conn, 'systolic_blood_pressure', min_value=50, max_value=20
 plt.sca(axs[1, 3])
 compare_obs_by_covid(conn, 'heart_rate', min_value=40, max_value=180)
 
+plt.sca(axs[1, 4])
+compare_obs_by_covid(conn, 'oxygen_flow_rate', min_value=0, max_value=10)
+
 plt.sca(axs[2, 0])
 compare_labs_by_death(conn, 'lactic_acid', min_value=1, max_value=10)
 
@@ -192,25 +184,48 @@ plt.sca(axs[2, 1])
 compare_labs_by_death(conn, 'pco2', min_value=35, max_value=100)
 
 plt.sca(axs[2, 2])
-compare_labs_by_death(conn, 'd_dimer', min_value=100, max_value=15000)
+compare_labs_by_death(conn, 'd_dimer', min_value=100, max_value=6000)
 
 plt.sca(axs[2, 3])
-compare_labs_by_death(conn, 'potassium', min_value=3, max_value=6.5)
+compare_labs_by_death(conn, 'platelet_count', min_value=30, max_value=450)
+
+plt.sca(axs[2, 4])
+compare_labs_by_death(conn, 'alanine_aminotransferase', min_value=10, max_value=150)
+
+plt.sca(axs[3, 0])
+compare_obs_by_death(conn, 'temperature', min_value=36, max_value=39)
+
+plt.sca(axs[3, 1])
+compare_obs_by_death(conn, 'respiratory_rate', min_value=15, max_value=30)
+
+plt.sca(axs[3, 2])
+compare_obs_by_death(conn, 'systolic_blood_pressure', min_value=50, max_value=200)
+
+plt.sca(axs[3, 3])
+compare_obs_by_death(conn, 'heart_rate', min_value=40, max_value=180)
+
+plt.sca(axs[3, 4])
+compare_obs_by_death(conn, 'oxygen_flow_rate', min_value=0, max_value=10)
+
+plt.sca(axs[4, 0])
+compare_labs_by_admit(conn, 'creatinine', min_value=60, max_value=200)
+
+plt.sca(axs[4, 1])
+compare_labs_by_admit(conn, 'hemoglobin', min_value=50, max_value=140)
+
+plt.sca(axs[4, 2])
+compare_obs_by_admit(conn, 'respiratory_rate', min_value=15, max_value=30)
+
+plt.sca(axs[4, 3])
+compare_obs_by_admit(conn, 'heart_rate', min_value=40, max_value=180)
+
+plt.sca(axs[4, 4])
+compare_obs_by_admit(conn, 'systolic_blood_pressure', min_value=40, max_value=180)
 
 
-#plt.sca(axs[2, 1])
-#plt.sca(axs[2, 2])
-#plt.sca(axs[2, 3])
-
-#plt.sca(axs[3, 0])
-#plt.sca(axs[3, 1])
-#plt.sca(axs[3, 2])
-#plt.sca(axs[3, 3])
-
+plt.tight_layout()
 plt.show()
 exit()
-
-compare_obs_by_death(conn, 'systolic_blood_pressure')
 
 #query = "SELECT imaging_accession_uid from imaging_data " + \
 #    " INNER JOIN patient_data ON " + \
