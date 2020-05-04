@@ -2,9 +2,15 @@ import re
 import numpy as np
 from constants import DRUG_NAME_MAP, DRUG_ROUTE_MAP, LAB_NAMES_MAP
 from lang_utils import transliterate_string
+from time_utils import get_hours_between_datetimes
+
+def map_string_lower(str_value):
+  if str_value is None: return ''
+  return str(str_value).lower().strip()
 
 def map_time(time):
   if time is None: return ''
+  if str(time).lower() == 'nat': return ''
   return str(time).strip().lower()
 
 def map_float_value(float_value):
@@ -63,7 +69,8 @@ def map_lab_sample_site(name, code):
   name_str = str(name).strip().lower()
   code_str = (str(code).strip()).lower()
 
-  if 'ecmo' in name_str: return 'ecmo_blood'
+  if 'art ecmo' in name_str: return 'ecmo_arterial_blood'
+  if 'vein ecmo' in name_str: return 'ecmo_venous_blood'
   if 'adbd' in name_str: return 'capillary_blood'
   if 'vein' in code_str: return 'venous_blood'
   if 'vein' in name_str: return 'venous_blood'
@@ -222,14 +229,27 @@ def map_culture_growth_value(value):
     print('Unrecognized growth result')
     return ''
 
-def map_episode_unit_type(unit_code):
+def map_episode_unit_type(unit_code, start_time=None):
   unit_code_str = str(unit_code)
+   
+  if start_time is not None:
+    time_delta = get_hours_between_datetimes(
+      '2020-01-01 00:00:00', start_time)
+    
   if '10S' in unit_code_str or '10N' in unit_code_str:
     return 'intensive_care'
-  elif 'ER' in unit_code_str:
+  if '13SM' in unit_code_str:
+    return 'high_dependency'
+  if '8NC' in unit_code_str:
+    if time_delta > 0:
+      return 'intensive_care'
+    else:
+      return 'coronary_care'
+
+  if 'ER' in unit_code_str:
     return 'emergency_room'
-  else: 
-    return 'inpatient_ward'
+  
+  return 'inpatient_ward'
 
 def map_observation_name(name):
   name_str = str(name).lower().strip()

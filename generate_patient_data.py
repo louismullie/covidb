@@ -9,13 +9,17 @@ import csv, re, os
 import numpy as np
 import pandas as pd
 
-from constants import DEBUG, TABLE_COLUMNS, LIVE_SHEET_FILENAME, CSV_DIRECTORY
-from time_utils import get_datetime_seconds, get_hours_between_datetimes
-from identity_utils import generate_patient_uid, generate_patient_site_uid, generate_accession_uid
+from constants import LOCAL_SITE_CODE, CSV_DIRECTORY, \
+  TABLE_COLUMNS, LIVE_SHEET_FILENAME
+from time_utils import get_datetime_seconds, \
+  get_hours_between_datetimes
+from identity_utils import generate_patient_uid, \
+  generate_patient_site_uid, generate_accession_uid
 from file_utils import write_csv, read_csv
 from postgresql_utils import sql_query
 
-from mappers import map_patient_ramq, map_patient_covid_status, map_patient_age, map_patient_sex
+from mappers import map_time, map_patient_ramq, \
+  map_patient_covid_status, map_patient_age, map_patient_sex
 
 live_sheet_rows = read_csv(LIVE_SHEET_FILENAME, remove_duplicates=True)
 
@@ -90,32 +94,24 @@ for row in live_sheet_rows:
   
   pcr_result_time = row[-6]
   pcr_sample_time = row[-7]
-  
+
   if patient_mrn not in patient_covid_statuses:
     patient_covid_statuses[patient_mrn] = [patient_covid_status]
   else:
     patient_covid_statuses[patient_mrn].append(patient_covid_status)
 
-  try:
-    if patient_mrn not in patient_data:
-      patient_data[patient_mrn] = []
+  if patient_mrn not in patient_data:
+    patient_data[patient_mrn] = []
 
-    patient_data[patient_mrn].append([
-      str(patient_mrn),
-      map_patient_ramq(patient_ramq),
-      pcr_sample_time,
-      'chum',
-      patient_covid_status,
-      map_patient_age(patient_age),
-      map_patient_sex(patient_birth_sex)
-    ])
-
-  except Exception as err:
-
-    if DEBUG:
-      print('Skipping row: %s' % row)
-      print('  due to error: %s' % err)
-    continue
+  patient_data[patient_mrn].append([
+    patient_mrn,
+    map_patient_ramq(patient_ramq),
+    map_time(pcr_sample_time),
+    LOCAL_SITE_CODE,
+    patient_covid_status,
+    map_patient_age(patient_age),
+    map_patient_sex(patient_birth_sex)
+  ])
 
   patient_mrns.append(patient_mrn)
 
@@ -126,22 +122,28 @@ status_col = TABLE_COLUMNS['patient_data'].index('patient_covid_status')
 # Build a list of unique patients
 for patient_mrn in patient_data:
 
-  patient_rows = patient_data[str(patient_mrn)]
+  patient_rows = patient_data[patient_mrn]
+  
+  # If the patient has never been positive, cohort entry time
+  # is the time of the first PCR result.
+  if 'positive' not in patient_covid_statuses[patient_mrn]:
+    filtered_patient_data.append(patient_rows[0])
+    continue
+  
+  # If the patient has ever been positive, cohort entry time
+  # is the time of the first positive PCR result.
   patient_rows.sort(key=lambda x: get_datetime_seconds(x[2]))
   found_positive = False
   
-  # Choose the first PCR entry - to be revised
-  if 'positive' not in patient_covid_statuses[patient_mrn]:
-    filtered_patient_data.append(patient_rows[0])
-  else:
-    for patient_row in patient_rows:
-      if found_positive: continue
-      if patient_row[status_col] == 'positive':
-        filtered_patient_data.append(patient_row)
-        found_positive = True
+  for patient_row in patient_rows:
+    if found_positive: continue
+    if patient_row[status_col] == 'positive':
+      filtered_patient_data.append(patient_row)
+      found_positive = True
 
 # Add vital status
-df = sql_query("SELECT DISTINCT * FROM dw_test.orcl_cichum_bendeces_live WHERE " + \
+df = sql_query("SELECT dossier FROM " + \
+  "dw_test.orcl_cichum_bendeces_live WHERE " + \
   "dossier in ('" + "', '".join(patient_mrns) + "') " + \
   "AND dhredeces > '2020-01-01'")
 

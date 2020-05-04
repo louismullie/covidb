@@ -5,6 +5,7 @@ pd.set_option('display.max_rows', 250)
 
 DEBUG = True
 
+LOCAL_SITE_CODE = 'CHUM'
 PATIENT_GLOBAL_SALT = '1fd5789d7ef4287fd8acfc765061e10eb3e7c093ff9150978695fb83692e4a87d55c4abf83c7ad9bcc3305ab03a4d28a5c404db6b84886c1665f949215e75a2b'
 PATIENT_SITE_SALT = '243460170aec12b2cb4ce6e92d1293ebe8bbc83b4a860681ecfd4b653961f253fc3cb7ae833de5a4faca2d98ed9789e061e95aea7335901e6c84c7c05feee85f'
 LIVE_SHEET_FILENAME = "/var/www/html/mchasse/covid19/data_all.csv"
@@ -586,8 +587,8 @@ LAB_NAMES_MAP = {
   'ssa': 'anti_ssa', 
   'ssb': 'anti_ssb', 
   'salicylates': 'salicylates', 
-  'sat o2 art': 'arterial_o2_sat', 
-  'sat o2 vein': 'venous_o2_sat', 
+  'sat o2 art': 'o2_sat', 
+  'sat o2 vein': 'o2_sat', 
   'sodium': 'sodium', 
   'sodium veineux': 'sodium', 
   'sodium, mict.': 'sodium', 
@@ -617,7 +618,7 @@ LAB_NAMES_MAP = {
   'troponine-t hs': 'hs_troponin_t', 
   'urée': 'urea', 
   'urée, mict.': 'urea', 
-  'vgm': 'mean_cell_volume', 
+  'vgm': 'mean_corpuscular_volume', 
   'vpm': 'mean_platelet_volume', 
   'vs': 'erythrocyte_sedimentation_rate', 
   'vanco post dose': 'vancomycin_post_dose', 
@@ -665,11 +666,11 @@ LAB_NAMES_MAP = {
   'excès base vein ecmo': 'base_excess',
   'po2 art ecmo': 'po2',
   'pco2 art ecmo': 'pco2',
-  'sat o2 art ecmo': 'arterial_o2_sat',
+  'sat o2 art ecmo': 'o2_sat',
   'hco3 art ecmo': 'bicarbonate',
-  'pco2 vein ecmo': 'venous_pco2',
-  'po2 vein ecmo': 'venous_po2',
-  'sat o2 vein ecmo': 'venous_o2_sat',
+  'pco2 vein ecmo': 'pco2',
+  'po2 vein ecmo': 'po2',
+  'sat o2 vein ecmo': 'o2_sat',
   'hco3 vein ecmo': 'bicarbonate',
   'g6pd quantit.': 'g6pd_quantitative',
   '6pgd quantit.': 'g6pd_quantitative',
@@ -701,6 +702,48 @@ NP_TO_FIO2_MAP = {
   '10.0': '60'
 }
 
+UNIT_TYPE_MAP = {
+  '12S ': 'inpatient_ward', #'Unité 12 Sud',  
+  '17N ': 'inpatient_ward', #'Unité 17 Nord', 
+  '13N ': 'inpatient_ward', #'Unité 13 Nord', 
+  '10N ': 'intensive_care_unit', #Unité des soins intensifs (NORD)', 
+  'CCJ1': 'day_surgery_unit', #'Chirurgie du même jour (1) CHUM', 
+  '14S ': 'inpatient_ward', #'Unité 14 Sud', 
+  '01CJ': 'day_surgery_unit', #"Unité de chirurgie d'un jour Ophtalmologie", 
+  '11NT': 'inpatient_ward', #'Unité  de médecine des toxicomanies', 
+  '15N ': 'inpatient_ward', #'Unité 15 Nord', 
+  '11NI': 'high_dependency_unit', #'Unité des soins intensifs de psychiatrie', 
+  '15S ': 'inpatient_ward', #'Unité 15 Sud', 
+  '14N ': 'inpatient_ward', #'Unité 14 Nord', 
+  '13S ': 'inpatient_ward', #'Unité 13 Sud', 
+  '17SM': 'high_dependency_unit', #'Unité 17 Sud- S. intermédiaires', 
+   #'CBI ': 'Unité fantôme', 
+  '09SA': 'inpatient_ward', #'Unité de naissance', 
+  '11NY': 'inpatient_ward', #'Unité de psychiatrie - toxico', 
+  'CHEM': 'cardiac_catheterization_lab', #'Unité Hémodynamie  CHUM', 
+  '13NM': 'high_dependency_unit', #'Unité 13 Nord- S.intermédiaires', 
+  '18S ': 'inpatient_ward', #'Unité 18 Sud', 
+  '19S ': 'inpatient_ward', #'Unité 19 Sud', 
+  '09S ': 'inpatient_ward', #'Unité Mère-enfant', 
+  '17S ': 'inpatient_ward', #Unité 17 Sud', 
+  '16S ': 'inpatient_ward', #'Unité 16 Sud', 
+  'CCJ2': 'day_surgery_unit', #'Chirurgie du même jour (2) CHUM', 
+  '11S ': 'inpatient_ward', #'Unité 11 Sud', 
+  '19N ': 'inpatient_ward', #'Unité 19 Nord', 
+  '10S ': 'intensive_care_unit', #'Unité des soins intensifs (SUD)', 
+  '08S ': 'palliative_care' #'Unité des soins palliatifs', 
+  '18N ': 'inpatient_ward', 
+  '13SM': 'high_dependency_unit', #'Unité 13 Sud -S.intermédiaires', 
+  '09N ': 'intensive_care', #'Unité des grands brûlés', 
+  '12N ': 'inpatient_ward', 
+  '11NP': 'inpatient_ward', 
+  '05CJ': 'day_surgery_unit',  #"Unité de chirurgie d'un jour (5 étage)", 
+  '15SM': 'high_dependency_unit', #'Unité 15 Sud- S. intermédiaires', 
+  '08NC': 'coronary_care_unit' #'Unité S.int. cardiaque', 
+  '16N ': 'inpatient_ward',  #'Unité 16 Nord', 
+  'CCJO': 'day_surgery_unit', #'Chirurgie du même jour (O) Obstétrique', 
+  '04CJ': 'day_surgery_unit',  #"Unité de chirurgie d'un jour (4 étage)", 
+}
 
 #[
 #  'prednisone',

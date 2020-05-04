@@ -4,6 +4,7 @@ def read_csv(file_name, remove_duplicates=False):
 
   data_rows = []
   lines_seen = set()
+  duplicates_removed = 0
 
   with open(file_name) as data_file:
     reader = csv.reader(data_file)
@@ -17,13 +18,21 @@ def read_csv(file_name, remove_duplicates=False):
 
       if ''.join(row) in lines_seen:
         if remove_duplicates: 
+          duplicates_removed += 1
           continue
 
       data_rows.append(row)
       lines_seen.add(''.join(row))
 
       row_count += 1
+  
+  if remove_duplicates:
+    duplicates_msg = '- removed %d duplicates' % \
+      duplicates_removed
+  else: 
+    duplicates_msg = ''
 
+  print('Read %s %s' % (file_name, duplicates_msg))
   return data_rows
 
 def write_csv(headers, data, file_name, remove_duplicates=False):

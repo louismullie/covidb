@@ -76,16 +76,24 @@ for index, row in df.iterrows():
     pcr_sample_times[str(patient_mrn)], str(lab_sample_time))
   
   if delta_hours > -48 and delta_hours < 7*24:
+
+    mapped_lab_name = map_lab_name(lab_name)
+    mapped_lab_sample_site = map_lab_sample_site(lab_name, lab_sample_site)
+    mapped_lab_value = map_lab_result_value(lab_result_string)
+
+    if mapped_lab_name == 'venous_o2_sat':
+      print(mapped_lab_value)
+
     lab_data_rows.append([
       patient_mrn, 
-      map_lab_name(lab_name), 
-      map_lab_sample_site(lab_name, lab_sample_site), 
+      mapped_lab_name, 
+      mapped_lab_sample_site, 
       map_time(lab_sample_time), 
       map_time(lab_result_time), 
       lab_result_status,
       lab_result_units, 
       lab_result_string, 
-      map_lab_result_value(lab_result_string)
+      mapped_lab_value
     ])
 
 print('Total rows: %d' % len(lab_data_rows))
