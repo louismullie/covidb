@@ -265,8 +265,8 @@ for row in live_sheet_rows:
 
   patient_mrn = str(row[0])
 
-  if patient_mrn in other_bypassed_mrns:
-    continue
+  #if patient_mrn in other_bypassed_mrns:
+  #  continue
 
   patient_ramq = str(row[1])
   patient_age = row[-1]
@@ -307,7 +307,29 @@ for patient_mrn in patient_data:
   
   # Cohort entry time is the time of the first PCR result.
   patient_rows.sort(key=lambda x: get_datetime_seconds(x[2]))
-  filtered_patient_data.append(patient_rows[0])
+
+  patient_status = 'unknown'
+  
+  row_index = 0
+  for patient_row in patient_rows:
+    if patient_row[status_col] == 'positive':
+      patient_status = 'positive'
+      break
+    elif patient_row[status_col] == 'negative':
+      patient_status = 'negative'
+    elif patient_row[status_col] == 'pending' and \
+      patient_status != 'negative':
+      patient_status = 'pending'
+    row_index += 1
+ 
+  if patient_status == 'positive':
+    patient_row = patient_rows[row_index]
+  else:
+    patient_row = patient_rows[0]
+
+  patient_row[status_col] = patient_status
+
+  filtered_patient_data.append(patient_row)
 
 # Add vital status
 df = sql_query("SELECT dossier FROM " + \

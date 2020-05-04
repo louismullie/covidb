@@ -8,7 +8,7 @@ DEBUG = True
 LOCAL_SITE_CODE = 'CHUM'
 PATIENT_GLOBAL_SALT = '1fd5789d7ef4287fd8acfc765061e10eb3e7c093ff9150978695fb83692e4a87d55c4abf83c7ad9bcc3305ab03a4d28a5c404db6b84886c1665f949215e75a2b'
 PATIENT_SITE_SALT = '243460170aec12b2cb4ce6e92d1293ebe8bbc83b4a860681ecfd4b653961f253fc3cb7ae833de5a4faca2d98ed9789e061e95aea7335901e6c84c7c05feee85f'
-LIVE_SHEET_FILENAME = "/var/www/html/mchasse/covid19/data_all.csv"
+LIVE_SHEET_FILENAME = "/var/www/html/mchasse/covid19/data_all_tagged.csv"
 CSV_DIRECTORY = "/data8/projets/Mila_covid19/output/covidb_full/csv"
 BLOB_DIRECTORY = "/data8/projets/Mila_covid19/output/covidb_full/blob"
 IMAGING_LIST_FILENAME = "/data8/projets/Mila_covid19/data/studies_to_extract.csv"
@@ -738,7 +738,7 @@ UNIT_TYPE_MAP = {
   '08S': 'palliative_care_unit', #'Unité des soins palliatifs', 
   '18N': 'inpatient_ward', 
   '13SM': 'high_dependency_unit', #'Unité 13 Sud -S.intermédiaires', 
-  '09N': 'intensive_care', #'Unité des grands brûlés', 
+  '09N': 'intensive_care_unit', #'Unité des grands brûlés', 
   '12N': 'inpatient_ward', 
   '11NP': 'inpatient_ward', 
   '05CJ': 'day_surgery_unit',  #"Unité de chirurgie d'un jour (5 étage)", 

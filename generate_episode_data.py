@@ -37,11 +37,16 @@ df = sql_query(
   "AND dhreadm > '2020-01-01'"
 )
 
+#df = sql_query(
+#  "SELECT dossier from dw_test.view_covid_noncovid_tested_hospitalisation " +
+#  "WHERE soinsintensif=0 and patient_covid='Positif'"
+#)
+
 episode_data_rows = [
   [
     map_string_lower(row.dossier), 
     map_string_lower(int(row.noadm)), 
-    map_episode_unit_type('ER', None), 
+    map_episode_unit_type('ER', None),  
     map_time(row.dhreadm), 
     map_time(row.dhredep),
     map_string_lower(row.diagdesc),
@@ -79,10 +84,6 @@ for index, row in df.iterrows():
 
   location_start_time = map_time(row.dhredeb)
 
-  #hours = get_hours_between_datetimes(
-  #    pcr_sample_times[patient_mrn], location_start_time)
-    
-  
   # Unfortunately, not filled out in database
   # Leave this for later just in case
   # location_end_time = map_time(row.dhrefin)
@@ -109,7 +110,7 @@ for index, row in df.iterrows():
   current_num_locations = len(locations_data[patient_mrn][episode_id])
    
   # Skip patients going through Unite fantome
-  if location_ward_code == 'CBI': continue
+  if location_ward_code in ['CELJ','CBI']: continue
 
   # Handle changes between units of the same type as one location
   if current_num_locations > 1:
@@ -201,6 +202,14 @@ for patient_mrn in locations_data:
       episode_duration_hours = int(get_hours_between_datetimes(
         episode_start_time, episode_end_time, default_now=True
       ))
+
+      # Skip if test episode started > 24h after first PCR test
+      hours_delta = get_hours_between_datetimes(
+        pcr_sample_times[patient_mrn], episode_start_time)
+  
+      if hours_delta < -24*5: 
+        print('Skip', episode_unit_type)
+        continue
 
       episode_data_rows.append([
         patient_mrn, 

@@ -41,13 +41,15 @@ def map_patient_covid_status(status):
   elif status_str == 'annulé': return 'unknown'
   elif status_str == 'rapp. numérisé': return 'unknown'
   elif status_str == 'non valide': return 'unknown'
+  elif status_str == 'positif transféré': return 'positive'
+  elif status_str == 'négatif transféré': return 'negative'
   else: raise Exception('Invalid COVID status: %s' % status)
 
 def map_patient_age(age):
   age_str = str(age).strip()
   if age_str == '': return ''
   age_parsed = int(age_str)
-  if age_parsed < 0 or age_parsed > 122:
+  if age_parsed < 0 or age_parsed > 125:
     raise Exception('Invalid age: %s' % age)
   return age_parsed
 
@@ -235,13 +237,13 @@ def map_episode_unit_type(unit_code, start_time=None):
    
   if start_time is not None:
     time_delta = get_hours_between_datetimes(
-      '2020-01-01 00:00:00', start_time)
+      '2020-04-15 00:00:00', start_time)
   
   if '8NC' in unit_code_str:
     if time_delta > 0:
-      return 'intensive_care'
+      return 'intensive_care_unit'
     else:
-      return 'coronary_care'
+      return 'coronary_care_unit'
   if 'ER' in unit_code_str:
     return 'emergency_room'
 
