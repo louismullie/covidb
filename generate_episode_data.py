@@ -12,7 +12,7 @@ import pandas as pd
 from constants import DEBUG, TABLE_COLUMNS, CSV_DIRECTORY
 from postgresql_utils import sql_query, list_columns, list_tables
 from file_utils import write_csv, read_csv
-from time_utils import get_hours_between_datetimes, get_current_datetime
+from time_utils import get_hours_between_datetimes
 from identity_utils import generate_patient_site_uid
 from mappers import map_time, map_string_lower, map_episode_unit_type
 
@@ -27,6 +27,7 @@ patient_data_rows = read_csv(os.path.join( \
   CSV_DIRECTORY, 'patient_data.csv'))
 
 patient_mrns = [row[0] for row in patient_data_rows]
+pcr_sample_times = [row[2] for row in patient_data_rows]
 
 # Get ER visit data from ADT
 df = sql_query(
@@ -43,8 +44,13 @@ episode_data_rows = [
     map_episode_unit_type('ER', None), 
     map_time(row.dhreadm), 
     map_time(row.dhredep),
-    map_string_lower(row.diagdesc)
-  ] for i, row in df.iterrows()
+    map_string_lower(row.diagdesc),
+    get_hours_between_datetimes( \
+      row.dhreadm, row.dhredep, default_now=True),
+  ] for i, row in df.iterrows() \
+  if get_hours_between_datetimes( \
+    row.dhreadm, pcr_sample_times[str(row.dossier)]
+  ) > 0
 ]
 
 episode_ids = [
@@ -188,16 +194,9 @@ for patient_mrn in locations_data:
         episode_description = admission_data['admission_description']
       
       # Get length of stay
-      if episode_end_time == '':
-        los_hours = get_hours_between_datetimes(
-          episode_start_time, get_current_datetime()
-        )
-      else:
-        los_hours = get_hours_between_datetimes(
-          episode_start_time, episode_end_time
-        )
-
-      episode_length_days = int(los_hours / 24.0)
+      episode_duration_hours = int(get_hours_between_datetimes(
+        episode_start_time, episode_end_time, default_now=True
+      ))
 
       episode_data_rows.append([
         patient_mrn, 
@@ -206,7 +205,7 @@ for patient_mrn in locations_data:
         episode_start_time, 
         episode_end_time,
         episode_description,
-        episode_length_days
+        episode_duration_hours
       ])
 
 print('Total rows: %d' % len(episode_data_rows))

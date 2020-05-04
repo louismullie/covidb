@@ -35,8 +35,10 @@ TABLE_COLUMNS = {
   ],
 
   'episode_data': [
-    'patient_site_uid', 'episode_admission_uid', 'episode_unit_type', 
-    'episode_start_time', 'episode_end_time', 'episode_description', 'episode_length_days'
+    'patient_site_uid', 'episode_admission_uid', 
+    'episode_unit_type', 'episode_start_time', 
+    'episode_end_time', 'episode_description', 
+    'episode_duration_hours'
   ],
 
   'diagnosis_data': [
@@ -51,14 +53,15 @@ TABLE_COLUMNS = {
   ],
 
   'lab_data': [
-    'patient_site_uid', 'lab_name', 'lab_sample_site', 'lab_sample_time',
-    'lab_result_time', 'lab_result_status', 'lab_result_units',
+    'patient_site_uid', 'lab_name', 'lab_sample_site', 
+    'lab_sample_time', 'lab_result_time', 
+    'lab_result_status', 'lab_result_units',
     'lab_result_string', 'lab_result_value'
   ],
 
   'observation_data': [
-    'patient_site_uid', 'observation_name', 'observation_time', 
-    'observation_value', #'observation_units'
+    'patient_site_uid', 'observation_name', 
+    'observation_time', 'observation_value', #'observation_units'
   ],
 
   'pcr_data': [
