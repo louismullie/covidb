@@ -12,7 +12,7 @@ import pandas as pd
 from constants import DEBUG, TABLE_COLUMNS, CSV_DIRECTORY
 from postgresql_utils import sql_query, list_columns, list_tables
 from file_utils import write_csv, read_csv
-from time_utils import get_hours_between_datetimes
+from time_utils import get_hours_between_datetimes, get_current_datetime
 from identity_utils import generate_patient_site_uid
 from mappers import map_time, map_string_lower, map_episode_unit_type
 
@@ -27,16 +27,6 @@ patient_data_rows = read_csv(os.path.join( \
   CSV_DIRECTORY, 'patient_data.csv'))
 
 patient_mrns = [row[0] for row in patient_data_rows]
-
-# Get service description from codes
-df = sql_query(
-  "SELECT unitesoinscode, unitesoinsdesc from dw_v01.ci_unitesoins "
-  "WHERE unitesoinscode is not null AND hospital = 'chum' " +
-  "AND unitesoinsdesc NOT LIKE '%fermé%'"
-)
-
-service_codes = dict((row.unitesoinscode, row.unitesoinsdesc) for i, row in df.iterrows())
-print(service_codes)
 
 # Get ER visit data from ADT
 df = sql_query(
@@ -94,15 +84,11 @@ for index, row in df.iterrows():
   location_ward_code = str(row.unitesoinscode).strip()
   
   patient_location_data = {
-    'location_patient_mrn': patient_mrn,
     'location_ward_code': location_ward_code, 
     'location_start_time': location_start_time,
     'location_end_time': '',
     'location_description': ''
   }
-
-  if patient_mrn == '5325786':
-    print(patient_location_data)
 
   if patient_mrn not in locations_data:
     locations_data[patient_mrn] = {}
@@ -112,6 +98,9 @@ for index, row in df.iterrows():
 
   current_num_locations = len(locations_data[patient_mrn][episode_id])
    
+  # Skip patients going through Unite fantome
+  if location_ward_code == 'CBI': continue
+
   # Handle changes between units of the same type as one location
   if current_num_locations > 1:
     previous_location = locations_data[patient_mrn][episode_id][-1]
@@ -122,7 +111,7 @@ for index, row in df.iterrows():
       location_ward_code, location_start_time)
     if previous_ward_type == current_ward_type:
       continue
-  
+
   locations_data[patient_mrn][episode_id] \
     .append(patient_location_data)
 
@@ -198,19 +187,28 @@ for patient_mrn in locations_data:
       else:
         episode_description = admission_data['admission_description']
       
+      # Get length of stay
+      if episode_end_time == '':
+        los_hours = get_hours_between_datetimes(
+          episode_start_time, get_current_datetime()
+        )
+      else:
+        los_hours = get_hours_between_datetimes(
+          episode_start_time, episode_end_time
+        )
+
+      episode_length_days = int(los_hours / 24.0)
+
       episode_data_rows.append([
         patient_mrn, 
         episode_id,
         episode_unit_type,
         episode_start_time, 
         episode_end_time,
-        episode_description
+        episode_description,
+        episode_length_days
       ])
 
-for row in episode_data_rows:
-  if row[0] == '5325786':
-    #sprint(locations_data['5325786'])
-    print(row)
 print('Total rows: %d' % len(episode_data_rows))
 
 write_csv(TABLE_COLUMNS['episode_data'], episode_data_rows, 

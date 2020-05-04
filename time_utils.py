@@ -1,5 +1,8 @@
 from datetime import datetime
 
+def get_current_datetime():
+  return datetime.today().strftime("%Y-%m-%d %H:%M:%S")
+
 def get_datetime_seconds(dt, dt_format="%Y-%m-%d %H:%M:%S"):
   return int(datetime.strptime(str(dt), dt_format).strftime('%s'))
 

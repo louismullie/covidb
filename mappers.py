@@ -1,6 +1,7 @@
 import re
 import numpy as np
-from constants import DRUG_NAME_MAP, DRUG_ROUTE_MAP, LAB_NAMES_MAP
+from constants import DRUG_NAME_MAP, DRUG_ROUTE_MAP, \
+  LAB_NAMES_MAP, UNIT_TYPE_MAP
 from lang_utils import transliterate_string
 from time_utils import get_hours_between_datetimes
 
@@ -217,7 +218,7 @@ def map_culture_result_status(value):
   if value_str == 'pos': return 'resulted'
   elif value_str == 'neg': return 'resulted'
   else: 
-    print('Unrecognized culture status')
+    print('Unrecognized culture status: ' + value_str)
     return ''
 
 def map_culture_growth_value(value):
@@ -226,30 +227,29 @@ def map_culture_growth_value(value):
   if value_str == 'pos': return 'positive'
   elif value_str == 'neg': return 'negative'
   else: 
-    print('Unrecognized growth result')
+    print('Unrecognized growth result ' + value_str)
     return ''
 
 def map_episode_unit_type(unit_code, start_time=None):
-  unit_code_str = str(unit_code)
+  unit_code_str = str(unit_code).strip()
    
   if start_time is not None:
     time_delta = get_hours_between_datetimes(
       '2020-01-01 00:00:00', start_time)
-    
-  if '10S' in unit_code_str or '10N' in unit_code_str:
-    return 'intensive_care'
-  if '13SM' in unit_code_str:
-    return 'high_dependency'
+  
   if '8NC' in unit_code_str:
     if time_delta > 0:
       return 'intensive_care'
     else:
       return 'coronary_care'
-
   if 'ER' in unit_code_str:
     return 'emergency_room'
-  
-  return 'inpatient_ward'
+
+  if unit_code_str not in UNIT_TYPE_MAP:
+    print('Unrecognized unit type: ' + unit_code_str)
+    return ''
+  else:
+    return UNIT_TYPE_MAP[unit_code_str]
 
 def map_observation_name(name):
   name_str = str(name).lower().strip()
