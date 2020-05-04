@@ -91,7 +91,7 @@ def map_lab_sample_site(name, code):
   if 'autres' in code_str: return 'other'
   else:
     #print('Unrecognized sample site: ', name_str, code_str)
-    return 'blood'
+    return ['unspecified_blood']
 
 def map_lab_result_value(result_string):
   if result_string is None: return ''

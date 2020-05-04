@@ -18,13 +18,15 @@ from mappers import map_time
 
 patient_data_rows = read_csv(os.path.join(CSV_DIRECTORY, 'patient_data.csv'))
 
-patient_mrns = []
+patient_mrns = set()
 pcr_sample_times = {}
 
 for row in patient_data_rows:
   patient_mrn = row[0]
-  patient_mrns.append(patient_mrn)
+  patient_mrns.add(patient_mrn)
   pcr_sample_times[patient_mrn] = row[2]
+
+patient_mrns = list(patient_mrns)
 
 df = sql_query("SELECT * FROM dw_v01.dw_rad_examen "+
   "WHERE dossier IN ('S" + "', 'S".join(patient_mrns) + "') " +
@@ -41,6 +43,7 @@ for index, row in df.iterrows():
   if ('rx' in lower_desc and 'poumon' in lower_desc): #or \
      #('scan' in lower_desc and 'thorax' in lower_desc):
      #('scan' in lower_desc and 'abdo' in lower_desc):
+    
     hours = get_hours_between_datetimes(
       pcr_sample_times[row_patient_mrn], row.date_heure_exam)
     
@@ -49,7 +52,7 @@ for index, row in df.iterrows():
     patients_with_imaging.append(row_patient_mrn)
     imaging_accession_numbers.append(row.accession_number)
       
-    imaging_accession_uid = generate_accession_uid(row.accession_number)
+    imaging_accession_uid = row.accession_number
     imaging_acquired_time = row.date_heure_debut_examen
     # check imaging acquired time
     imaging_data_rows.append([

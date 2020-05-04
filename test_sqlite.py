@@ -89,7 +89,7 @@ def compare_labs_by(conn, col, val_pos, val_neg, lab_name, min_value=0, max_valu
   
   res = sql_fetch_all(conn, query + " '" +  val_neg + "' " + query_tail)
   values_neg = [float(value[0]) for value in res]
-
+  
   plot_compare_kde(lab_name, col, val_pos, val_neg, values_pos, \
     values_neg, min_value, max_value)
 
@@ -144,21 +144,72 @@ conn = sqlite3.connect(db_file_name)
 #tabulate_column('patient_covid_status', res, -4)
 #tabulate_column('patient_death_status', res, -1)
 
-compare_labs_by_admit(conn, 'lymphocyte_count')
-compare_labs_by_admit(conn, 'd_dimer')
-compare_obs_by_admit(conn, 'fraction_inspired_oxygen')
-compare_obs_by_admit(conn, 'temperature')
+fig, axs = plt.subplots(5, 5)
 
+plt.sca(axs[0, 0])
+compare_labs_by_covid(conn, 'lymphocyte_count', min_value=0.1, max_value=10)
+#compare_labs_by_admit(conn, 'd_dimer')
+#compare_obs_by_admit(conn, 'fraction_inspired_oxygen', max_value=100)
+#compare_obs_by_admit(conn, 'temperature', min_value=35, max_value=40)
+
+plt.sca(axs[0, 1])
 compare_labs_by_covid(conn, 'c_reactive_protein', max_value=500)
-compare_labs_by_covid(conn, 'd_dimer', max_value=30000)
-compare_labs_by_covid(conn, 'lactate_dehydrogenase', max_value=10000)
-compare_labs_by_covid(conn, 'ferritin', min_value=5, max_value=10000)
-compare_labs_by_covid(conn, 'lymphocyte_count', max_value=10)
-compare_labs_by_covid(conn, 'phosphate', max_value=5)
-compare_labs_by_covid(conn, 'mean_platelet_volume', max_value=10)
 
-compare_obs_by_covid(conn, 'fraction_inspired_oxygen')
-compare_obs_by_death(conn, 'fraction_inspired_oxygen')
+#compare_labs_by_covid(conn, 'd_dimer', max_value=30000)
+#compare_labs_by_covid(conn, 'lactate_dehydrogenase', max_value=10000)
+#compare_labs_by_covid(conn, 'ferritin', min_value=5, max_value=10000)
+
+plt.sca(axs[0, 2])
+compare_labs_by_covid(conn, 'lymphocyte_count', max_value=10)
+
+plt.sca(axs[0, 3])
+compare_labs_by_covid(conn, 'c_reactive_protein', max_value=500)
+
+plt.sca(axs[0, 4])
+compare_labs_by_covid(conn, 'phosphate', max_value=2.5)
+
+
+#compare_labs_by_covid(conn, 'mean_platelet_volume', max_value=10)
+
+#compare_obs_by_covid(conn, 'fraction_inspired_oxygen')
+
+plt.sca(axs[1, 0])
+compare_obs_by_covid(conn, 'fraction_inspired_oxygen', min_value=21, max_value=100)
+
+plt.sca(axs[1, 1])
+compare_obs_by_covid(conn, 'temperature', min_value=35, max_value=40.0)
+
+plt.sca(axs[1, 2])
+compare_obs_by_covid(conn, 'systolic_blood_pressure', min_value=50, max_value=200)
+
+plt.sca(axs[1, 3])
+compare_obs_by_covid(conn, 'heart_rate', min_value=40, max_value=180)
+
+plt.sca(axs[2, 0])
+compare_labs_by_death(conn, 'lactic_acid', min_value=1, max_value=15)
+
+plt.sca(axs[2, 1])
+compare_labs_by_death(conn, 'pco2', min_value=35, max_value=100)
+
+plt.sca(axs[2, 2])
+compare_labs_by_death(conn, 'd_dimer', min_value=100, max_value=15000)
+
+plt.sca(axs[2, 3])
+compare_labs_by_death(conn, 'potassium', min_value=3, max_value=6.5)
+
+
+#plt.sca(axs[2, 1])
+#plt.sca(axs[2, 2])
+#plt.sca(axs[2, 3])
+
+#plt.sca(axs[3, 0])
+#plt.sca(axs[3, 1])
+#plt.sca(axs[3, 2])
+#plt.sca(axs[3, 3])
+
+plt.show()
+exit()
+
 compare_obs_by_death(conn, 'systolic_blood_pressure')
 
 #query = "SELECT imaging_accession_uid from imaging_data " + \

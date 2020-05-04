@@ -338,7 +338,7 @@ LAB_NAMES_MAP = {
   'a-1-glycoprot. %': 'alpha1_glycoprotein_percent', 
   'a-1-glycoprot., élec': 'alpha1_glycoprotein', #
   'a.foetoprotéine': 'alpha_fetoprotein', 
-  'a.lactique (rés.prélim.)': 'lactic_acid', 
+  'a.lactique (rés.prélim.)': 'lactic_acid_prelim', 
   'a1 antitrypsine': 'alpha_1_antitrypsin', 
   'a1-antitrypsine, élec': 'alpha1_antitrypsin', 
   'a2-macroglob. %': 'alpha2_macroglobulin_percent', 
@@ -352,7 +352,7 @@ LAB_NAMES_MAP = {
   'ac.anti thyroglobuline': 'anti_thyroglobulin',
   'ac. valproïque': 'valproic_acid', 
   'acide folique': 'folic_acid', 
-  'acide lac.art. ser.': 'arterial_lactic_acid', 
+  'acide lac.art. ser.': 'lactic_acid', 
   'acide lactique': 'lactic_acid', 
   'acide urique': 'uric_acid', 
   'acides biliaires': 'biliary_acids', 

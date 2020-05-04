@@ -27,11 +27,13 @@ all_mrns = list(set(
   [str(row[0]) for row in live_sheet_rows]
 ))
 
-all_tests = [
+all_tests_obj = [
   [str(row[0]), str(row[-7]), 
   row[-3] == 'External'] \
   for row in live_sheet_rows
 ]
+
+all_tests = [','.join([str(x) for x in y]) for y in all_tests_obj]
 
 total_tests = len(all_tests)
 
@@ -66,18 +68,21 @@ def is_between_datetimes(dt, d1, d2):
 
 test_num = 0
 tests_done_external = []
+tests_done_internal = []
 tests_done_in_er_episode = []
 tests_done_in_non_er_episode = []
 tests_done_without_episode = []
 
 overlapping_episodes = 0
 
-for test in all_tests:
-  test_mrn, test_dt, is_external = test
+for test_obj in all_tests_obj:
+  test_mrn, test_dt, is_external = test_obj
+  test = ','.join([str(x) for x in test_obj])
 
   if is_external:
     tests_done_external.append(test)
-    continue
+  else:
+    tests_done_internal.append(test)
 
   was_done_in_er = False
   curr_ep = None
@@ -86,16 +91,14 @@ for test in all_tests:
     if is_between_datetimes(test_dt, ep_start, ep_end):
       was_done_in_er = True
       break
+
   was_done_in_non_er = False
   for ep_mrn, ep_start, ep_end in non_er_episodes:
     if test_mrn != ep_mrn: continue
     if is_between_datetimes(test_dt, ep_start, ep_end):
-      tests_done_in_non_er_episode.append([test_mrn, test_dt])
       was_done_in_non_er = True
       break
-  if was_done_in_er and was_done_in_non_er:
-    overlapping_episodes += 1 
-  
+
   if was_done_in_er:
     tests_done_in_er_episode.append(test)
   elif was_done_in_non_er:
@@ -105,31 +108,21 @@ for test in all_tests:
 
   test_num += 1
 
-tests_done_internal = [test for m, d, ext in all_tests if not ext]
-
 print('\n\n===== 1. Summary of COVID testing according to patient contact\n\n')
 
-print('Total tests in live sheet: %d' % len(all_tests))
+print('Total tests in live sheet: %d' % len(set(all_tests)))
 
-print('\n... Tests done at outside labs: %d' % len(tests_done_external))
-print('   ... sampled during a CHUM ER episode: %d' % len(tests_done_in_er_episode & tests_done_external))
-print('   ... sampled during a CHUM hospital admission: %d' % len(tests_done_in_non_er_episode & tests_done_external))
-print('   ... sampled outside of CHUM: %d' % len(tests_done_without_episode & tests_done_external))
+print('\n... Tests done at outside labs: %d' % len(set(tests_done_external)))
+print('   ... sampled during presence in CHUM emergency room: %d' % len(set(tests_done_in_er_episode) & set(tests_done_external)))
+print('   ... sampled during presence on CHUM inpatient unit*: %d' % len(set(tests_done_in_non_er_episode) & set(tests_done_external)))
+print('   ... sampled during out-of-hospital clinical episode: %d' % len(set(tests_done_without_episode) & set(tests_done_external)))
 
-print('Total tests in live sheet: %d' % len(all_tests))
+print('\n... Tests done at the CHUM labs: %d' % len(set(tests_done_internal)))
+print('   ... sampled during presence in CHUM emergency room: %d' % len(set(tests_done_in_er_episode) & set(tests_done_internal)))
+print('   ... sampled during presence on CHUM inpatient unit*: %d' % len(set(tests_done_in_non_er_episode) & set(tests_done_internal)))
+print('   ... sampled during out-of-hospital clinical episode: %d' % len(set(tests_done_without_episode) & set(tests_done_internal)))
 
-print('\n... Tests done at the CHUM labs: %d' % len(tests_done_internal))
-print('   ... sampled during a CHUM ER episode: %d' % len(tests_done_in_er_episode & tests_done_internal))
-print('   ... sampled during a CHUM hospital admission: %d' % len(tests_done_in_non_er_episode & tests_done_internal))
-print('   ... sampled outside of CHUM: %d' % len(tests_done_without_episode & tests_done_internal))
-
-print('\n\n===== 2. Summary of COVID testing according to providing lab\n\n')
-
-print('\n... tests done at outside labs: %d' % len(tests_done_external))
-print('   ... tests done at the CHUM labs: %d' % len(tests_done_internal))
-
-print('   ... sampled without an episode: %d' % len(tests_done_without_episode & tests_done_))
-
+print('\n   * i.e. inpatient ward, intensive care unit, etc.')
 
 print('\n\n===== 2. Summary of hospital contact by tested patients\n\n')
 
@@ -225,21 +218,26 @@ other_bypassed_mrns = [
 print('Total patients tested in live sheet: %d' % \
   (num_tested))
 
-print('\nTotal %d ER episodes (%d patients)' % \
+print('Total patients with hospital contact: %d' % \
+  (num_included))
+
+print('\nTotal %d CHUM ER episodes (%d patients)' % \
   (num_visits, num_visited))
 
-print('\nTotal %d non-ER episodes (%d patients)' % \
+print('\nTotal %d hospital admissions (%d patients)' % \
   (num_admissions, num_admitted))
 
-print('\n... %d CHUM admissions from ER (%d patients)' % \
+print('\n... %d admissions from ER (%d patients)' % \
   (len(admitted_from_er_mrns), \
    len(list(set(admitted_from_er_mrns)))))
 
-print('\n... %d CHUM admissions from outside (%d patients)' % \
+print('\n... %d admissions from outside (%d patients)' % \
   (len(other_bypassed_mrns), \
    len(list(set(other_bypassed_mrns)))))
 
-print('\n... %d episodes in other categories' % \
+print('   ... i.e. direct-to-ward transfer or elective admission')
+
+print('\nTotal episodes in other categories: %d' % \
   (num_admissions - len(admitted_from_er_mrns) \
   - len(other_bypassed_mrns)))
 
@@ -258,87 +256,3 @@ print('   ... %d presence in cath lab (%d patients)' % \
 print('   ... %d episodes missing unit information (%d patients)' % \
   (len(no_unit_mrns), \
    len(list(set(no_unit_mrns)))))
-
-print('\nTotal %d patients with hospital contact' % \
-  (num_included))
-
-print('\n... %d only ever tested outside of CHUM' % \
-  len(list(set(included_mrns) & set(external_mrns))))
-
-# Begin building database
-
-patient_data = {}
-patient_mrns = []
-patient_covid_statuses = {}
-
-for row in live_sheet_rows:
-
-  patient_mrn = str(row[0])
-
-  if patient_mrn not in included_mrns:
-    continue
-
-  patient_ramq = str(row[1])
-  patient_age = row[-1]
-  patient_birth_sex = row[-2]
-  patient_covid_status = map_patient_covid_status(row[-4])
-  
-  pcr_result_time = row[-6]
-  pcr_sample_time = row[-7]
-
-  if patient_mrn not in patient_covid_statuses:
-    patient_covid_statuses[patient_mrn] = [patient_covid_status]
-  else:
-    patient_covid_statuses[patient_mrn].append(patient_covid_status)
-
-  if patient_mrn not in patient_data:
-    patient_data[patient_mrn] = []
-
-  patient_data[patient_mrn].append([
-    patient_mrn,
-    map_patient_ramq(patient_ramq),
-    map_time(pcr_sample_time),
-    LOCAL_SITE_CODE,
-    patient_covid_status,
-    map_patient_age(patient_age),
-    map_patient_sex(patient_birth_sex)
-  ])
-
-  patient_mrns.append(patient_mrn)
-
-filtered_patient_data = []
-
-status_col = TABLE_COLUMNS['patient_data'].index('patient_covid_status')
-
-# Build a list of unique patients
-for patient_mrn in patient_data:
-
-  patient_rows = patient_data[patient_mrn]
-  
-  # Cohort entry time is the time of the first PCR result.
-  patient_rows.sort(key=lambda x: get_datetime_seconds(x[2]))
-  filtered_patient_data.append(patient_rows[0])
-
-# Add vital status
-df = sql_query("SELECT dossier FROM " + \
-  "dw_test.orcl_cichum_bendeces_live WHERE " + \
-  "dossier in ('" + "', '".join(patient_mrns) + "') " + \
-  "AND dhredeces > '2020-01-01'")
-
-dead = [row.dossier for index, row in df.iterrows()]
-final_patient_data = []
-
-for row in filtered_patient_data:
-  final_row = row
-  if row[0] in dead:
-    final_row = final_row + ['dead']
-  else:
-    final_row = final_row + ['alive']
-  if row[0] in admitted_mrns:
-    final_row = final_row + ['yes']
-  else:
-    final_row = final_row + ['no']
-  final_patient_data.append(final_row)
-
-write_csv(TABLE_COLUMNS['patient_data'], final_patient_data, 
-  os.path.join(CSV_DIRECTORY, 'patient_data.csv'))

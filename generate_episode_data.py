@@ -27,7 +27,7 @@ patient_data_rows = read_csv(os.path.join( \
   CSV_DIRECTORY, 'patient_data.csv'))
 
 patient_mrns = [row[0] for row in patient_data_rows]
-pcr_sample_times = [row[2] for row in patient_data_rows]
+pcr_sample_times = dict( (str(row[0]), str(row[2])) for row in patient_data_rows)
 
 # Get ER visit data from ADT
 df = sql_query(
@@ -79,6 +79,10 @@ for index, row in df.iterrows():
 
   location_start_time = map_time(row.dhredeb)
 
+  #hours = get_hours_between_datetimes(
+  #    pcr_sample_times[patient_mrn], location_start_time)
+    
+  
   # Unfortunately, not filled out in database
   # Leave this for later just in case
   # location_end_time = map_time(row.dhrefin)
