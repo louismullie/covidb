@@ -192,24 +192,42 @@ def correlate_labs(conn):
     id_1, st_1, rv_1 = arterial_pco2
     for venous_pco2 in venous_pco2s:
       id_2, st_2, rv_2 = venous_pco2
-      if st_1 == st_2:
+      if id_1 != id_2: continue
+      av_pco2 = rv_2 - rv_1
+      if av_pco2 < 0: continue
+      dt12 = get_hours_between_datetimes(st_1, st_2)
+      if dt12 < 2:
         pairs.append([arterial_pco2, venous_pco2])
   
-  triplets = []
+  x = []
+  y = []
+  ids = []
 
   for d_dimer in d_dimers:
     id_1, st_1, rv_1 = d_dimer
     for arterial_pco2, venous_pco2 in pairs:
       id_2, st_2, rv_2 = arterial_pco2
       id_3, st_3, rv_3 = venous_pco2
-      av_pco2 = rv_2 - rv_3
+      if not (id_1 == id_2 == id_3): continue
       td12 = get_hours_between_datetimes(st_1, st_2)
       td13 = get_hours_between_datetimes(st_1, st_3)
       if np.abs(td12) < 24 or np.abs(td13) < 24:
-        triplets.append([rv_1, av_pco2])
+        x.append(rv_1)
+        y.append(av_pco2)
+        ids.append(id_1)
 
-  print(len(triplets))
+  print(len(x))
+  print(len(np.unique(ids)))
+  x = np.asarray(x)
+  y = np.asarray(y)
 
+  z = np.polyfit(x, y, 1)
+  p = np.poly1d(z)
+
+  plt.scatter(x, y)
+  plt.plot(x, p(x), 'r--')
+  plt.show()
+  
   #print(arterial_pco2)
   #print(venous_pco2)
   #print(d_dimer)

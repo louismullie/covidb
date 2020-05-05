@@ -5,7 +5,7 @@ pd.set_option('display.max_rows', 250)
 
 DEBUG = True
 
-LOCAL_SITE_CODE = 'CHUM'
+LOCAL_SITE_CODE = 'chum'
 PATIENT_GLOBAL_SALT = '1fd5789d7ef4287fd8acfc765061e10eb3e7c093ff9150978695fb83692e4a87d55c4abf83c7ad9bcc3305ab03a4d28a5c404db6b84886c1665f949215e75a2b'
 PATIENT_SITE_SALT = '243460170aec12b2cb4ce6e92d1293ebe8bbc83b4a860681ecfd4b653961f253fc3cb7ae833de5a4faca2d98ed9789e061e95aea7335901e6c84c7c05feee85f'
 LIVE_SHEET_FILENAME = "/var/www/html/mchasse/covid19/data_all_tagged.csv"
@@ -29,7 +29,7 @@ for dicom_id_map_row in dicom_id_map_rows:
 TABLE_COLUMNS = {
 
   'patient_data': [
-    'patient_site_uid', 'patient_uid', 'pcr_sample_time', 
+    'patient_site_uid', 'patient_global_uid', 'pcr_sample_time', 
     'patient_site_code', 'patient_covid_status', 'patient_age', 
     'patient_sex', 'patient_vital_status', 'patient_was_admitted'
   ],
@@ -53,10 +53,10 @@ TABLE_COLUMNS = {
   ],
 
   'lab_data': [
-    'patient_site_uid', 'lab_name', 'lab_sample_site', 
+    'patient_site_uid', 'lab_name', 'lab_sample_type', 
     'lab_sample_time', 'lab_result_time', 
     'lab_result_status', 'lab_result_units',
-    'lab_result_string', 'lab_result_value'
+    'lab_result_value_string', 'lab_result_value'
   ],
 
   'observation_data': [
@@ -65,17 +65,17 @@ TABLE_COLUMNS = {
   ],
 
   'pcr_data': [
-    'patient_site_uid', 'pcr_name', 'pcr_sample_site', 'pcr_sample_time', 
+    'patient_site_uid', 'pcr_name', 'pcr_sample_type', 'pcr_sample_time', 
     'pcr_result_time', 'pcr_result_value', 'pcr_result_status'
   ],
 
   'culture_data': [
-    'patient_site_uid', 'culture_type', 'culture_specimen_type', 'culture_sample_time', 
+    'patient_site_uid', 'culture_type', 'culture_sample_type', 'culture_sample_time', 
     'culture_result_time', 'culture_growth_positive', 'culture_result_status'
   ],
 
   'imaging_data': [
-    'patient_site_uid', 'imaging_accession_uid', 'imaging_modality', 'imaging_site',
+    'patient_site_uid', 'imaging_accession_uid', 'imaging_modality', 'imaging_body_site',
     'imaging_acquisition_time'
   ],
 
