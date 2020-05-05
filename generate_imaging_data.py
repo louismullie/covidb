@@ -43,7 +43,6 @@ for index, row in df.iterrows():
   if ('rx' in lower_desc and 'poumon' in lower_desc): #or \
      #('scan' in lower_desc and 'thorax' in lower_desc):
      #('scan' in lower_desc and 'abdo' in lower_desc):
-    
     hours = get_hours_between_datetimes(
       pcr_sample_times[row_patient_mrn], row.date_heure_exam)
     
@@ -52,9 +51,9 @@ for index, row in df.iterrows():
     patients_with_imaging.append(row_patient_mrn)
     imaging_accession_numbers.append(row.accession_number)
       
-    imaging_accession_uid = row.accession_number
+    imaging_accession_uid = generate_accession_uid(row.accession_number)
     imaging_acquired_time = row.date_heure_debut_examen
-    # check imaging acquired time
+    
     imaging_data_rows.append([
       row_patient_mrn,
       imaging_accession_uid,

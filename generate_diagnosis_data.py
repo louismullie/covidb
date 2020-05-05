@@ -214,8 +214,12 @@ df = sql_query("SELECT DISTINCT * FROM dw_test.orcl_cichum_bendeces_live WHERE "
 for index, row in df.iterrows():
   patient_mrn = str(row.dossier)
   
-  last_episode_for_dossier = last_episode_by_dossier[patient_mrn]
-  episode_id = last_episode_for_dossier['episode_id']
+  if patient_mrn in last_episode_by_dossier:
+    last_episode_for_dossier = last_episode_by_dossier[patient_mrn]
+    episode_id = last_episode_for_dossier['episode_id']
+  else:
+    episode_id = ''
+  
   diagnosis_type = 'death'
   diagnosis_time = row.dhredeces
 
