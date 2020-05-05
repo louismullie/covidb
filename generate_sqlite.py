@@ -1,7 +1,7 @@
 import os, csv, sqlite3
 import pandas as pd
 
-from constants import SQLITE_DIRECTORY, CSV_DIRECTORY
+from constants import SQLITE_DIRECTORY, CSV_DIRECTORY, TABLE_COLUMNS
 from identity_utils import generate_patient_uid, generate_patient_site_uid
 
 db_file_name = os.path.join(SQLITE_DIRECTORY, 'covidb_version-1.0.0.db')
@@ -25,10 +25,7 @@ for schema_block in schema_blocks:
 
 curr = conn.cursor()
 
-tables = ['patient_data', 'episode_data', 'lab_data', 'observation_data',
-'diagnosis_data', 'drug_data', 'pcr_data', 'culture_data', 'slice_data', 'imaging_data']
-
-for table in tables:
+for table_name in TABLE_COLUMNS:
   file_uri = os.path.join(CSV_DIRECTORY, table + '.csv')
   df = pd.read_csv(file_uri)
   #if 'patient_site_uid' in df.columns:
