@@ -31,8 +31,6 @@ for row in reader:
     pcr_sample_times[str(patient_mrn)] = row[2]
   row_count += 1
 
-# extCOVID19
-# SARS-CoV-2 Hors-CHUM
 df = sql_query("SELECT * FROM dw_v01.oacis_lb WHERE " +
     "resultdtm IS NOT NULL AND longdesc in ('FIO2', 'Sat O2 Art', 'Température') AND " +
     "specimencollectiondtm > '2020-01-01' AND dossier in (" + ", ".join(patient_mrns) + ")")
@@ -50,6 +48,24 @@ for index, row in df.iterrows():
      observation_value in LAB_PENDING_FLAGS or \
      observation_value in LAB_CANCELLED_FLAGS:
     continue
+  
+  mapped_observation_time = map_time(observation_time)
+  mapped_observation_name = map_observation_name(row.longdesc)
+  mapped_observation_value = map_float_value(observation_value)
+
+  if mapped_observation_name == 'fraction_inspired_oxygen':
+  
+    # If FiO2 is encoded as 0, (relatively) safely assume 21%.
+    # If FiO2 is encoded as 0.21, safely assume 21%.
+    if float(mapped_observation_value) == 0 or \
+       float(mapped_observation_value) == 0.21:
+      mapped_observation_value = '21.0'
+    # Cannot assume what this is, includes values incorrectly
+    # encoded as fractions (e.g. 0.50 instead of 50%),
+    # but also typos (e.g. 2.0 instead of 21.0) as well as 
+    # nasal prongs flow rates incorrectly entered as FiO2s.
+    elif float(mapped_observation_value) < 21.0:
+      continue
 
   delta_hours = get_hours_between_datetimes(
     pcr_sample_times[str(patient_mrn)], str(observation_time))
@@ -58,9 +74,9 @@ for index, row in df.iterrows():
 
     observation_data_rows.append([
       patient_mrn, 
-      map_observation_name(row.longdesc),
-      map_time(observation_time),
-      map_float_value(observation_value)
+      mapped_observation_name,
+      mapped_observation_time,
+      mapped_observation_value
     ])
 
 #### Add diagnoses from ER visits
@@ -144,7 +160,12 @@ for index, row in df.iterrows():
       print('Invalid oxygenation parameters')
       exit()
 
+
     if fraction_inspired_oxygen is not None:
+
+      if float(fraction_inspired_oxygen) < 1:
+        print(fraction_inspired_oxygen)
+
       observation_data_rows.append([
         patient_mrn, 
         'fraction_inspired_oxygen', 
