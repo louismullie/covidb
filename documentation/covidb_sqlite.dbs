@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<project name="CoviDB - Pre-Release Data Specification" id="Project_2a8906a" database="Sqlite" >
-	<comment><![CDATA[Version 1.0.0-rc1]]></comment>
+<project name="CoviDB - Data Specification / Dictionary" id="Project_2a8906a" database="Sqlite" >
+	<comment><![CDATA[Version 1.0.0]]></comment>
 	<schema name="covidb" >
 		<table name="culture_data" >
 			<column name="patient_site_uid" type="char" length="128" decimal="0" jt="1" mandatory="y" >
@@ -9,47 +9,29 @@
 			<column name="culture_data_id" type="integer" length="0" decimal="0" jt="4" mandatory="y" >
 				<comment><![CDATA[Primary key of this table; implemented as an auto-incrementing integer.]]></comment>
 			</column>
-			<column name="culture_type" type="smallint" length="0" decimal="0" jt="5" >
-				<comment><![CDATA[Type of culture obtained.
-1 = Bacterial culture (aerobic)
-2 = Bacterial culture (anaerobic)
-3 = Fungal culture
-4 = Mycobacterial culture]]></comment>
+			<column name="culture_type" type="text" jt="-1" >
+				<comment><![CDATA[Type of culture obtained. Possible values: "bacterial_aerobic", "bacterial_anaerobic", "mycobacterial", "fungal", "viral".]]></comment>
 			</column>
-			<column name="culture_result_status" type="smallint" length="0" decimal="0" jt="5" >
-				<comment><![CDATA[Current status of the culture:
-1 = Resulted
-2 = Pending
-3 = Rejected
-4 = Cancelled
-5 = Other]]></comment>
+			<column name="culture_result_status" type="text" jt="-1" >
+				<comment><![CDATA[Current status of the culture. Possible values: "resulted", "pending", "cancelled".]]></comment>
 			</column>
-			<column name="culture_loinc_code" type="varchar" decimal="0" jt="12" >
+			<column name="culture_loinc_code" type="text" jt="-1" >
 				<comment><![CDATA[LOINC code of the culture being performed.]]></comment>
 			</column>
-			<column name="culture_specimen_type" type="varchar" length="64" jt="12" >
-				<comment><![CDATA[Site from which the culture sample was collected.
-1 = Expectorated sputum
-2 = Endotracheal aspirate
-3 = Bronchoalveolar lavage
-4 = Pleural fluid
-5 = Ascites fluid
-6 = Blood culture
-7 = Urine culture
-8 = CSF culture
-9 = Other]]></comment>
+			<column name="culture_sample_type" type="text" length="64" jt="-1" >
+				<comment><![CDATA[Site from which the culture sample was collected. Possible values: "blood", "urine", "expectorated_sputum", "bronchial_aspirate", "pleural_fluid", "ascites_fluid", "cerebrospinal_fluid", etc.]]></comment>
 			</column>
-			<column name="culture_sample_time" type="varchar" decimal="0" jt="12" >
-				<comment><![CDATA[Timestamp, with time zone, of sampling.]]></comment>
+			<column name="culture_sample_time" type="timestamp" jt="93" >
+				<comment><![CDATA[Timestamp indicating the time at which the culture was sampled.]]></comment>
 			</column>
-			<column name="culture_result_time" type="varchar" decimal="0" jt="12" >
-				<comment><![CDATA[Timestamp, with time zone, indicating the time at which the culture was resulted.]]></comment>
+			<column name="culture_result_time" type="timestamp" jt="93" >
+				<comment><![CDATA[Timestamp indicating the time at which the culture was resulted.]]></comment>
 			</column>
-			<column name="culture_gram_positive" type="boolean" length="0" decimal="0" jt="-7" >
-				<comment><![CDATA[Equals true if the Gram stain is positive.]]></comment>
+			<column name="culture_gram_positive" type="text" jt="-1" >
+				<comment><![CDATA[Whether or not Gram stain was positive. Possible values: "positive", "negative".]]></comment>
 			</column>
-			<column name="culture_growth_positive" type="boolean" length="0" decimal="0" jt="-7" >
-				<comment><![CDATA[Equals true if the culture yielded growth of a pathogen in significant quantities (e.g. any quantity for blood, > 10^3 CFUs for LBA sputum)]]></comment>
+			<column name="culture_growth_result" type="text" jt="-1" >
+				<comment><![CDATA[Whether or not culture yielded growth of a pathogen in significant quantities (e.g. any quantity for blood, > 10^3 CFUs for LBA sputum). Possible values: "positive", "negative".]]></comment>
 			</column>
 			<column name="culture_result_organisms" type="boolean" length="0" decimal="0" jt="-7" >
 				<comment><![CDATA[Comma-separated list of organisms that have grown on the culture medium. Organisms should be stated with their full name (e.g. Staphylococcus aureus).]]></comment>
@@ -68,35 +50,33 @@
 			<column name="episode_data_id" type="integer" length="0" decimal="0" jt="4" >
 				<comment><![CDATA[Identifier referencing episode during which a diagnosis was made.]]></comment>
 			</column>
-			<column name="diagnosis_id" type="bigint" decimal="0" jt="-5" mandatory="y" >
+			<column name="diagnosis_data_id" type="integer" jt="4" mandatory="y" >
 				<comment><![CDATA[Primary key of this table; implemented as an auto-incrementing integer.]]></comment>
 			</column>
-			<column name="diagnosis_type" type="smallint" jt="5" >
-				<comment><![CDATA[Type of diagnosis recorded.
-1 = comorbidity prior to admission (BDCP type 1)
-2 = comorbidity after admission (BDCP type 2)
-3 = primary diagnosis (BDCP type M)
-4 = secondary diagnosis (BDCP type 3)
-5 = death
+			<column name="diagnosis_type" type="text" jt="-1" >
+				<comment><![CDATA[Type of diagnosis recorded. Possible values:
+"previous_comorbidity" (BDCP type 1)
+"new_comorbidity" (BDCP type 2)
+"principal_diagnosis" (BDCP type M)
+"secondary_diagnosis" (BDCP type 3)
+"death" (not a BDCP type)
 
 Reference: Canadian Norms for Codification of Medical Diagnoses, https://bit.ly/346yCHg]]></comment>
 			</column>
-			<column name="diagnosis_name" type="varchar" length="100" decimal="0" jt="12" >
-				<comment><![CDATA[Name of diagnosis that was recorded.
-
-Could be in: { viral pneumonitis, bacterial pneumonia, acute respiratory distress syndrome, pneumothorax, pleural effusion, cryptogenic organizing pneumonia, bronchiolitis, meningitis, seizure, stroke, congestive heart failure, endocarditis, myocarditis, pericarditis, atrial fibrillation, ventricular tachycardia/ventricular fibrillation, STEMI, NSTEMI, cardiac arrest, bactermia, disseminated intravascular coagulation, anemia, rhabdomyolysis, acute renal injury, acute renal failure, gastrointestinal hemorrhage, pancreatitis, liver dysfunction, hyperglycemia, hypoglycemia, home oxygen therapy, outpatient dialysis }]]></comment>
+			<column name="diagnosis_name" type="text" length="100" jt="-1" >
+				<comment><![CDATA[Name of diagnosis that was recorded, as derived from ICD code.]]></comment>
 			</column>
-			<column name="diagnosis_icd_code" type="varchar" decimal="0" jt="12" >
+			<column name="diagnosis_icd_code" type="text" jt="-1" >
 				<comment><![CDATA[ICD-10 code referencing the diagnosis.]]></comment>
 			</column>
-			<column name="diagnosis_source" type="varchar" decimal="0" jt="12" >
-				<comment><![CDATA[Data source from which the diagnosis occurred.]]></comment>
+			<column name="diagnosis_source" type="text" jt="-1" >
+				<comment><![CDATA[Data source system from which the diagnosis was recorded. For local institutional usage.]]></comment>
 			</column>
 			<column name="diagnosis_time" type="timestamp" jt="93" >
-				<comment><![CDATA[Timestamp (with timezone) at which the diagnosis was made.]]></comment>
+				<comment><![CDATA[Timestamp indicating when the diagnosis was made.]]></comment>
 			</column>
 			<index name="pk_outcome_data_id" unique="PRIMARY_KEY" >
-				<column name="diagnosis_id" />
+				<column name="diagnosis_data_id" />
 			</index>
 			<fk name="fk_diagnosis_data_patient_data" to_schema="covidb" to_table="patient_data" >
 				<fk_column name="patient_site_uid" pk="patient_site_uid" />
@@ -109,39 +89,39 @@ Could be in: { viral pneumonitis, bacterial pneumonia, acute respiratory distres
 			<column name="patient_site_uid" type="char" length="128" decimal="0" jt="1" mandatory="y" >
 				<comment><![CDATA[Identifier referencing a specific individual in the patient_data table.]]></comment>
 			</column>
-			<column name="drug_data_id" type="bigint" decimal="0" jt="-5" mandatory="y" />
-			<column name="drug_name" type="varchar" length="100" decimal="0" jt="12" >
-				<comment><![CDATA[Generic name of drug that was administered.]]></comment>
+			<column name="drug_data_id" type="integer" jt="4" mandatory="y" />
+			<column name="drug_name" type="text" length="100" jt="-1" >
+				<comment><![CDATA[Generic name of drug that was administered. Name should be in lowercase letters, in English format, with no accents.]]></comment>
 			</column>
-			<column name="drug_din_code" type="varchar" decimal="0" jt="12" >
+			<column name="drug_din_code" type="text" jt="-1" >
 				<comment><![CDATA[Standard Drug Identification Number (DIN).
 
 Reference: https://bit.ly/2R8jPGC]]></comment>
 			</column>
-			<column name="drug_class" type="varchar" decimal="0" jt="12" >
+			<column name="drug_class" type="text" jt="-1" >
 				<comment><![CDATA[Standard drug class.]]></comment>
 			</column>
 			<column name="drug_infusion" type="boolean" length="0" decimal="0" jt="-7" >
 				<comment><![CDATA[True if the drug is administered via a continuous infusion.]]></comment>
 			</column>
-			<column name="drug_dose" type="varchar" decimal="0" jt="12" >
+			<column name="drug_dose" type="text" jt="-1" >
 				<comment><![CDATA[Dose of the drug administered at a time.]]></comment>
 			</column>
-			<column name="drug_rate" type="float" decimal="0" jt="7" >
+			<column name="drug_rate" type="text" length="0" decimal="0" jt="-1" >
 				<comment><![CDATA[Drug infusion rate, for continuous infusions.]]></comment>
 			</column>
-			<column name="drug_route" type="varchar" length="16" jt="12" >
+			<column name="drug_roa" type="text" length="16" jt="-1" >
 				<comment><![CDATA[Drug route of administration short name, as defined by FDA standards (e.g. IV, SC, PO).  N.B. IV DRIP is not used; information on whether the drug is administered as an continuous infusion is found in the drug_infusion column.
 
 Reference: https://bit.ly/3dRlo5z]]></comment>
 			</column>
-			<column name="drug_frequency" type="smallint" length="0" decimal="0" jt="5" >
-				<comment><![CDATA[(If drug_infusion is FALSE). Frequency of drug administration, in number of times per day.]]></comment>
+			<column name="drug_frequency" type="text" jt="-1" >
+				<comment><![CDATA[Frequency of drug administration, in text format.]]></comment>
 			</column>
-			<column name="drug_start_time" type="varchar" decimal="0" jt="12" >
+			<column name="drug_start_time" type="timestamp" jt="93" >
 				<comment><![CDATA[Timezone, with timestamp, indicating the time at which the drug was started.]]></comment>
 			</column>
-			<column name="drug_end_time" type="varchar" decimal="0" jt="12" >
+			<column name="drug_end_time" type="timestamp" jt="93" >
 				<comment><![CDATA[Timezone, with timestamp, indicating the time at which the drug was stopped.]]></comment>
 			</column>
 			<index name="pk_drug_data_id" unique="PRIMARY_KEY" >
@@ -156,18 +136,13 @@ Reference: https://bit.ly/3dRlo5z]]></comment>
 			<column name="patient_site_uid" type="char" length="128" decimal="0" jt="1" mandatory="y" >
 				<comment><![CDATA[Identifier referencing a specific individual in the patient_data table.]]></comment>
 			</column>
-			<column name="episode_data_id" type="bigint" decimal="0" jt="-5" mandatory="y" >
+			<column name="episode_data_id" type="integer" jt="4" mandatory="y" >
 				<comment><![CDATA[Primary key of this table; implemented as an auto-incrementing integer.]]></comment>
 			</column>
-			<column name="episode_unit_type" type="smallint" length="0" decimal="0" jt="5" >
-				<comment><![CDATA[Type of unit:
-1 = Outpatient clinic
-2 = Emergency room
-3 = Hospital ward
-4 = High-dependency unit
-5 = Intensive care unit]]></comment>
+			<column name="episode_unit_type" type="text" jt="-1" >
+				<comment><![CDATA[Type of unit where the patient was present during this episode. Possible values: "intensive_care_unit", "high_dependency_unit", "coronary_care_unit", "inpatient_ward", "emergency_room", "day_surgery_unit", "other".]]></comment>
 			</column>
-			<column name="episode_ctas" type="date" length="0" decimal="0" jt="91" >
+			<column name="episode_ctas" type="smallint" jt="5" >
 				<comment><![CDATA[CTAS (Canadian Triage and Acuity Scale) level for initial presentation in ER.
 Level 1 = Resuscitation
 Level 2 = Emergent
@@ -175,16 +150,19 @@ Level 3 = Urgent
 Level 4 = Less urgent
 Level 5 = Non urgent
 
-Should be blank unless episode_unit_type == 2.]]></comment>
+Should be blank unless episode_unit_type is "emergency_room"]]></comment>
 			</column>
-			<column name="episode_start_time" type="varchar" decimal="0" jt="12" >
-				<comment><![CDATA[Timestamp, with timezone, of when the episode started (e.g. triaged in the emergency room).]]></comment>
+			<column name="episode_start_time" type="timestamp" jt="93" >
+				<comment><![CDATA[Timestamp indicating when the episode started (e.g. triaged in the emergency room).]]></comment>
 			</column>
-			<column name="episode_end_time" type="varchar" decimal="0" jt="12" >
-				<comment><![CDATA[Timestamp, with timezone, of when the episode ended (e.g. discharged from the emergency room).]]></comment>
+			<column name="episode_end_time" type="timestamp" jt="93" >
+				<comment><![CDATA[Timestamp of when the episode ended (e.g. discharged from the emergency room).]]></comment>
 			</column>
-			<column name="episode_description" type="varchar" length="256" jt="12" >
+			<column name="episode_description" type="text" length="256" jt="-1" >
 				<comment><![CDATA[Free text description of the reason for the episode.]]></comment>
+			</column>
+			<column name="episode_duration_hours" type="integer" jt="4" >
+				<comment><![CDATA[Total duration of the episode, in hours. Rounded down to the nearest integer.]]></comment>
 			</column>
 			<index name="pk_episode_data_id" unique="PRIMARY_KEY" >
 				<column name="episode_data_id" />
@@ -201,19 +179,19 @@ Should be blank unless episode_unit_type == 2.]]></comment>
 			<column name="exposure_data_id" type="integer" length="0" decimal="0" jt="4" mandatory="y" >
 				<comment><![CDATA[Primary key of this table; implemented as an auto-incrementing integer.]]></comment>
 			</column>
-			<column name="exposure_type_id" type="integer" length="0" decimal="0" jt="4" >
-				<comment><![CDATA[Identifier referencing the type of exposure.]]></comment>
+			<column name="exposure_type_id" type="integer" jt="4" >
+				<comment><![CDATA[Identifier representing the type of exposure.]]></comment>
 			</column>
-			<column name="exposure_total" type="varchar" decimal="0" jt="12" >
+			<column name="exposure_cumulative" type="float" jt="7" >
 				<comment><![CDATA[Cumulative exposure, if quantifiable. E.g. number of pack years smoked.]]></comment>
 			</column>
-			<column name="exposure_details" type="varchar" decimal="0" jt="12" >
+			<column name="exposure_details" type="text" jt="-1" >
 				<comment><![CDATA[Free text with additional details on exposure.]]></comment>
 			</column>
-			<column name="exposure_start_time" type="varchar" decimal="0" jt="12" >
+			<column name="exposure_start_time" type="timestamp" jt="93" >
 				<comment><![CDATA[Timestamp, with time zone, indicating when the exposure occurred (for a one-time exposure), or started (for an prolonged exposure).]]></comment>
 			</column>
-			<column name="exposure_end_time" type="varchar" decimal="0" jt="12" >
+			<column name="exposure_end_time" type="timestamp" jt="93" >
 				<comment><![CDATA[Timestamp, with time zone, indicating when the exposure ended.]]></comment>
 			</column>
 			<index name="pk_exposure_data_id" unique="PRIMARY_KEY" >
@@ -227,16 +205,16 @@ Should be blank unless episode_unit_type == 2.]]></comment>
 			</fk>
 		</table>
 		<table name="exposure_type" >
-			<column name="exposure_type_id" type="bigint" decimal="0" jt="-5" mandatory="y" >
+			<column name="exposure_type_id" type="integer" jt="4" mandatory="y" >
 				<comment><![CDATA[Primary key of this table; implemented as an auto-incrementing integer.]]></comment>
 			</column>
-			<column name="exposure_type_name" type="varchar" length="100" decimal="0" jt="12" >
+			<column name="exposure_type_name" type="text" length="100" jt="-1" >
 				<comment><![CDATA[Name of exposure type.]]></comment>
 			</column>
-			<column name="exposure_type_description" type="varchar" decimal="0" jt="12" >
+			<column name="exposure_type_description" type="text" jt="-1" >
 				<comment><![CDATA[Description of exposure.]]></comment>
 			</column>
-			<column name="exposure_type_total_units" type="varchar" decimal="0" jt="12" >
+			<column name="exposure_type_cumulative_units" type="text" jt="-1" >
 				<comment><![CDATA[Units determining how the exposure is cumulated (e.g. pack-years for smoking).]]></comment>
 			</column>
 			<index name="pk_exposure_type_exposure_type_id" unique="PRIMARY_KEY" >
@@ -247,38 +225,40 @@ Should be blank unless episode_unit_type == 2.]]></comment>
 			<column name="patient_site_uid" type="char" length="128" decimal="0" jt="1" mandatory="y" >
 				<comment><![CDATA[Identifier referencing a specific individual in the patient_data table.]]></comment>
 			</column>
-			<column name="imaging_data_id" type="bigint" decimal="0" jt="-5" mandatory="y" >
+			<column name="imaging_data_id" type="integer" jt="4" mandatory="y" >
 				<comment><![CDATA[Primary key of this table; implemented as an auto-incrementing integer.]]></comment>
 			</column>
 			<column name="imaging_accession_uid" type="char" length="128" jt="1" >
-				<comment><![CDATA[Accession number of the imaging on the site's local PACS database.]]></comment>
+				<comment><![CDATA[Hashed accession number of the imaging on the site's local PACS database.]]></comment>
 			</column>
-			<column name="imaging_status" type="varchar" length="16" jt="12" >
+			<column name="imaging_status" type="text" length="16" jt="-1" >
 				<comment><![CDATA[Status of the imaging. Can be "read", "pending", "destroyed"]]></comment>
 			</column>
-			<column name="imaging_modality" type="varchar" decimal="0" jt="12" >
-				<comment><![CDATA[Modality of the imaging that was performed, as defined by the DICOM "Modality" header (DICOM standard section C.7.3.1).
+			<column name="imaging_modality" type="text" jt="-1" >
+				<comment><![CDATA[Modality of the imaging that was performed, as defined by the DICOM "Modality" header (DICOM standard section C.7.3.1). Lowercase letters.
 
-Examples: CT, XR, US.
+Examples: "ct", "xr", "us".
 
 Reference: https://bit.ly/2X8Yv7Q]]></comment>
+			</column>
+			<column name="imaging_body_site" type="text" length="36" jt="-1" >
+				<comment><![CDATA[Body site that was imaged. E.g. "chest".]]></comment>
 			</column>
 			<column name="imaging_iv_contrast" type="boolean" length="0" decimal="0" jt="-7" >
 				<comment><![CDATA[True if intravenous contrast was given during the imaging study.]]></comment>
 			</column>
-			<column name="imaging_manufacturer" type="varchar" decimal="0" jt="12" >
+			<column name="imaging_manufacturer" type="text" jt="-1" >
 				<comment><![CDATA[Manufacturer of the equipment that was used to acquire imaging, as defined by the DICOM "Manufacturer header."]]></comment>
 			</column>
-			<column name="imaging_acquisition_time" type="varchar" decimal="0" jt="12" >
-				<comment><![CDATA[Timestamp, with timezone, representing the time at which the study was performed.]]></comment>
+			<column name="imaging_acquisition_time" type="timestamp" jt="93" >
+				<comment><![CDATA[Timestamp representing the time at which the study was performed.]]></comment>
 			</column>
-			<column name="imaging_report_time" type="varchar" decimal="0" jt="12" >
-				<comment><![CDATA[Timestamp, with timezone, indicating the time at which the imaging was reported.]]></comment>
+			<column name="imaging_report_time" type="timestamp" jt="93" >
+				<comment><![CDATA[Timestamp indicating the time at which the imaging was reported.]]></comment>
 			</column>
-			<column name="imaging_report_text" type="varchar" length="250" decimal="0" jt="12" >
+			<column name="imaging_report_text" type="text" length="250" jt="-1" >
 				<comment><![CDATA[De-identified textual report of the imaging.]]></comment>
 			</column>
-			<column name="imaging_site" type="varchar" length="36" jt="12" />
 			<index name="pk_study_data_id" unique="PRIMARY_KEY" >
 				<column name="imaging_data_id" />
 			</index>
@@ -291,18 +271,20 @@ Reference: https://bit.ly/2X8Yv7Q]]></comment>
 				<comment><![CDATA[Identifier referencing a specific individual in the patient_data table.]]></comment>
 			</column>
 			<column name="drug_data_id" type="integer" length="0" decimal="0" jt="4" />
-			<column name="intervention_data_id" type="bigint" decimal="0" jt="-5" mandatory="y" >
+			<column name="intervention_data_id" type="integer" jt="4" mandatory="y" >
 				<comment><![CDATA[Primary key of this table; implemented as an auto-incrementing integer.]]></comment>
 			</column>
-			<column name="intervention_type_id" type="smallint" length="0" decimal="0" jt="5" >
+			<column name="intervention_type_id" type="integer" jt="4" >
 				<comment><![CDATA[Identifier referencing the type of intervention.]]></comment>
 			</column>
-			<column name="intervention_details" type="varchar" length="100" decimal="0" jt="12" />
-			<column name="intervention_start_time" type="varchar" decimal="0" jt="12" >
-				<comment><![CDATA[Timestamp, with timezone, indicating the time at which the intervention was initiated.]]></comment>
+			<column name="intervention_details" type="text" length="100" jt="-1" >
+				<comment><![CDATA[Free text, detailing additional details about the intervention that was performed.]]></comment>
 			</column>
-			<column name="intervention_end_time" type="varchar" decimal="0" jt="12" >
-				<comment><![CDATA[Timestamp, with timezone, indicating the time at which the intervention was completed.]]></comment>
+			<column name="intervention_start_time" type="time" jt="92" >
+				<comment><![CDATA[Timestamp indicating the time at which the intervention was initiated.]]></comment>
+			</column>
+			<column name="intervention_end_time" type="timestamp" jt="93" >
+				<comment><![CDATA[Timestamp indicating the time at which the intervention was completed.]]></comment>
 			</column>
 			<index name="pk_intervention_data_id" unique="PRIMARY_KEY" >
 				<column name="intervention_data_id" />
@@ -318,18 +300,11 @@ Reference: https://bit.ly/2X8Yv7Q]]></comment>
 			</fk>
 		</table>
 		<table name="intervention_type" >
-			<column name="intervention_type_id" type="bigint" decimal="0" jt="-5" mandatory="y" >
+			<column name="intervention_type_id" type="integer" jt="4" mandatory="y" >
 				<comment><![CDATA[Primary key of this table; implemented as an auto-incrementing integer.]]></comment>
 			</column>
-			<column name="intervention_name" type="varchar" decimal="0" jt="12" >
+			<column name="intervention_name" type="text" jt="-1" >
 				<comment><![CDATA[Name of intervention. E.g. prone ventilation, inhaled nitric oxide, tracheostomy, extracorporeal support.]]></comment>
-			</column>
-			<column name="intervention_invasiveness" type="bigint" decimal="0" jt="-5" >
-				<comment><![CDATA[Level of invasiveness of the intervention type:
-1 = noninvasive intervention (e.g. proning)
-2 = drug administration
-3 = invasive bedside procedure (e.g. central line)
-4 = open surgical procedure (e.g. tracheostomy)]]></comment>
 			</column>
 			<index name="pk_respiratory_data_id" unique="PRIMARY_KEY" >
 				<column name="intervention_type_id" />
@@ -343,49 +318,40 @@ Reference: https://bit.ly/2X8Yv7Q]]></comment>
 			<column name="patient_site_uid" type="char" length="128" decimal="0" jt="1" mandatory="y" >
 				<comment><![CDATA[Identifier referencing a specific individual in the patient_data table.]]></comment>
 			</column>
-			<column name="lab_data_id" type="bigint" decimal="0" jt="-5" mandatory="y" >
+			<column name="lab_data_id" type="integer" jt="4" mandatory="y" >
 				<comment><![CDATA[Primary key of this table; implemented as an auto-incrementing integer.]]></comment>
 			</column>
-			<column name="lab_name" type="varchar" length="100" decimal="0" jt="12" >
-				<comment><![CDATA[Name of laboratory test. 
-
-Reference: https://bit.ly/2UGF5pp
-
-Could be in: { haemoglobin, WBC count, lymphocyte count, neutrophil count, hematocrit, platelets, APTT, PT, INR, ALT, total bilirubin, AST, glucose, urea, lactate, creatinine, sodium, potassium, procalcitonin, CRP, LDH, D-dimer, fibrinogen, ferritin, triglycerides, IL-6, CD4, CD8, CD4/CD8 ratio, NT-proBNP, troponin, hsT, hsTnI, TnT, TnI }]]></comment>
+			<column name="lab_name" type="text" length="100" jt="-1" >
+				<comment><![CDATA[Name of laboratory test. Lower case letters, words separated by underscores.]]></comment>
 			</column>
-			<column name="lab_loinc_code" type="varchar" decimal="0" jt="12" >
+			<column name="lab_loinc_code" type="text" jt="-1" >
 				<comment><![CDATA[LOINC code for the laboratory test.]]></comment>
 			</column>
-			<column name="lab_cerner_code" type="varchar" decimal="0" jt="12" >
+			<column name="lab_cerner_code" type="text" jt="-1" >
 				<comment><![CDATA[Code for laboratory test.
 
 Reference (for CERNER): https://bit.ly/2UGF5pp]]></comment>
 			</column>
-			<column name="lab_units" type="varchar" decimal="0" jt="12" >
-				<comment><![CDATA[Reporting units for the lab test.
-
-Could be in: { g/L, g/dL, 10^9 cells/L, 10^3 cells/microL, cells/microL, seconds, U/L, micromol/L, mg/L, mg/dL, mmol/L, mg/dL, mEq/L }]]></comment>
+			<column name="lab_units" type="text" jt="-1" >
+				<comment><![CDATA[Reporting units for the lab test.]]></comment>
 			</column>
-			<column name="lab_sample_time" type="varchar" decimal="0" jt="12" >
-				<comment><![CDATA[Timezone, with timestamp, indicating the time at which the laboratory test was sampled.]]></comment>
+			<column name="lab_sample_time" type="timestamp" jt="93" >
+				<comment><![CDATA[Timestamp indicating the time at which the laboratory test was sampled.]]></comment>
 			</column>
-			<column name="lab_sample_type" type="varchar" length="64" jt="12" >
-				<comment><![CDATA[Type of specimen sample. Possible values: "venous_blood", "arterial_blood", "capillary_blood", "urine", "other".]]></comment>
+			<column name="lab_sample_type" type="text" length="64" jt="-1" >
+				<comment><![CDATA[Type of specimen sample. Possible values: "venous_blood", "arterial_blood", "capillary_blood", "urine", "other", etc.]]></comment>
 			</column>
-			<column name="lab_result_status" type="smallint" length="0" decimal="0" jt="5" >
-				<comment><![CDATA[Current status of the culture:
-1 = Resulted
-2 = Pending
-3 = Cancelled]]></comment>
+			<column name="lab_result_status" type="text" jt="-1" >
+				<comment><![CDATA[Current status of the culture. Possible values: "resulted", "cancelled", "pending".]]></comment>
 			</column>
-			<column name="lab_result_time" type="varchar" decimal="0" jt="12" >
-				<comment><![CDATA[Timezone, with timestamp, indicating the time at which the laboratory test was resulted.]]></comment>
+			<column name="lab_result_time" type="timestamp" jt="93" >
+				<comment><![CDATA[Timstamp indicating the time at which the laboratory test was resulted.]]></comment>
 			</column>
-			<column name="lab_result_value" type="float" length="0" decimal="0" jt="7" >
+			<column name="lab_result_value" type="float" jt="7" >
 				<comment><![CDATA[Value of the laboratory result, as a floating-point number. The lower or upper limit of the detectable value is used for extreme results (e.g. < 0.01 is encoded as 0.01).]]></comment>
 			</column>
-			<column name="lab_result_string" type="varchar" length="16" jt="12" >
-				<comment><![CDATA[Value of the laboratory result, as a string.]]></comment>
+			<column name="lab_result_value_string" type="text" length="16" jt="-1" >
+				<comment><![CDATA[Value of the laboratory result, as a string. Can include special characters, e.g. "< 0.06"]]></comment>
 			</column>
 			<index name="pk_lab_data_lab_data_id" unique="PRIMARY_KEY" >
 				<column name="lab_data_id" />
@@ -398,21 +364,27 @@ Could be in: { g/L, g/dL, 10^9 cells/L, 10^3 cells/microL, cells/microL, seconds
 			<column name="patient_site_uid" type="char" length="128" decimal="0" jt="1" mandatory="y" >
 				<comment><![CDATA[Identifier referencing a specific individual in the patient_data table.]]></comment>
 			</column>
-			<column name="observation_data_id" type="bigint" decimal="0" jt="-5" mandatory="y" >
+			<column name="observation_data_id" type="integer" jt="4" mandatory="y" >
 				<comment><![CDATA[Primary key of this table; implemented as an auto-incrementing integer.]]></comment>
 			</column>
 			<column name="observation_type_id" type="integer" length="0" decimal="0" jt="4" mandatory="y" />
-			<column name="observation_device" type="varchar" decimal="0" jt="12" >
-				<comment><![CDATA[Device that was used to perform the observation (e.g. blood pressure cuff, arterial line).]]></comment>
+			<column name="observation_device" type="text" jt="-1" >
+				<comment><![CDATA[Device that was used to perform the observation. E.g. "blood_pressure_cuff", "arterial_line".]]></comment>
 			</column>
-			<column name="observation_start_time" type="varchar" decimal="0" jt="12" >
-				<comment><![CDATA[Timestamp, with timezone, indicating the time at which the observation started.]]></comment>
-			</column>
-			<column name="observation_end_time" type="varchar" decimal="0" jt="12" >
-				<comment><![CDATA[Timestamp, with timezone, indicating the time at which the observation ended. Empty if the observation is made at a single point in time.]]></comment>
-			</column>
-			<column name="observation_source" type="varchar" length="256" jt="12" >
+			<column name="observation_source" type="text" length="256" jt="-1" >
 				<comment><![CDATA[Description of which source system the observation was drawn from (e.g. from lab data, Oacis, SIURGE, etc.)]]></comment>
+			</column>
+			<column name="observation_start_time" type="time" jt="92" >
+				<comment><![CDATA[Timestamp indicating the time at which the observation started.]]></comment>
+			</column>
+			<column name="observation_end_time" type="timestamp" jt="93" >
+				<comment><![CDATA[Timestamp indicating the time at which the observation ended. Empty if the observation is made at a single point in time.]]></comment>
+			</column>
+			<column name="observation_value" type="float" jt="7" >
+				<comment><![CDATA[Value of the observation, as a floating point number.]]></comment>
+			</column>
+			<column name="observation_value_string" type="text" jt="-1" >
+				<comment><![CDATA[Observation value, as a string.]]></comment>
 			</column>
 			<index name="pk_clinical_data_id" unique="PRIMARY_KEY" >
 				<column name="observation_data_id" />
@@ -425,23 +397,23 @@ Could be in: { g/L, g/dL, 10^9 cells/L, 10^3 cells/microL, cells/microL, seconds
 			</fk>
 		</table>
 		<table name="observation_type" >
-			<column name="observation_type_id" type="bigint" decimal="0" jt="-5" mandatory="y" >
+			<column name="observation_type_id" type="integer" jt="4" mandatory="y" >
 				<comment><![CDATA[Primary key of this table; implemented as an auto-incrementing integer.]]></comment>
 			</column>
-			<column name="observation_category" type="smallint" length="0" decimal="0" jt="5" >
+			<column name="observation_type_class" type="smallint" length="0" decimal="0" jt="5" >
 				<comment><![CDATA[Values:
 1 = Observation from clinical interaction only (e.g. capillary refill)
 2 = Observation derived from a score or rule (e.g. AVPU scale)
 3 = Observation from a measurement device (e.g. blood pressure)
 4 = Observation derived from a setting on a device (e.g. PEEP)]]></comment>
 			</column>
-			<column name="observation_name" type="varchar" decimal="0" jt="12" mandatory="y" >
+			<column name="observation_type_name" type="text" jt="-1" mandatory="y" >
 				<comment><![CDATA[Name of observation (e.g. temperature, heart rate).]]></comment>
 			</column>
-			<column name="observation_units" type="varchar" decimal="0" jt="12" mandatory="y" >
+			<column name="observation_units" type="text" jt="-1" mandatory="y" >
 				<comment><![CDATA[Units for this type of observation.]]></comment>
 			</column>
-			<column name="observation_regexp" type="varchar" decimal="0" jt="12" >
+			<column name="observation_regexp" type="text" jt="-1" >
 				<comment><![CDATA[Regular expression used to validate observations.]]></comment>
 			</column>
 			<index name="pk_observation_types_observation_id" unique="PRIMARY_KEY" >
@@ -460,29 +432,25 @@ Procedure for generation: https://bit.ly/39ANAXa]]></comment>
 
 Procedure for generation: https://bit.ly/39ANAXa]]></comment>
 			</column>
-			<column name="patient_site_code" type="varchar" decimal="0" jt="12" >
-				<comment><![CDATA[Standardized code for the site at which the data was acquired.
+			<column name="patient_site_code" type="text" jt="-1" >
+				<comment><![CDATA[Standardized code for the site at which the data was acquired. Lowercase letters.
 
 Reference codes: https://bit.ly/2Jyw7nN]]></comment>
 			</column>
 			<column name="patient_was_transferred" type="boolean" jt="-7" >
 				<comment><![CDATA[True if the patient was transferred from another institution.]]></comment>
 			</column>
-			<column name="patient_transfer_site_code" type="date" length="0" decimal="0" jt="91" >
+			<column name="patient_transfer_site_code" type="text" jt="-1" >
 				<comment><![CDATA[Site code of the transferring institution, if the patient has been transferred from elsewhere.]]></comment>
 			</column>
-			<column name="patient_covid_status" type="smallint" length="0" decimal="0" jt="5" >
-				<comment><![CDATA[COVID status of the patient.
-1 = Negative at all times
-2 = Positive at any time
-3 = COVID status pending
-4 = Unknown / not tested]]></comment>
+			<column name="patient_covid_status" type="text" jt="-1" >
+				<comment><![CDATA[COVID status of the patient. Possible values: "negative", "positive", "recovered", "unknown"]]></comment>
 			</column>
 			<column name="patient_birth_date" type="date" length="0" decimal="0" jt="91" >
 				<comment><![CDATA[Birth date of the patient. Should be replaced by patient_age, computed as per the most recent birth date, in de-identified data exports.]]></comment>
 			</column>
-			<column name="patient_sex" type="char" length="1" decimal="0" jt="1" >
-				<comment><![CDATA[Equals "F" if the patient's is female, "M" if the patient's sex is male, "X" if the patient's sex is other than male or female.]]></comment>
+			<column name="patient_sex" type="text" length="1" jt="-1" >
+				<comment><![CDATA[Possible values: "male", "female", "other".]]></comment>
 			</column>
 			<column name="patient_birth_country" type="char" length="2" decimal="0" jt="1" >
 				<comment><![CDATA[Country of origin, as 2-letter ISO 3166 code (e.g. CA).]]></comment>
@@ -506,8 +474,8 @@ Reference codes: https://bit.ly/2Jyw7nN]]></comment>
 			<column name="patient_postal_district" type="char" length="3" decimal="0" jt="1" >
 				<comment><![CDATA[First 3 letters of postal code of the patient (e.g. H3V).]]></comment>
 			</column>
-			<column name="patient_assisted_living" type="smallint" length="0" decimal="0" jt="5" >
-				<comment><![CDATA[True if the patient lives in an assisted living facility (semi-autonomous residence or long-term care facility).]]></comment>
+			<column name="patient_assisted_living" type="boolean" jt="-7" >
+				<comment><![CDATA[True if the patient was living in an assisted living facility (semi-autonomous residence or long-term care facility) at the time of COVID testing.]]></comment>
 			</column>
 			<column name="patient_code_status" type="smallint" length="0" decimal="0" jt="5" >
 				<comment><![CDATA[Level of intervention, where:
@@ -516,10 +484,8 @@ Reference codes: https://bit.ly/2Jyw7nN]]></comment>
 3 = medical therapy only
 4 = comfort care only]]></comment>
 			</column>
-			<column name="patient_vital_status" type="smallint" jt="5" >
-				<comment><![CDATA[1 = patient is dead
-2 = patient is alive
-3 = death status unknown]]></comment>
+			<column name="patient_vital_status" type="text" jt="-1" >
+				<comment><![CDATA[Vital status of the patient at the time of most recent follow-up. Possible values: "dead", "alive", "unknown"]]></comment>
 			</column>
 			<column name="patient_last_fu_date" type="date" length="0" decimal="0" jt="91" >
 				<comment><![CDATA[Date of last follow-up at which the mortality status of the patient was assessed.]]></comment>
@@ -535,44 +501,33 @@ Reference codes: https://bit.ly/2Jyw7nN]]></comment>
 			<column name="patient_site_uid" type="char" length="128" decimal="0" jt="1" mandatory="y" >
 				<comment><![CDATA[Identifier referencing a specific individual in the patient_data table.]]></comment>
 			</column>
-			<column name="pcr_data_id" type="bigint" decimal="0" jt="-5" mandatory="y" >
+			<column name="pcr_data_id" type="integer" jt="4" mandatory="y" >
 				<comment><![CDATA[Primary key of this table; implemented as an auto-incrementing integer.]]></comment>
 			</column>
-			<column name="pcr_name" type="varchar" length="100" decimal="0" jt="12" >
-				<comment><![CDATA[Name of the PCR test being performed (e.g. "SaRS-CoV-2 PCR").]]></comment>
+			<column name="pcr_name" type="text" length="100" jt="-1" >
+				<comment><![CDATA[Name of the PCR test being performed. Lowercase letters, words separated by underscores. E.g. "sars_cov2", "varicella_zoster_virus".]]></comment>
 			</column>
-			<column name="pcr_loinc_code" type="varchar" decimal="0" jt="12" >
+			<column name="pcr_loinc_code" type="text" jt="-1" >
 				<comment><![CDATA[LOINC code identifying the test kit used for PCR testing. If a non-commercial kit was used, the appropriate code is 94500-6.
 
 Reference: https://bit.ly/2wQJfly]]></comment>
 			</column>
-			<column name="pcr_sample_time" type="varchar" decimal="0" jt="12" >
-				<comment><![CDATA[Timestamp, with timezone, indicating the time at which the sample was drawn.]]></comment>
+			<column name="pcr_sample_time" type="timestamp" jt="93" >
+				<comment><![CDATA[Timestamp indicating the time at which the sample was drawn.]]></comment>
 			</column>
-			<column name="pcr_sample_site" type="smallint" length="0" decimal="0" jt="5" >
-				<comment><![CDATA[Type of sample collected.
-1 = Nasopharyngeal swab
-2 = Oropharyngeal swab
-3 = Combined NP + OP swab
-4 = Expectorated sputum
-5 = Bronchial aspirate
-6 = Bronchoalveolar lavage
-7 = Feces/rectal swab
-8 = Urine specimen
-9 = Blood specimen
-10 = Unknown/unspecified]]></comment>
+			<column name="pcr_sample_type" type="text" jt="-1" >
+				<comment><![CDATA[Type of sample collected. E.g. "nasopharyngeal_swab", "oropharyngeal_swab", "expectorated_sputum", "bronchial_secretions", "bronchoalveolar_lavage", "rectal_swab", "urine", "blood", "unknown".]]></comment>
 			</column>
-			<column name="pcr_result_time" type="varchar" decimal="0" jt="12" >
-				<comment><![CDATA[Timestamp, with timezone, indicating the time at which the PCR test was resulted.]]></comment>
+			<column name="pcr_result_time" type="timestamp" jt="93" >
+				<comment><![CDATA[Timestamp indicating the time at which the PCR test was resulted.]]></comment>
 			</column>
-			<column name="pcr_result_status" type="varchar" length="64" jt="12" >
+			<column name="pcr_result_status" type="text" length="64" jt="-1" >
 				<comment><![CDATA[Status of the PCR. Possible values: "resulted", "pending", "cancelled".]]></comment>
 			</column>
-			<column name="pcr_result_value" type="smallint" jt="5" >
-				<comment><![CDATA[1 = Negative
-2 = Positive]]></comment>
+			<column name="pcr_result_value" type="text" jt="-1" >
+				<comment><![CDATA[Result of the PCR, if available. Possible values: "positive", "negative".]]></comment>
 			</column>
-			<column name="pcr_result_transferred" type="timestamp" jt="93" >
+			<column name="pcr_result_transferred" type="boolean" jt="-7" >
 				<comment><![CDATA[True if the PCR was transferred from another site.]]></comment>
 			</column>
 			<index name="pk_pcr_data_id" unique="PRIMARY_KEY" >
@@ -587,33 +542,26 @@ Reference: https://bit.ly/2wQJfly]]></comment>
 			<column name="patient_site_uid" type="char" length="128" decimal="0" jt="1" mandatory="y" >
 				<comment><![CDATA[Identifier referencing a specific individual in the patient_data table.]]></comment>
 			</column>
-			<column name="signal_data_id" type="bigint" decimal="0" jt="-5" mandatory="y" >
+			<column name="signal_data_id" type="integer" jt="4" mandatory="y" >
 				<comment><![CDATA[Primary key of this table; implemented as an auto-incrementing integer.]]></comment>
 			</column>
-			<column name="signal_type" type="smallint" length="0" decimal="0" jt="5" >
-				<comment><![CDATA[Type of signal being recorded.
-1 = arterial blood pressure
-2 = pulmonary artery pressure
-3 = pulse oximetry
-4 = ventilator pressure
-5 = ventilator volume
-6 = waveform capnography
-7 = electrocardiogram]]></comment>
+			<column name="signal_name" type="text" jt="-1" >
+				<comment><![CDATA[Type of signal being recorded. E.g. "arterial_blood_pressure", "pulse_oximetry", "electrocardiogram".]]></comment>
 			</column>
 			<column name="signal_num_channels" type="smallint" length="0" decimal="0" jt="5" >
 				<comment><![CDATA[The number of channels in the signal being recorded.]]></comment>
 			</column>
-			<column name="signal_sampling_freq" type="smallint" length="0" decimal="0" jt="5" >
+			<column name="signal_sampling_freq" type="float" jt="7" >
 				<comment><![CDATA[Sampling frequency, in hertz.]]></comment>
 			</column>
-			<column name="signal_data_uri" type="varchar" decimal="0" jt="12" >
+			<column name="signal_data_uri" type="text" jt="-1" >
 				<comment><![CDATA[Unique resource identifier pointing to the file on disk where the signal is stored.]]></comment>
 			</column>
-			<column name="signal_start_time" type="varchar" decimal="0" jt="12" >
-				<comment><![CDATA[Timestamp, with timezone, indicating when the signal recording started.]]></comment>
+			<column name="signal_start_time" type="timestamp" jt="93" >
+				<comment><![CDATA[Timestamp indicating when the signal recording started.]]></comment>
 			</column>
-			<column name="signal_end_time" type="varchar" decimal="0" jt="12" >
-				<comment><![CDATA[Timestamp, with timezone, indicating when the signal recording ended.]]></comment>
+			<column name="signal_end_time" type="text" jt="-1" >
+				<comment><![CDATA[Timestamp indicating when the signal recording ended.]]></comment>
 			</column>
 			<index name="pk_signal_data_id" unique="PRIMARY_KEY" >
 				<column name="signal_data_id" />
@@ -627,51 +575,63 @@ Reference: https://bit.ly/2wQJfly]]></comment>
 			<column name="patient_site_uid" type="char" length="128" decimal="0" jt="1" mandatory="y" >
 				<comment><![CDATA[Identifier referencing a specific individual in the patient_data table.]]></comment>
 			</column>
-			<column name="imaging_data_id" type="integer" length="0" decimal="0" jt="4" >
+			<column name="imaging_data_id" type="integer" jt="4" >
 				<comment><![CDATA[Identifier that references the imaging study to which this slice belongs.]]></comment>
 			</column>
-			<column name="imaging_accession_uid" type="char" length="128" jt="1" />
+			<column name="imaging_accession_uid" type="char" length="128" jt="1" >
+				<comment><![CDATA[Hashed accession number of the imaging on the site's local PACS database.]]></comment>
+			</column>
 			<column name="slice_data_id" type="bigint" decimal="0" jt="-5" mandatory="y" >
 				<comment><![CDATA[Primary key of this table; implemented as an auto-incrementing integer.]]></comment>
 			</column>
-			<column name="slice_series_instance_uid" type="varchar" length="256" jt="12" >
-				<comment><![CDATA[As defined by the DICOM SeriesInstanceUID header (0020,000E).]]></comment>
+			<column name="slice_series_instance_uid" type="char" length="128" jt="1" >
+				<comment><![CDATA[Hash of the series instance UID, as defined by the DICOM SeriesInstanceUID header (0020,000E).]]></comment>
 			</column>
-			<column name="slice_study_instance_uid" type="varchar" length="256" jt="12" />
-			<column name="slice_data_uri" type="varchar" length="256" jt="12" >
-				<comment><![CDATA[Unique resource identifier pointing to file containing the pixel data. The file on disk representing the pixel data is a matrix of 16-bit integers (range: -32,768 to +32,767), stored as a CSV file in ASCII text encoding, with commas as separators and no quotes around fields.]]></comment>
+			<column name="slice_study_instance_uid" type="char" length="128" jt="1" >
+				<comment><![CDATA[Hash of the study instance UID, as defined in DICOM headers.]]></comment>
 			</column>
-			<column name="slice_view_position" type="varchar" decimal="0" jt="12" >
-				<comment><![CDATA[As defined by the DICOM ViewPosition header (DICOM standard, C.8.1.1)
-
-Should be in: { AP, PA, LL, RL, RLD, LLD, RLO, LLO }]]></comment>
+			<column name="slice_data_uri" type="text" length="256" jt="-1" >
+				<comment><![CDATA[Unique resource identifier pointing to file containing the pixel data. The file on disk representing the pixel data is a matrix of 32-bit integers stored in HDF5 format (.H5).]]></comment>
 			</column>
-			<column name="slice_patient_position" type="varchar" decimal="0" jt="12" >
-				<comment><![CDATA[As defined by the DICOM PatientPosition header (DICOM standard C.7.3.1).
-
-Should be in: { HFP, HFS, HFDR, HFDL, FFDR, FFDL, FFP, FFS, LFP, LFS, RFP, RFS, AFDR, AFDL, PFDR, PFDL }]]></comment>
+			<column name="slice_view_position" type="text" jt="-1" >
+				<comment><![CDATA[As defined by the DICOM ViewPosition header (DICOM standard, C.8.1.1). Possible values:  AP, PA, LL, RL, RLD, LLD, RLO, LLO.]]></comment>
 			</column>
-			<column name="slice_image_orientation" type="varchar" decimal="0" jt="12" >
+			<column name="slice_patient_position" type="text" jt="-1" >
+				<comment><![CDATA[As defined by the DICOM PatientPosition header (DICOM standard C.7.3.1). Possible values: HFP, HFS, HFDR, HFDL, FFDR, FFDL, FFP, FFS, LFP, LFS, RFP, RFS, AFDR, AFDL, PFDR, PFDL.]]></comment>
+			</column>
+			<column name="slice_image_orientation" type="text" jt="-1" >
 				<comment><![CDATA[Specifies the direction cosines of the first row and the first column with respect to the patient, as defined by the DICOM ImageOrientation header (DICOM standard C.7.6.2).
 
 Should be: a string containing a comma-separated list of 6 floating point numbers.]]></comment>
 			</column>
-			<column name="slice_image_position" type="varchar" decimal="0" jt="12" >
+			<column name="slice_image_position" type="text" jt="-1" >
 				<comment><![CDATA[Specifies the X, Y, and Z coordinates of the upper left hand corner of the image, as defined by the DICOM ImagePosition header (DICOM standard C.7.6.2)
 
 Should be: a string containing a comma-separated list of 3 floating point numbers.]]></comment>
 			</column>
-			<column name="slice_window_center" type="varchar" decimal="0" jt="12" >
+			<column name="slice_window_center" type="float" jt="7" >
 				<comment><![CDATA[As defined by the DICOM WindowCenter header.]]></comment>
 			</column>
-			<column name="slice_window_width" type="varchar" decimal="0" jt="12" >
+			<column name="slice_window_width" type="float" jt="7" >
 				<comment><![CDATA[As defined by the DICOM WindowWidth header.]]></comment>
 			</column>
-			<column name="slice_pixel_spacing" type="varchar" decimal="0" jt="12" >
+			<column name="slice_pixel_spacing" type="text" jt="-1" >
 				<comment><![CDATA[For CT scans only. As defined in the PixelSpacing DICOM header.]]></comment>
 			</column>
-			<column name="slice_thickness" type="varchar" decimal="0" jt="12" >
+			<column name="slice_thickness" type="float" jt="7" >
 				<comment><![CDATA[For CT scans only. As defined in the PixelSpacing DICOM header.]]></comment>
+			</column>
+			<column name="slice_rows" type="integer" jt="4" >
+				<comment><![CDATA[Number of rows in the slice image (height of the image), in pixels.]]></comment>
+			</column>
+			<column name="slice_columns" type="integer" jt="4" >
+				<comment><![CDATA[Number of columns in the slice image (width of the image), in pixels.]]></comment>
+			</column>
+			<column name="slice_rescale_intercept" type="float" jt="7" >
+				<comment><![CDATA[Rescale intercept, as defined by DICOM file.]]></comment>
+			</column>
+			<column name="slice_rescale_slope" type="float" jt="7" >
+				<comment><![CDATA[Rescale slope, as defined by DICOM file.]]></comment>
 			</column>
 			<index name="pk_dicom_data_id" unique="PRIMARY_KEY" >
 				<column name="slice_data_id" />
@@ -685,26 +645,26 @@ Should be: a string containing a comma-separated list of 3 floating point number
 			<column name="patient_site_uid" type="char" length="128" decimal="0" jt="1" mandatory="y" >
 				<comment><![CDATA[Identifier referencing a specific individual in the patient_data table.]]></comment>
 			</column>
-			<column name="symptom_data_id" type="bigint" decimal="0" jt="-5" mandatory="y" >
+			<column name="symptom_data_id" type="integer" jt="4" mandatory="y" >
 				<comment><![CDATA[Primary key of this table; implemented as an auto-incrementing integer.]]></comment>
 			</column>
-			<column name="symptom_snomed_code" type="varchar" decimal="0" jt="12" >
+			<column name="symptom_snomed_code" type="text" jt="-1" >
 				<comment><![CDATA[SNOMED CT code representing the symptom.]]></comment>
 			</column>
-			<column name="symptom_name" type="varchar" length="100" decimal="0" jt="12" >
+			<column name="symptom_name" type="text" length="100" jt="-1" >
 				<comment><![CDATA[Name of the symptom experienced.]]></comment>
 			</column>
-			<column name="symptom_details" type="varchar" decimal="0" jt="12" >
+			<column name="symptom_details" type="text" jt="-1" >
 				<comment><![CDATA[Free text containing any additional details about symptoms experienced.]]></comment>
 			</column>
-			<column name="symptom_source" type="varchar" decimal="0" jt="12" >
-				<comment><![CDATA[Data source that was used to collect information on this symptom.]]></comment>
+			<column name="symptom_source" type="text" jt="-1" >
+				<comment><![CDATA[Data source system from which the symptom was recorded. For local institutional usage.]]></comment>
 			</column>
-			<column name="symptom_start_time" type="varchar" decimal="0" jt="12" >
-				<comment><![CDATA[Timestamp, with timezone, indicating time at which the symptoms started.]]></comment>
+			<column name="symptom_start_time" type="timestamp" jt="93" >
+				<comment><![CDATA[Timestamp indicating the time at which the symptoms started.]]></comment>
 			</column>
-			<column name="symptom_end_time" type="varchar" decimal="0" jt="12" >
-				<comment><![CDATA[Timestamp, with timezone, indicating time at which the symptoms ended.]]></comment>
+			<column name="symptom_end_time" type="timestamp" jt="93" >
+				<comment><![CDATA[Timestamp indicating the time at which the symptoms ended.]]></comment>
 			</column>
 			<index name="pk_symptom_data_symptom_data_id" unique="PRIMARY_KEY" >
 				<column name="symptom_data_id" />
@@ -716,19 +676,19 @@ Should be: a string containing a comma-separated list of 3 floating point number
 	</schema>
 	<connector name="PostgreSQL" database="PostgreSQL" driver_class="org.postgresql.Driver" driver_jar="postgresql-42.2.8.jar" driver_desc="Standard" host="localhost" port="5432" instance="postgres" user="postgres" />
 	<layout name="CoviDB Data Spec" id="Layout_143a5b5" hide_fks="fk_culture_data_patient_data,fk_diagnosis_data_patient_data,fk_drug_data_patient_data,fk_episode_data_patient_data,fk_exposure_data_patient_data,fk_imaging_data_patient_data,fk_intervention_data_patient_data,fk_intervention_data_drug_data,fk_lab_data_patient_data,fk_observation_data_patient_data,fk_pcr_data_patient_data,fk_signal_data_patient_data,fk_symptom_data_patient_data," show_relation="columns" >
-		<comment><![CDATA[CoviDB - Pre-Release Data Specification]]></comment>
+		<comment><![CDATA[CoviDB - Data Specification / Dictionary]]></comment>
 		<entity schema="covidb" name="culture_data" color="C1D8EE" x="352" y="80" />
 		<entity schema="covidb" name="diagnosis_data" color="C1D8EE" x="64" y="480" />
-		<entity schema="covidb" name="drug_data" color="C1D8EE" x="560" y="608" />
-		<entity schema="covidb" name="episode_data" color="C1D8EE" x="352" y="640" />
+		<entity schema="covidb" name="drug_data" color="C1D8EE" x="560" y="624" />
+		<entity schema="covidb" name="episode_data" color="C1D8EE" x="352" y="656" />
 		<entity schema="covidb" name="exposure_data" color="C1D8EE" x="64" y="912" />
 		<entity schema="covidb" name="exposure_type" color="C1D8EE" x="336" y="960" />
 		<entity schema="covidb" name="imaging_data" color="C1D8EE" x="752" y="80" />
-		<entity schema="covidb" name="intervention_data" color="C1D8EE" x="752" y="640" />
+		<entity schema="covidb" name="intervention_data" color="C1D8EE" x="752" y="656" />
 		<entity schema="covidb" name="intervention_type" color="C1D8EE" x="736" y="960" />
 		<entity schema="covidb" name="lab_data" color="C1D8EE" x="352" y="320" />
 		<entity schema="covidb" name="observation_data" color="C1D8EE" x="752" y="336" />
-		<entity schema="covidb" name="observation_type" color="C1D8EE" x="1072" y="400" />
+		<entity schema="covidb" name="observation_type" color="C1D8EE" x="1072" y="480" />
 		<entity schema="covidb" name="patient_data" color="C1D8EE" x="48" y="80" />
 		<entity schema="covidb" name="pcr_data" color="C1D8EE" x="560" y="80" />
 		<entity schema="covidb" name="signal_data" color="C1D8EE" x="560" y="320" />

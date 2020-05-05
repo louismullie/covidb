@@ -1,4 +1,4 @@
-# CoviDB: a multimedia database of patients with COVID-19
+# CoviDB: a multimodal repository of patients with COVID-19
 
 ## 1. Installing
 
@@ -110,7 +110,7 @@ for slice in slices:
   data_frame = pd.DataFrame.from_csv(slice.slice_data_uri)
 ```
 
-The file on disk representing the pixel data is a matrix of 16-bit integers (range: -32,768 to +32,767), stored as a CSV file in ASCII text encoding, with commas as separators and no quotes around fields. This can be read directly into a Pandas data frame (as shown above), or converted to a NumPy array (see below).
+The file on disk representing the pixel data is a matrix of 32-bit integers, stored as a CSV file in ASCII text encoding, with commas as separators and no quotes around fields. This can be read directly into a Pandas data frame (as shown above), or converted to a NumPy array (see below).
 
 ### 3.3 Displaying a DICOM file
 ```python
@@ -137,32 +137,53 @@ TABLE_COLUMNS = {
 
   'patient_data': [
     'patient_site_uid', 'patient_uid', 'pcr_sample_time', 
-    'patient_site_code', 'patient_transfer_site_code', 
-    'patient_covid_status', 'patient_age', 'patient_sex'
+    'patient_site_code', 'patient_covid_status', 'patient_age', 
+    'patient_sex', 'patient_vital_status', 'patient_was_admitted'
   ],
 
   'episode_data': [
-    'patient_site_uid', 'episode_unit_type', 'episode_start_time', 
-    'episode_end_time', 'episode_description',
+    'patient_site_uid', 'episode_admission_uid', 
+    'episode_unit_type', 'episode_start_time', 
+    'episode_end_time', 'episode_description', 
+    'episode_duration_hours'
+  ],
+
+  'diagnosis_data': [
+    'patient_site_uid', 'episode_id', 'diagnosis_type',
+    'diagnosis_name', 'diagnosis_icd_code', 'diagnosis_time'
+  ],
+
+  'drug_data': [
+    'patient_site_uid', 'drug_name', 
+    'drug_start_time', 'drug_end_time',
+    'drug_frequency', 'drug_roa'
   ],
 
   'lab_data': [
-    'patient_site_uid', 'lab_name', 'lab_sample_site', 'lab_sample_time', 
-    'lab_result_time', 'lab_result_value', 'lab_result_units'
+    'patient_site_uid', 'lab_name', 'lab_sample_site', 
+    'lab_sample_time', 'lab_result_time', 
+    'lab_result_status', 'lab_result_units',
+    'lab_result_string', 'lab_result_value'
+  ],
+
+  'observation_data': [
+    'patient_site_uid', 'observation_name', 
+    'observation_time', 'observation_value', #'observation_units'
   ],
 
   'pcr_data': [
     'patient_site_uid', 'pcr_name', 'pcr_sample_site', 'pcr_sample_time', 
-    'pcr_result_time', 'pcr_result_value'
+    'pcr_result_time', 'pcr_result_value', 'pcr_result_status'
   ],
 
-  'micro_data': [
-    'patient_site_uid', 'micro_name', 'micro_sample_site', 'micro_sample_time', 
-    'micro_result_time', 'micro_result_value'
+  'culture_data': [
+    'patient_site_uid', 'culture_type', 'culture_specimen_type', 'culture_sample_time', 
+    'culture_result_time', 'culture_growth_positive', 'culture_result_status'
   ],
 
   'imaging_data': [
-    'patient_site_uid', 'imaging_accession_uid', 'imaging_modality', 'imaging_site'
+    'patient_site_uid', 'imaging_accession_uid', 'imaging_modality', 'imaging_site',
+    'imaging_acquisition_time'
   ],
 
   'slice_data': [
@@ -173,5 +194,6 @@ TABLE_COLUMNS = {
     'slice_thickness', 'slice_rows', 'slice_columns', 'slice_rescale_intercept', 
     'slice_rescale_slope'
   ]
+  
 }
 ```
