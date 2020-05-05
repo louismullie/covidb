@@ -8,6 +8,7 @@ from constants import SQLITE_DIRECTORY, CSV_DIRECTORY
 from plot_utils import plot_compare_kde
 from cli_utils import tabulate_column
 from sqlite_utils import sql_fetch_all, sql_fetch_one
+from time_utils import get_hours_between_datetimes
 
 def compute_drug_odds_ratios(conn):
 
@@ -133,9 +134,97 @@ def compare_drugs_by_death(conn, drug_names):
 
   return [odds_ratio, lower_ci, upper_ci, len(exposed_patients)]
 
+def summarize_variable(table, variable):
+
+  query = "SELECT %s FROM %s " % (variable, table)
+
+  if table == 'patient_data':
+    query += "WHERE patient_covid_status = 'positive'"
+  else:
+    query += (" INNER JOIN patient_data ON " + \
+    " lab_data.patient_site_uid = patient_data.patient_site_uid WHERE "
+    " patient_data.patient_covid_status = 'positive'")
+
+  values = np.asarray([x[0] for x in sql_fetch_all(conn, query) if x[0] is not None])
+  
+  print("Summary for variable %s" % variable)
+  print("Mean: %.2f" % np.mean(values))
+  print("Std: %.2f" % np.std(values))
+
+  pct_above70 = np.count_nonzero(values > 70) / len(values)
+  print("Proportion above 70: %.2f" % pct_above70)
+
+def correlate_labs(conn):
+  
+  query_art_pco2 = "SELECT patient_data.patient_site_uid, " + \
+    " lab_sample_time, lab_result_value from lab_data " + \
+    " INNER JOIN patient_data ON " + \
+    " lab_data.patient_site_uid = patient_data.patient_site_uid WHERE " + \
+    " lab_data.lab_name = 'pco2' AND " + \
+    " lab_data.lab_sample_site = 'arterial_blood' AND " + \
+    " lab_data.lab_result_status = 'resulted' AND " + \
+    " patient_data.patient_covid_status = 'positive'"
+
+  query_ven_pco2 = "SELECT patient_data.patient_site_uid, " + \
+    " lab_sample_time, lab_result_value from lab_data " + \
+    " INNER JOIN patient_data ON " + \
+    " lab_data.patient_site_uid = patient_data.patient_site_uid WHERE " + \
+    " lab_data.lab_name = 'pco2' AND " + \
+    " lab_data.lab_sample_site = 'venous_blood' AND " + \
+    " lab_data.lab_result_status = 'resulted' AND " + \
+    " patient_data.patient_covid_status = 'positive'"
+
+  query_d_dimer = "SELECT patient_data.patient_site_uid, " + \
+    " lab_sample_time, lab_result_value from lab_data " + \
+    " INNER JOIN patient_data ON " + \
+    " lab_data.patient_site_uid = patient_data.patient_site_uid WHERE " + \
+    " lab_data.lab_name = 'd_dimer' AND " + \
+    " lab_data.lab_result_status = 'resulted' AND " + \
+    " patient_data.patient_covid_status = 'positive'"
+
+  arterial_pco2s = sql_fetch_all(conn, query_art_pco2)
+  venous_pco2s = sql_fetch_all(conn, query_ven_pco2)
+  d_dimers =  sql_fetch_all(conn, query_d_dimer)
+  
+  pairs = []
+
+  for arterial_pco2 in arterial_pco2s:
+    id_1, st_1, rv_1 = arterial_pco2
+    for venous_pco2 in venous_pco2s:
+      id_2, st_2, rv_2 = venous_pco2
+      if st_1 == st_2:
+        pairs.append([arterial_pco2, venous_pco2])
+  
+  triplets = []
+
+  for d_dimer in d_dimers:
+    id_1, st_1, rv_1 = d_dimer
+    for arterial_pco2, venous_pco2 in pairs:
+      id_2, st_2, rv_2 = arterial_pco2
+      id_3, st_3, rv_3 = venous_pco2
+      av_pco2 = rv_2 - rv_3
+      td12 = get_hours_between_datetimes(st_1, st_2)
+      td13 = get_hours_between_datetimes(st_1, st_3)
+      if np.abs(td12) < 24 or np.abs(td13) < 24:
+        triplets.append([rv_1, av_pco2])
+
+  print(len(triplets))
+
+  #print(arterial_pco2)
+  #print(venous_pco2)
+  #print(d_dimer)
+  # plt.plot(arterial_pco2)
+  # p#lt.plot(venous_pco2)
+  # plt.plot(d_dimer)
+
 db_file_name = os.path.join(SQLITE_DIRECTORY, 'covidb_version-1.0.0.db')
 conn = sqlite3.connect(db_file_name)
 
+#summarize_variable('patient_data', 'patient_age')
+#exit()
+correlate_labs(conn)
+exit()
+#exit()
 #compute_drug_odds_ratios(conn)
 
 #tabulate_column('patient_age', res, -3)
