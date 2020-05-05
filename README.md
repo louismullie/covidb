@@ -130,13 +130,14 @@ plt.show()
 
 ## 4. Available tables and columns
 
-The list of available tables and columns, as of version 1.0.0, includes:
+The list of available tables and columns, as the current version, includes:
 
 ```python
+
 TABLE_COLUMNS = {
 
   'patient_data': [
-    'patient_site_uid', 'patient_uid', 'pcr_sample_time', 
+    'patient_site_uid', 'patient_global_uid', 'pcr_sample_time', 
     'patient_site_code', 'patient_covid_status', 'patient_age', 
     'patient_sex', 'patient_vital_status', 'patient_was_admitted'
   ],
@@ -160,29 +161,29 @@ TABLE_COLUMNS = {
   ],
 
   'lab_data': [
-    'patient_site_uid', 'lab_name', 'lab_sample_site', 
+    'patient_site_uid', 'lab_name', 'lab_sample_type', 
     'lab_sample_time', 'lab_result_time', 
     'lab_result_status', 'lab_result_units',
-    'lab_result_string', 'lab_result_value'
+    'lab_result_value_string', 'lab_result_value'
   ],
 
   'observation_data': [
     'patient_site_uid', 'observation_name', 
-    'observation_time', 'observation_value', #'observation_units'
+    'observation_time', 'observation_value'
   ],
 
   'pcr_data': [
-    'patient_site_uid', 'pcr_name', 'pcr_sample_site', 'pcr_sample_time', 
+    'patient_site_uid', 'pcr_name', 'pcr_sample_type', 'pcr_sample_time', 
     'pcr_result_time', 'pcr_result_value', 'pcr_result_status'
   ],
 
   'culture_data': [
-    'patient_site_uid', 'culture_type', 'culture_specimen_type', 'culture_sample_time', 
+    'patient_site_uid', 'culture_type', 'culture_sample_type', 'culture_sample_time', 
     'culture_result_time', 'culture_growth_positive', 'culture_result_status'
   ],
 
   'imaging_data': [
-    'patient_site_uid', 'imaging_accession_uid', 'imaging_modality', 'imaging_site',
+    'patient_site_uid', 'imaging_accession_uid', 'imaging_modality', 'imaging_body_site',
     'imaging_acquisition_time'
   ],
 
@@ -194,6 +195,5 @@ TABLE_COLUMNS = {
     'slice_thickness', 'slice_rows', 'slice_columns', 'slice_rescale_intercept', 
     'slice_rescale_slope'
   ]
-  
 }
 ```
