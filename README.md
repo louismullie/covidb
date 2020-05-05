@@ -76,7 +76,7 @@ from constants import SQLITE_DIRECTORY
 db_file_name = os.path.join(SQLITE_DIRECTORY, 'covid_v1.0.0.db')
 
 conn = sqlite3.connect(db_file_name)
-curr = conn.execute("SELECT * from patient_data where patient_sex = 'M' AND patient_covid_status=1")
+curr = conn.execute("SELECT * from patient_data where patient_sex = 'male' AND patient_covid_status='positive'")
 res = curr.fetchall()
 ```
 
@@ -98,7 +98,7 @@ study = curr.fetchone()
 imaging_accession_uid = study.imaging_accession_uid
 ```
 
-Next, retrieve the slice(s) associated with the imaging study, and retrieve the location on disk of their pixel data files  (`slice_data_uri`).
+Next, retrieve the slice(s) associated with the imaging study, and retrieve the location on disk of their pixel data files (`slice_data_uri`).
 
 ```python
 # Retrieve the DICOM slices for the imaging study
@@ -107,10 +107,12 @@ slices = curr.fetchall()
 
 # Retrieve the data files for the imaging study
 for slice in slices:
-  data_frame = pd.DataFrame.from_csv(slice.slice_data_uri)
+  with h5py.File(slice_data_uri, 'r') as data_file:
+    slice_pixels = data_file['dicom'][:]
+    # ... do something with pixel data
 ```
 
-The file on disk representing the pixel data is a matrix of 32-bit integers, stored as a CSV file in ASCII text encoding, with commas as separators and no quotes around fields. This can be read directly into a Pandas data frame (as shown above), or converted to a NumPy array (see below).
+The file on disk representing the pixel data is a matrix of 32-bit integers, stored in HDF5 format.
 
 ### 3.3 Displaying a DICOM file
 ```python
@@ -118,11 +120,12 @@ import numpy as np
 import matplotlib.pyplot as plt
 from image_utils import equalize_histogram
 
-imge_data_frame = pd.DataFrame.from_csv(dicom_data_uri)
-image_numpy_array = data_frame.to_numpy()
-
+# Read in H5 data file
+with h5py.File(slice_data_uri, 'r') as data_file:
+  pixel_array = data_file['dicom'][:]
+    
 # Optional - use equalization method best suited for use
-image_contrast_adjusted = equalize_histogram(numpy_array)
+image_contrast_adjusted = equalize_histogram(pixel_array)
 
 plt.imshow(image_contrast_adjusted, cmap="gray")
 plt.show()
