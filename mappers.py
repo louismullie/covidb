@@ -93,7 +93,7 @@ def map_lab_sample_site(name, code):
   if 'autres' in code_str: return 'other'
   else:
     #print('Unrecognized sample site: ', name_str, code_str)
-    return ['unspecified_blood']
+    return 'unspecified_blood'
 
 def map_lab_result_value(result_string):
   if result_string is None: return ''
@@ -237,7 +237,7 @@ def map_episode_unit_type(unit_code, start_time=None):
    
   if start_time is not None:
     time_delta = get_hours_between_datetimes(
-      '2020-04-15 00:00:00', start_time)
+      '2020-04-08 00:00:00', start_time)
   
   if '8NC' in unit_code_str:
     if time_delta > 0:
@@ -253,17 +253,34 @@ def map_episode_unit_type(unit_code, start_time=None):
   else:
     return UNIT_TYPE_MAP[unit_code_str]
 
-def map_observation_name(name):
+def map_observation_name(name, units):
   name_str = str(name).lower().strip()
-  if name_str == 'fio2': return 'fraction_inspired_oxygen'
-  if name_str == 'sat o2 art': return 'oxygen_saturation'
-  if name_str == 'sat_o2': return 'oxygen_saturation'
-  if name_str == 'température': return 'temperature'
-  if name_str == 'tension_systol': return 'systolic_blood_pressure'
-  if name_str == 'tension_diastol': return 'diastolic_blood_pressure'
-  if name_str == 'rythme_resp': return 'respiratory_rate'
-  if name_str == 'pouls': return 'heart_rate'
-  if name_str == 'temp': return 'temperature'
+  units_str = str(units).lower().strip()
+  if name_str == 'oxygen':
+    if units_str == 'l/min':
+      return 'oxygen_flow_rate'
+    elif units_str == '%':
+      return 'fraction_inspired_oxygen'
+  if name_str == 'fio2':
+    return 'fraction_inspired_oxygen'
+  if name_str in ['sao2', 'sat_o2', 'sat o2 art']:
+    return 'oxygen_saturation'
+  if name_str in ['sao2', 'sat_o2', 'sat o2 art']:
+    return 'oxygen_saturation'
+  if name_str in ['systolic', 'tension_systol']:
+    return 'systolic_blood_pressure'
+  if name_str in ['diastolic', 'tension_diastol']:
+    return 'diastolic_blood_pressure'
+  if name_str in ['resp', 'respob', 'rythme_resp']:
+    return 'respiratory_rate'
+  if name_str in ['pulse', 'pouls']:
+    return 'heart_rate'
+  if name_str in ['tempob', 'température', 'temperature', 'temp']:
+    return 'temperature'
+  if name_str in ['weight']:
+    return 'weight'
+  if name_str in ['height']:
+    return 'height'
   raise Exception('Unrecognized observation: %s' % name_str)
 
 def map_drug_name(name):

@@ -35,6 +35,7 @@ for row in reader:
     pcr_sample_times[str(patient_mrn)] = row[2]
   row_count += 1
 
+
 df = sql_query("SELECT * FROM dw_v01.oacis_lb WHERE " +
     "lbres_ck IS NOT NULL AND resultunit IS NOT NULL AND resultdtm IS NOT NULL AND " +
     "specimencollectiondtm > '2020-01-01' AND dossier in (" + ", ".join(patient_mrns) + ")")
@@ -45,7 +46,7 @@ for index, row in df.iterrows():
   
   # Temperature and other observations encoded in labs
   try:
-    if map_observation_name(row.longdesc) is not None:
+    if map_observation_name(row.longdesc, None) is not None:
       continue
   except:
     pass

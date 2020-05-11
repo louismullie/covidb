@@ -1,5 +1,8 @@
 from connect_postgres import connectDB_returnDF
 
+import pandas as pd
+pd.set_option('display.max_rows', 250)
+
 def sql_query(query):
   return connectDB_returnDF(str(query))
 
@@ -10,22 +13,24 @@ def list_columns(table_name):
 def list_tables(table_schema, table_name):
   df = connectDB_returnDF("SELECT * from information_schema.tables " + \
     "WHERE table_schema = 'public' AND table_name LIKE '%" + table_name + "%'")
-  for row in df.iterrows():
+  
+  for i, row in df.iterrows():
     print(row)
 
-#list_tables('public', 'urgchum_episod_note_inf')
+#list_tables('public', 'zrrob')
 
 
-#df2 = sql_query(
-# "SELECT * from public.urgchum_episod_note_inf WHERE " + 
-# "note LIKE '%covid%' LIMIT 100 "
+#df = sql_query(
+# "SELECT * FROM dw_v01.citadel_chum_unitesoins "
 #)
 
-#print(df2.iloc[0])
+#print(df)
 
+#for i, row in df.iterrows():
+#  print([x for x in row if x is not None])
 #exit()
 #exit()
-#list_columns('lb_mic_sus_med_result')
+#list_columns('oacis_zrrob')
 
 #df2 = sql_query(
 #  "SELECT * from dw_v01.oacis_rd INNER JOIN " +

@@ -9,7 +9,7 @@ import os
 import numpy as np
 import pandas as pd
 
-from constants import DEBUG, TABLE_COLUMNS, CSV_DIRECTORY
+from constants import DEBUG, TABLE_COLUMNS, CSV_DIRECTORY, LIVE_SHEET_FILENAME
 from postgresql_utils import sql_query, list_columns, list_tables
 from file_utils import write_csv, read_csv
 from time_utils import get_hours_between_datetimes
@@ -26,8 +26,19 @@ pcr_sample_times = {}
 patient_data_rows = read_csv(os.path.join( \
   CSV_DIRECTORY, 'patient_data.csv'))
 
-patient_mrns = [row[0] for row in patient_data_rows]
-pcr_sample_times = dict( (str(row[0]), str(row[2])) for row in patient_data_rows)
+patient_mrns = []
+
+live_sheet_rows = read_csv(LIVE_SHEET_FILENAME, remove_duplicates=True)
+
+pcr_sample_times = {}
+
+for row in live_sheet_rows:
+  patient_mrn = str(row[0])
+  patient_mrns.append(patient_mrn)
+  pcr_time = str(row[-7])
+  if patient_mrn not in pcr_sample_times:
+    pcr_sample_times[patient_mrn] = []
+  pcr_sample_times[patient_mrn].append(pcr_time)
 
 # Get ER visit data from ADT
 df = sql_query(
@@ -36,11 +47,6 @@ df = sql_query(
   "dossier in ('" + "', '".join(patient_mrns) + "') " + \
   "AND dhreadm > '2020-01-01'"
 )
-
-#df = sql_query(
-#  "SELECT dossier from dw_test.view_covid_noncovid_tested_hospitalisation " +
-#  "WHERE soinsintensif=0 and patient_covid='Positif'"
-#)
 
 episode_data_rows = [
   [
@@ -54,7 +60,7 @@ episode_data_rows = [
       row.dhreadm, row.dhredep, default_now=True),
   ] for i, row in df.iterrows() \
   if get_hours_between_datetimes( \
-    row.dhreadm, pcr_sample_times[str(row.dossier)]
+    row.dhreadm, pcr_sample_times[str(row.dossier)][0]
   ) > 0
 ]
 
@@ -110,7 +116,7 @@ for index, row in df.iterrows():
   current_num_locations = len(locations_data[patient_mrn][episode_id])
    
   # Skip patients going through Unite fantome
-  if location_ward_code in ['CELJ','CBI']: continue
+  if location_ward_code in ['CEC1', 'CEC2', 'CELJ','CBI']: continue
 
   # Handle changes between units of the same type as one location
   if current_num_locations > 1:
@@ -203,13 +209,18 @@ for patient_mrn in locations_data:
         episode_start_time, episode_end_time, default_now=True
       ))
 
-      # Skip if test episode started > 24h after first PCR test
-      hours_delta = get_hours_between_datetimes(
-        pcr_sample_times[patient_mrn], episode_start_time)
-  
-      if hours_delta < -24*5: 
-        print('Skip', episode_unit_type)
-        continue
+      # Skip if test episode started > 5 days after first PCR test
+      found_close = False
+
+      for pcr_time in pcr_sample_times[patient_mrn]:
+
+        hours_delta = get_hours_between_datetimes(
+          episode_start_time, pcr_time)
+
+        if hours_delta > -24*7 and hours_delta < 24*30: 
+          found_close = True
+
+      if not found_close: continue
 
       episode_data_rows.append([
         patient_mrn, 

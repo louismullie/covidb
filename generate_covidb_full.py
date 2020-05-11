@@ -48,6 +48,9 @@ run_step('pcr_data')
 print('\n\n* Generating observation data...')
 run_step('observation_data')
 
+print('\n\n* Generating observation data...')
+run_step('intervention_data')
+
 print('\n\n* Generating culture data...')
 run_step('culture_data')
 

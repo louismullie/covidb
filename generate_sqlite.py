@@ -26,6 +26,7 @@ for schema_block in schema_blocks:
 curr = conn.cursor()
 
 for table_name in TABLE_COLUMNS:
+  if table_name == 'intervention_data': continue
   file_uri = os.path.join(CSV_DIRECTORY, table_name + '.csv')
   df = pd.read_csv(file_uri)
   #if 'patient_site_uid' in df.columns:

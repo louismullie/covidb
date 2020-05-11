@@ -142,8 +142,10 @@ num_external = len(set(external_mrns))
 df = sql_query(
   "SELECT dossier, dhreadm FROM " +
   "dw_test.cichum_sejhosp_live WHERE " +
-  "dossier in (" + ", ".join(all_mrns) + ") " +
-  "AND dhreadm > '2020-01-01'"
+  "dossier in (" + ", ".join(all_mrns) + ") AND " +
+  "(unitesoinscode != 'CBI' and unitesoinscode != 'CELJ' AND " +
+  "unitesoinscode != 'CEC1' and unitesoinscode != 'CEC2') AND " +
+  "dhreadm > '2020-01-01'"
 )
 
 admitted_mrns = [str(row.dossier) for i, row in df.iterrows()]
@@ -180,8 +182,10 @@ bypassed_er_mrns = [
 df = sql_query(
   "SELECT dossier, unitesoinscode FROM " +
   "dw_test.cichum_sejhosp_live WHERE " +
-  "dossier in (" + ", ".join(bypassed_er_mrns) + ") " +
-  "AND dhreadm > '2020-01-01'")
+  "dossier in (" + ", ".join(bypassed_er_mrns) + ") AND" +
+  "(unitesoinscode != 'CBI' and unitesoinscode != 'CELJ' AND " +
+  "unitesoinscode != 'CEC1' and unitesoinscode != 'CEC2') AND " +
+  "dhreadm > '2020-01-01'")
 
 hotel_dieu_mrns = [
   str(row.dossier) for i,row in df.iterrows() \
@@ -265,13 +269,15 @@ for row in live_sheet_rows:
 
   patient_mrn = str(row[0])
 
-  #if patient_mrn in other_bypassed_mrns:
-  #  continue
-
   patient_ramq = str(row[1])
   patient_age = row[-1]
   patient_birth_sex = row[-2]
-  patient_covid_status = map_patient_covid_status(row[-4])
+
+  try:
+    patient_covid_status = map_patient_covid_status(row[-4])
+  except:
+    print('Invalid COVID status')
+    continue
   
   pcr_result_time = row[-6]
   pcr_sample_time = row[-7]

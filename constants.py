@@ -64,6 +64,11 @@ TABLE_COLUMNS = {
     'observation_time', 'observation_value', #'observation_units'
   ],
 
+  'intervention_data': [
+    'patient_site_uid', 'intervention_name', 
+    'intervention_start_time', 'intervention_end_time'
+  ],
+
   'pcr_data': [
     'patient_site_uid', 'pcr_name', 'pcr_sample_type', 'pcr_sample_time', 
     'pcr_result_time', 'pcr_result_value', 'pcr_result_status'
@@ -99,6 +104,7 @@ CENSOR_COLUMNS = {
   'pcr_data': ['pcr_name', 'pcr_sample_site'],
   'culture_data': ['culture_type', 'culture_specimen_type'],
   'imaging_data': ['imaging_modality', 'imaging_site'],
+  'intervention_data': [],
   'slice_data': []
 }
 
@@ -293,7 +299,7 @@ LAB_PENDING_FLAGS = [
 
 LAB_CANCELLED_FLAGS = [
   'Test annulé', 'Test Annulé', 'ANN', 
-  'ann', 'annulé', 'ANNULE', 'ANNULÉ',
+  'ann', 'annulé', 'ANNULE', 'ANNULÉ', 'TEST ANNULE',
   'test annulé', 'Annulé', 'ANNULe', 'annule'
 ]
 
@@ -710,7 +716,6 @@ UNIT_TYPE_MAP = {
   '17N': 'inpatient_ward', #'Unité 17 Nord', 
   '13N': 'inpatient_ward', #'Unité 13 Nord', 
   '10N': 'intensive_care_unit', #Unité des soins intensifs (NORD)', 
-  'CCJ1': 'day_surgery_unit', #'Chirurgie du même jour (1) CHUM', 
   '14S': 'inpatient_ward', #'Unité 14 Sud', 
   '01CJ': 'day_surgery_unit', #"Unité de chirurgie d'un jour Ophtalmologie", 
   '11NT': 'inpatient_ward', #'Unité  de médecine des toxicomanies', 
@@ -720,7 +725,11 @@ UNIT_TYPE_MAP = {
   '14N': 'inpatient_ward', #'Unité 14 Nord', 
   '13S': 'inpatient_ward', #'Unité 13 Sud', 
   '17SM': 'high_dependency_unit', #'Unité 17 Sud- S. intermédiaires', 
+   # Ghost units, used for transfer of patients
    #'CBI ': 'Unité fantôme', 
+   #'CELJ': 'inpatient_ward', # 'Équipe médecine (CELJ)'
+   #'CEC1': 'inpatient_ward', #'Équipe chirurgie (CEC1)',
+   #'CEC2': 'inpatient_ward', #'Équipe chirurgie (CEC2)',
   '09SA': 'inpatient_ward', #'Unité de naissance', 
   '11NY': 'inpatient_ward', #'Unité de psychiatrie - toxico', 
   'CHEM': 'cardiac_catheterization_lab', #'Unité Hémodynamie  CHUM', 
@@ -730,7 +739,6 @@ UNIT_TYPE_MAP = {
   '09S': 'inpatient_ward', #'Unité Mère-enfant', 
   '17S': 'inpatient_ward', #Unité 17 Sud', 
   '16S': 'inpatient_ward', #'Unité 16 Sud', 
-  'CCJ2': 'day_surgery_unit', #'Chirurgie du même jour (2) CHUM', 
   '11S': 'inpatient_ward', #'Unité 11 Sud', 
   '19': 'inpatient_ward', #'Unité 19 Nord', 
   '19N': 'inpatient_ward', #'Unité 19 Nord', 
@@ -741,25 +749,24 @@ UNIT_TYPE_MAP = {
   '09N': 'intensive_care_unit', #'Unité des grands brûlés', 
   '12N': 'inpatient_ward', 
   '11NP': 'inpatient_ward', 
-  '05CJ': 'day_surgery_unit',  #"Unité de chirurgie d'un jour (5 étage)", 
   '15SM': 'high_dependency_unit', #'Unité 15 Sud- S. intermédiaires', 
   '08NC': 'coronary_care_unit', #'Unité S.int. cardiaque', 
   '16N': 'inpatient_ward',  #'Unité 16 Nord', 
   'CCJO': 'day_surgery_unit', #'Chirurgie du même jour (O) Obstétrique', 
+  'CCJ1': 'day_surgery_unit', #'Chirurgie du même jour (1) CHUM', 
+  '05CJ': 'day_surgery_unit',  #"Unité de chirurgie d'un jour (5 étage)", 
   '04CJ': 'day_surgery_unit',  #"Unité de chirurgie d'un jour (4 étage)", 
-  'CELJ': 'inpatient_ward', # 'Équipe médecine (CELJ)'
-  'CEC1': 'inpatient_ward', #'Équipe chirurgie (CEC1)',
-  'CEC2': 'inpatient_ward', #'Équipe chirurgie (CEC2)',
+  'CCJ2': 'day_surgery_unit', #'Chirurgie du même jour (2) CHUM', 
   '09SB': 'inpatient_ward', #Unité des bébés dans chambre des mères'
   '09SN': 'inpatient_ward', #'Unité de néonatalogie', 
-  '1HLR': 'inpatient_ward', #'Unité Hotel-Dieu - 1 LeRoyer'
-  '2HLR': 'inpatient_ward', #'Unité Hotel-Dieu - 2 LeRoyer'
-  '4HLR': 'inpatient_ward', #'Unité Hotel-Dieu - 4 LeRoyer',
-  '5HDB': 'inpatient_ward', #'Unité Hotel-Dieu - 5 DeBullion',
-  '5HLR': 'inpatient_ward', #'Unité Hotel-Dieu - 5 LeRoyer',
-  '6HLR': 'inpatient_ward', #'Unité Hotel-Dieu - 6 LeRoyer',
-  '6HDB': 'inpatient_ward', #'Unité Hotel-Dieu - 6 DeBullion',
-  '7HDB': 'inpatient_ward', #'Unité Hotel-Dieu - 7 DeBullion',
+  '1HLR': 'hd_inpatient_ward', #'Unité Hotel-Dieu - 1 LeRoyer'
+  '2HLR': 'hd_inpatient_ward', #'Unité Hotel-Dieu - 2 LeRoyer'
+  '4HLR': 'hd_inpatient_ward', #'Unité Hotel-Dieu - 4 LeRoyer',
+  '5HDB': 'hd_inpatient_ward', #'Unité Hotel-Dieu - 5 DeBullion',
+  '5HLR': 'hd_inpatient_ward', #'Unité Hotel-Dieu - 5 LeRoyer',
+  '6HLR': 'hd_inpatient_ward', #'Unité Hotel-Dieu - 6 LeRoyer',
+  '6HDB': 'hd_inpatient_ward', #'Unité Hotel-Dieu - 6 DeBullion',
+  '7HDB': 'hd_inpatient_ward', #'Unité Hotel-Dieu - 7 DeBullion',
 }
 
 #[

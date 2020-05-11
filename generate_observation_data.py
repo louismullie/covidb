@@ -31,11 +31,61 @@ for row in reader:
     pcr_sample_times[str(patient_mrn)] = row[2]
   row_count += 1
 
+observation_data_rows = []
+
+df = sql_query(
+  "SELECT dossier, servacro, rsltvalue, startdtm, unitcd FROM " +
+  "dw_v01.oacis_ob WHERE " +
+  "startdtm > '2020-01-01' AND " +
+  "dossier in (" + ", ".join(patient_mrns) + ")"
+)
+
+#print('done')
+#print(df.iloc[0])
+#exit()
+
+# Get vital signs from Oacis
+#df = sql_query(
+# "SELECT dossier, servtxt, startdtm, rsltvalue, unitcd FROM public.oacis_zrob INNER JOIN " +
+# "public.oacis_zrobvalues ON oacis_zrobvalues.sid = oacis_zrob.sid INNER JOIN " +
+# "datalake.oacis_serv ON oacis_serv.sid = oacis_zrob.sid INNER JOIN " +
+# "dw_v01.dw_oacis_pat_doss ON oacis_serv.pid = dw_oacis_pat_doss.opid WHERE " +
+# "startdtm > '2020-01-01' AND dossier in (" + ", ".join(patient_mrns) + ")" 
+
+#print(df.size)
+for index, row in df.iterrows():
+
+  patient_mrn = str(row.dossier)
+  observation_name = row.servacro
+  observation_value = row.rsltvalue
+  observation_time = row.startdtm
+  observation_unit = row.unitcd
+
+  try:
+    mapped_observation_name = map_observation_name(observation_name, observation_unit)
+  except:
+    continue
+
+  mapped_observation_time = map_time(observation_time)
+  mapped_observation_value = map_float_value(observation_value)
+
+  delta_hours = get_hours_between_datetimes(
+    pcr_sample_times[str(patient_mrn)], str(observation_time))
+  
+  if delta_hours < -48: continue
+
+  observation_data_rows.append([
+    patient_mrn, 
+    mapped_observation_name,
+    mapped_observation_time,
+    mapped_observation_value
+  ])
+
+print('Done fetching observations from Oacis')
+
 df = sql_query("SELECT * FROM dw_v01.oacis_lb WHERE " +
     "resultdtm IS NOT NULL AND longdesc in ('FIO2', 'Sat O2 Art', 'Température') AND " +
     "specimencollectiondtm > '2020-01-01' AND dossier in (" + ", ".join(patient_mrns) + ")")
-
-observation_data_rows = []
 
 for index, row in df.iterrows():
   
@@ -50,7 +100,7 @@ for index, row in df.iterrows():
     continue
   
   mapped_observation_time = map_time(observation_time)
-  mapped_observation_name = map_observation_name(row.longdesc)
+  mapped_observation_name = map_observation_name(row.longdesc, None)
   mapped_observation_value = map_float_value(observation_value)
 
   if mapped_observation_name == 'fraction_inspired_oxygen':
@@ -123,7 +173,7 @@ for index, row in df.iterrows():
 
     observation_data_rows.append([
       patient_mrn, 
-      map_observation_name(observation_name), 
+      map_observation_name(observation_name, None), 
       map_time(observation_time),
       map_float_value(observation_value)
     ])
