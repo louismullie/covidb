@@ -14,10 +14,25 @@ from sklearn.experimental import enable_iterative_imputer
 from sklearn.impute import IterativeImputer, SimpleImputer
 from sklearn.preprocessing import Imputer
 from sklearn.ensemble import RandomForestClassifier
+from sklearn.model_selection import KFold
+
 np.set_printoptions(precision=2, suppress=True)
 
 db_file_name = os.path.join(SQLITE_DIRECTORY, 'covidb_version-1.0.0.db')
 conn = sqlite3.connect(db_file_name)
+
+def map_age(age):
+  if age is None: return 60
+  else: return float(age)
+
+def map_sex(sex):
+  if sex == 'male': return 1
+  else: return 0
+
+query_info = "SELECT patient_site_uid, patient_age, patient_sex from patient_data WHERE " + \
+        " patient_data.patient_covid_status = 'positive'"
+
+pt_infos = dict((str(x[0]), [map_age(x[1]), map_sex(x[2])]) for x in sql_fetch_all(conn, query_info))
 
 query_icu = "SELECT episode_data.patient_site_uid from episode_data INNER JOIN " + \
         " patient_data ON episode_data.patient_site_uid = patient_data.patient_site_uid WHERE " + \
@@ -36,10 +51,7 @@ death_pt_ids = set([str(x[0]) for x in sql_fetch_all(conn, query_deaths)])
 query = "SELECT episode_data.patient_site_uid, episode_start_time from episode_data INNER JOIN " + \
          " patient_data ON episode_data.patient_site_uid = patient_data.patient_site_uid WHERE " + \
          " (episode_data.episode_unit_type = 'inpatient_ward' OR " + \
-         "  episode_data.episode_unit_type = 'coronary_care_unit' OR " + \
-         "  episode_data.episode_unit_type = 'intensive_care_unit' OR " + \
-         "  episode_data.episode_unit_type = 'emergency_room' OR " + \
-         "  episode_data.episode_unit_type = 'high_dependency_unit') AND " + \
+         "  episode_data.episode_unit_type = 'emergency_room' ) AND " + \
          " patient_data.patient_covid_status = 'positive'"
 
 res = sql_fetch_all(conn, query)
@@ -104,11 +116,14 @@ complete_lab_names = set()
 for patient_id in sorted(lab_bins):
   feature_rows = []
   feature_subarray = []
+  #age, sex = pt_infos[patient_id]
+  #feature_subarray = [[age, sex, 0]]
+  #feature_rows.append('age_sex')
   for lab_name in sorted(lab_names):
     
     pct_with_data = len(patients_with_data[lab_name]) / len(eligible_patients)
     
-    if pct_with_data > 0.5:
+    if pct_with_data > 0.25:
       complete_lab_names.add(lab_name)
       feature_rows.append(lab_name)
       if lab_name not in lab_bins[patient_id]: 
@@ -144,7 +159,7 @@ imputed_array = imp_mean.transform(input_array)
 df = pd.DataFrame(imputed_array)
 
 plt.matshow(df.corr())
-plt.title('Correlations between laboratory parameters over time', y=-0.01)
+#plt.title('Correlations between laboratory parameters over time', y=-0.01)
 plt.xticks(range(0,len(feature_rows)), feature_rows, rotation='vertical',fontsize='6')
 plt.yticks(range(0,len(feature_rows)), feature_rows, fontsize='6')
 plt.gca().xaxis.set_ticks_position('top')
@@ -174,9 +189,11 @@ for feature_name in feature_rows:
     str(output_array[0][i]))
   i += 1
 
+all_pt_ids = []
 labels = []
 num_patient = 0
 for patient_id in sorted(lab_bins):
+  all_pt_ids.append(patient_id)
   labels.append( (patient_id in icu_pt_ids or patient_id in death_pt_ids ) )
   num_patient += 1
 
@@ -186,23 +203,45 @@ classifier_input = np.asarray([x.flatten() for x in output_array])
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import roc_curve, auc
 
-X_train, X_test, y_train, y_test = train_test_split( \
-  classifier_input, classifier_labels, test_size=1/3)
+kfold = KFold(n_splits=5)
+X = classifier_input
+y = classifier_labels
+
+#X_train, X_test, y_train, y_test = train_test_split( \
+#  classifier_input, classifier_labels, test_size=1/3)
 
 print('Classifier input array shape: %s' % str(output_array.shape))
 print(labels)
 
 clf = RandomForestClassifier(max_depth=10, random_state=0)
-y_score = clf.fit(X_train, y_train).predict_proba(X_test)
-
-fpr, tpr, _ = roc_curve(y_test, y_score[:,1])
-roc_auc = auc(fpr, tpr)
 
 plt.figure()
-lw = 2
-plt.plot(fpr, tpr, color='darkorange',
-         lw=lw, label='Random Forest Classifier (AUC = %0.2f)' % roc_auc)
-plt.plot([0, 1], [0, 1], color='navy', lw=lw, linestyle='--')
+fold = 0
+tprs = []
+mean_fpr = np.linspace(0, 1, 100)
+
+for train_index, test_index in kfold.split(X):
+  X_train, X_test = X[train_index], X[test_index]
+  y_train, y_test = y[train_index], y[test_index]
+
+  y_score = clf.fit(X_train, y_train).predict_proba(X_test)
+
+  fpr, tpr, _ = roc_curve(y_test, y_score[:,1])
+  tprs.append(np.interp(mean_fpr, fpr, tpr))
+  roc_auc = auc(fpr, tpr)
+
+  plt.plot(fpr, tpr, lw=1, color='gray', linestyle='--', \
+    label='Fold %i (AUC = %0.2f)' % (fold, roc_auc))
+
+  fold += 1
+
+mean_tpr = np.mean(tprs, axis=0)
+mean_auc = auc(mean_fpr, mean_tpr)
+
+plt.plot(mean_fpr, mean_tpr, lw=2, color='green', \
+  label='Average %i (AUC = %0.2f)' % (fold, mean_auc))
+
+plt.plot([0, 1], [0, 1], color='navy', lw=2, linestyle='--')
 plt.xlim([0.0, 1.0])
 plt.ylim([0.0, 1.05])
 plt.xlabel('False Positive Rate')
@@ -210,3 +249,10 @@ plt.ylabel('True Positive Rate')
 plt.title('Prediction of ICU admission or death')
 plt.legend(loc="lower right")
 plt.show()
+
+print('Number of patients (total): %d' % len(all_pt_ids))
+print('Number of patients (unique): %d' % len(np.unique(all_pt_ids)))
+print('Number of + events (train): %d' % np.count_nonzero(y_train))
+print('Number of + events (test): %d' % np.count_nonzero(y_test))
+print('Number of windows (train): %d' % len(X_train))
+print('Number of windows (test): %d' % len(X_test))
