@@ -36,12 +36,12 @@ imaging_data_rows = []
 patients_with_imaging = []
 imaging_accession_numbers = []
 
-for index, row in df.iterrows():
+for index, row in df.iterrows():[]
   lower_desc = row.description.lower()
   row_patient_mrn = str(row.dossier)[1:]
   
-  if ('rx' in lower_desc and 'poumon' in lower_desc): #or \
-     #('scan' in lower_desc and 'thorax' in lower_desc):
+  if ('rx' in lower_desc and 'poumon' in lower_desc) or \
+     ('scan' in lower_desc and 'thorax' in lower_desc):
      #('scan' in lower_desc and 'abdo' in lower_desc):
     hours = get_hours_between_datetimes(
       pcr_sample_times[row_patient_mrn], row.date_heure_exam)
@@ -54,10 +54,13 @@ for index, row in df.iterrows():
     imaging_accession_uid = generate_accession_uid(row.accession_number)
     imaging_acquired_time = row.date_heure_debut_examen
     
+    if 'rx' in lower_desc: modality = 'xr'
+    elif 'scan' in lower_desc: modality = 'ct'
+
     imaging_data_rows.append([
       row_patient_mrn,
       imaging_accession_uid,
-      'xr', 'chest',
+      modality, 'chest',
       map_time(imaging_acquired_time)
     ])
 

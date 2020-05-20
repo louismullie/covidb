@@ -106,6 +106,8 @@ for index, row in df.iterrows():
     'location_end_time': '',
     'location_description': ''
   }
+  if patient_mrn == '5632640':
+    print(episode_id, location_start_time, location_ward_code)
 
   if patient_mrn not in locations_data:
     locations_data[patient_mrn] = {}
@@ -189,8 +191,10 @@ for patient_mrn in locations_data:
       
       if episode_location_num + 1 < episode_location_total:
         next_location = episode_locations_data[episode_location_num + 1]
+        admission_start_time = episode_start_time
         episode_end_time = next_location['location_start_time']
       elif admission_data is not None:
+        admission_start_time = admission_data['admission_start_time']
         admission_end_time = admission_data['admission_end_time']
         if admission_end_time:
           episode_end_time = admission_end_time
@@ -208,20 +212,18 @@ for patient_mrn in locations_data:
       episode_duration_hours = int(get_hours_between_datetimes(
         episode_start_time, episode_end_time, default_now=True
       ))
-
-      # Skip if test episode started > 5 days after first PCR test
+      # Skip if ADMISSION started > 5 days after first PCR test
       found_close = False
-
       for pcr_time in pcr_sample_times[patient_mrn]:
 
         hours_delta = get_hours_between_datetimes(
-          episode_start_time, pcr_time)
+          admission_start_time, pcr_time)
 
         if hours_delta > -24*7 and hours_delta < 24*30: 
           found_close = True
-
+      
       if not found_close: continue
-
+      
       episode_data_rows.append([
         patient_mrn, 
         episode_id,

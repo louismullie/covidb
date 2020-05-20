@@ -71,7 +71,7 @@ for index, row in df.iterrows():
 
   delta_hours = get_hours_between_datetimes(
     pcr_sample_times[str(patient_mrn)], str(observation_time))
-  
+  9
   if delta_hours < -48: continue
 
   observation_data_rows.append([
