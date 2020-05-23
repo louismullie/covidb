@@ -201,16 +201,17 @@ for patient_id, lab_name, lab_sample_time, lab_value in full_lab_data:
   
   for episode_start_time in eligible_episodes[patient_id]:
     hours_since_admission = get_hours_between_datetimes(episode_start_time, lab_sample_time)
-    full_lab_bins[patient_id][lab_name].append([hours_since_admission, lab_value])
-    full_patients_with_data[lab_name].append(patient_id)
+    if hours_since_admission > -24 and hours_since_admission < 96:
+      full_lab_bins[patient_id][lab_name].append([hours_since_admission, lab_value])
+      full_patients_with_data[lab_name].append(patient_id)
 
 from sklearn.preprocessing import PolynomialFeatures
 from sklearn.linear_model import Ridge
 
 from sklearn.pipeline import make_pipeline
 
-num_labs_per_fig = 5
-n_time_points = 3
+num_labs_per_fig = 25
+n_time_points = 5
 lab_data = []
 
 full_lab_names = list(set(full_lab_names))
@@ -223,7 +224,7 @@ for patient_id in np.unique(full_patients_with_data['creatinine']):
   
   if patient_id not in eligible_patients: continue 
 
-  if True: fig, axs = plt.subplots(num_labs_per_fig,1, constrained_layout=True)
+  if True: fig, axs = plt.subplots(7,7, constrained_layout=True)
   
   if patient_id not in regressed_data:
     regressed_data[patient_id] = {}
@@ -234,10 +235,7 @@ for patient_id in np.unique(full_patients_with_data['creatinine']):
   for variable_num in range(0, len(full_lab_names)):
 
     if True:
-      if num_labs_plotted >= num_labs_per_fig:
-        ax = axs[num_labs_per_fig-1]
-      else:
-        ax = axs[num_labs_plotted]
+      ax = axs[int(num_labs_plotted / 7),num_labs_plotted % 7 ]
 
     variable_name = full_lab_names[variable_num]
     variable_num += 1
@@ -270,15 +268,13 @@ for patient_id in np.unique(full_patients_with_data['creatinine']):
     y = labs_y.ravel()
 
     dx = np.max(X) - np.min(X)
-    x = np.atleast_2d(np.linspace(0, 3, n_time_points * 24)).T
+    x = np.atleast_2d(np.linspace(0, 5, n_time_points * 24)).T
 
     m = np.mean(labs_X)
     gp = Lasso(alpha=1)
     gp.fit(X, y)
 
-    kernel = C(0.1, (1e-23, 1e5)) * \
-      RBF(0.1, (1e-23, 1e10)) + \
-      WhiteKernel(0.1, (1e-23, 1e5))
+    kernel = C(0.1, (1e-23, 1e5)) * Matern(length_scale=10000, nu=1.5)
   
     Xy_pairs = [[labs_X[k], labs_y[k]] for k in range(0,len(labs_X))]
   
@@ -287,7 +283,9 @@ for patient_id in np.unique(full_patients_with_data['creatinine']):
   
     Xy_pairs.sort(key=lambda x: x[0])
     Xy_pairs = np.asarray(Xy_pairs) 
-
+    #plt.title(variable_name)
+    #plt.plot(Xy_pairs[:,0], Xy_pairs[:,1])
+    #plt.show()
     labs_X = Xy_pairs[:,0]
     labs_y = np.abs(Xy_pairs[:,1])
 
@@ -304,27 +302,27 @@ for patient_id in np.unique(full_patients_with_data['creatinine']):
     y_pred_lasso = gp.predict(x)
     y_pred, sigma = gp2.predict(x,return_std=True)
 
-    for k in range(0,n_time_points):
-      lab_data.append([patient_id, variable_name, k, y_pred[k*24]])
+    for k in range(0,n_time_points-2):
+      lab_data.append([patient_id, variable_name, k, y_pred[(k+1)*24]])
     if True:
-      p1 = ax.fill(np.concatenate([x, x[::-1]]),
+      p1 = ax.fill(np.concatenate([x-1, x[::-1]-1]),
          np.concatenate([y_pred - 1.9600,
                         (y_pred + 1.9600)[::-1]]),
          alpha=.25, fc='b', ec='None', label='95% confidence interval')
 
-      p2 = ax.plot(X2, y2, 'g.', markersize=10, label='Added points')
-      p3 = ax.plot(X, y, 'k.', markersize=10, label='Observations')
-      p4 = ax.plot(x, y_pred, 'r:', label='Prediction')
+      p2 = ax.plot(X2-1, y2, 'g.', markersize=10, label='Added points')
+      p3 = ax.plot(X-1, y, 'k.', markersize=10, label='Observations')
+      p4 = ax.plot(x-1, y_pred, 'r:', label='Prediction')
       #p5 = ax.plot(x, y_pred_lasso, 'r:', label='Lasso prediction')
 
-      ax.set_xlim(0, n_time_points)
-      ax.set_xlabel('Number of days since beginning of episode')
-      ax.set_ylabel(variable_name)
+      ax.set_xlim(-1, n_time_points-1)
+      ax.set_xlabel('Number of days since beginning of episode', fontsize=6)
+      ax.set_ylabel(variable_name, fontsize=6)
 
-      ax.legend([(p1[0],p4[0]), p2[0], p3[0], p4[0]], ['95% CI', 'Added points',\
-    'Observed points', 'Prediction from full data'], loc='upper right')
+      #ax.legend([(p1[0],p4[0]), p2[0], p3[0], p4[0]], ['95% CI', 'Added points',\
+      #'Observed points', 'Prediction from full data'], loc='upper right')
 
-      ax.set_title(variable_name + ' over %.2f days' % n_time_points)
+      ax.set_title(variable_name + ' over %.2f days' % n_time_points, fontsize=6)
 
     #if num_labs_plotted == num_labs_per_fig: break
   patient_num += 1

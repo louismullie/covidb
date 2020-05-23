@@ -81,6 +81,8 @@ fig.set_figwidth(15)
 db_file_name = os.path.join(SQLITE_DIRECTORY, 'covidb_version-1.0.0.db')
 conn = sqlite3.connect(db_file_name)
 
+res = sql_fetch_all(conn, "SELECT * FROM drug_data WHERE drug_name LIKE '%parin%' AND drug_roa='sc'")
+
 plt.sca(axs[0, 0])
 compare_labs_by_covid(conn, 'lymphocyte_count', min_value=0.1, max_value=10)
 
