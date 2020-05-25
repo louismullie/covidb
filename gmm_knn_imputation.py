@@ -24,6 +24,14 @@ from sklearn.impute import KNNImputer
 
 BOXCOX_A = 1.5
 PLT_ALL = False
+include_covid_negative = False
+threshold_missingness = 0.25
+threshold_discreteness = 0.01
+
+if include_covid_negative:
+  inclusion_flag = ""
+else:
+  inclusion_flag = " AND patient_data.patient_covid_status = 'positive'"
 
 db_file_name = os.path.join(SQLITE_DIRECTORY, 'covidb_version-1.0.0.db')
 conn = sqlite3.connect(db_file_name)
@@ -31,13 +39,13 @@ conn = sqlite3.connect(db_file_name)
 query_icu = "SELECT episode_data.patient_site_uid from episode_data INNER JOIN " + \
         " patient_data ON episode_data.patient_site_uid = patient_data.patient_site_uid WHERE " + \
         " (episode_data.episode_unit_type = 'intensive_care_unit' OR " + \
-        "  episode_data.episode_unit_type = 'high_dependency_unit') AND " + \
-        " patient_data.patient_covid_status = 'positive'"
+        "  episode_data.episode_unit_type = 'high_dependency_unit')  " + \
+        inclusion_flag
 
 query_deaths = "SELECT diagnosis_data.patient_site_uid from diagnosis_data INNER JOIN " + \
         " patient_data ON diagnosis_data.patient_site_uid = patient_data.patient_site_uid WHERE " + \
-        " diagnosis_data.diagnosis_type = 'death' AND " + \
-        " patient_data.patient_covid_status = 'positive'"
+        " diagnosis_data.diagnosis_type = 'death' " + \
+        inclusion_flag
 
 icu_pt_ids = set([str(x[0]) for x in sql_fetch_all(conn, query_icu)])
 death_pt_ids = set([str(x[0]) for x in sql_fetch_all(conn, query_deaths)])
@@ -45,8 +53,8 @@ death_pt_ids = set([str(x[0]) for x in sql_fetch_all(conn, query_deaths)])
 query = "SELECT episode_data.patient_site_uid, episode_start_time from episode_data INNER JOIN " + \
          " patient_data ON episode_data.patient_site_uid = patient_data.patient_site_uid WHERE " + \
          " (episode_data.episode_unit_type = 'inpatient_ward' OR " + \
-         " episode_data.episode_unit_type = 'intensive_care_unit') AND " + \
-         " patient_data.patient_covid_status = 'positive'"
+         " episode_data.episode_unit_type = 'intensive_care_unit') " + \
+         inclusion_flag
 
 res = sql_fetch_all(conn, query)
 
@@ -67,16 +75,16 @@ query = "SELECT lab_data.patient_site_uid, lab_name, lab_sample_time, lab_result
   " (lab_data.lab_sample_type = 'venous_blood' OR " + \
   " lab_data.lab_sample_type = 'arterial_blood' OR " + \
   " lab_data.lab_sample_type = 'unspecified_blood') AND " + \
-  " lab_data.lab_result_status = 'resulted' AND " + \
-  " patient_data.patient_covid_status = 'positive'"
+  " lab_data.lab_result_status = 'resulted' " + \
+  inclusion_flag
   
 res1 = sql_fetch_all(conn, query)
 
 query = "SELECT observation_data.patient_site_uid, observation_name, observation_time, observation_value from observation_data " + \
   " INNER JOIN patient_data ON " + \
   " observation_data.patient_site_uid = patient_data.patient_site_uid WHERE " + \
-  " observation_data.observation_value IS NOT NULL AND " + \
-  " patient_data.patient_covid_status = 'positive'"
+  " observation_data.observation_value IS NOT NULL " + \
+  inclusion_flag
   
 res2 = sql_fetch_all(conn, query)
 
@@ -188,8 +196,6 @@ if PLT_ALL:
   plt.legend()
   plt.show()
 
-threshold_missingness = 0.25
-threshold_discreteness = 0.075
 means_thresh = means > threshold_missingness
 
 selected_variables = lab_names[means_thresh].tolist()
@@ -445,6 +451,7 @@ if PLT_ALL:
   fig.suptitle(top_title + sub_title, fontsize=8)
 
 remove_large_outliers = True
+export_values_for_variables = []
 positive_values_for_variables = []
 scaling_parameters = []
 
@@ -453,10 +460,10 @@ from scipy.stats import boxcox_normmax
 for k in range(0, len(selected_variables)):
   variable_name = selected_variables[k]
   values_for_variable = values_for_variables[k]
+  export_values_for_variables.append(values_for_variable)
   
   nn_values_for_variable = np.asarray([v for \
     v in values_for_variable if v is not None])
-    
   n_outliers_removed = 0
 
   if remove_large_outliers:
@@ -547,7 +554,12 @@ for k in range(0, len(selected_variables)):
   #print('Feature %s, pct. missing: %.2f, min: %.2f, max: %.2f' % 
   #  (variable_name, pct_missing, min_value, max_value))
 
+import pickle
+export_values_for_variables = np.asarray(export_values_for_variables)
+pickle.dump(export_values_for_variables, open('missing_data.sav', 'wb'))
+
 if PLT_ALL: 
+
   plt.setp(axes, yticks=[], xticks=[])
   plt.tight_layout(rect=[0,0.03,0,1.25])
   plt.subplots_adjust(hspace=1, wspace=0.35)
@@ -653,7 +665,7 @@ for k in range(0, len(selected_variables)):
   values_for_variable = positive_values_for_variables[k]
   gmm = fit_gmm(variable_name, values_for_variable, ax1, ax2)
   
-  generated_values = gmm.sample(1000)[0][:,0]
+  generated_values = gmm.sample(10000)[0][:,0]
 
   gmm_models[variable_name] = [gmm, generated_values]
 
@@ -676,7 +688,7 @@ if PLT_ALL:
   
   plt.show()
 
-n_synthetic = 200 * 5
+n_synthetic = 2000 * 5
 
 synthetic_variable_values = np.zeros(
  (len(selected_variables), n_synthetic)
