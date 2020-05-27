@@ -23,9 +23,9 @@ from sklearn.mixture import GaussianMixture
 from sklearn.impute import KNNImputer
 
 BOXCOX_A = 1.5
-PLT_ALL = False
-include_covid_negative = False
-threshold_missingness = 0.25
+PLT_ALL = True
+include_covid_negative = True
+threshold_missingness = 0.2
 threshold_discreteness = 0.01
 
 if include_covid_negative:
@@ -53,6 +53,7 @@ death_pt_ids = set([str(x[0]) for x in sql_fetch_all(conn, query_deaths)])
 query = "SELECT episode_data.patient_site_uid, episode_start_time from episode_data INNER JOIN " + \
          " patient_data ON episode_data.patient_site_uid = patient_data.patient_site_uid WHERE " + \
          " (episode_data.episode_unit_type = 'inpatient_ward' OR " + \
+         " episode_data.episode_unit_type = 'emergency_room' OR " + \
          " episode_data.episode_unit_type = 'intensive_care_unit') " + \
          inclusion_flag
 
@@ -98,19 +99,34 @@ def limit_to_label(limit):
     (left_limit, right_limit, n_time_points, hours_per_period)
 
 limits = [
-  [0, 36, 12], 
-  [-12, 36, 12], 
-  [-24, 36, 12], 
+
+  [-24, 36, 12],
+  [-24, 80, 16], 
+  [-24, 96, 24],
+
+  [0, 36, 12],
   [0, 48, 16], 
-  [-16, 48, 16], 
-  [-32, 48, 16], 
-  [0, 72, 24], 
-  [-24, 72, 24], 
-  [-48, 72, 24]
+  [0, 72, 24],
+
 ]
+
+limits = [
+
+  [-24, 36, 12],
+  [-24, 80, 16], 
+  [-24, 96, 24],
+
+  [0, 36, 12],
+  [0, 48, 16], 
+  [0, 72, 24],
+
+]
+
+selected_limit = 3
 
 ylabels = []
 percentages = []
+percentages_total = []
 
 for limit in limits:
 
@@ -132,11 +148,15 @@ for limit in limits:
     if patient_id not in eligible_patients: continue
     if lab_name == 'o2_sat' and lab_sample_type != 'arterial_blood': continue
     if lab_name == 'po2' and lab_sample_type != 'arterial_blood': continue
+    if lab_name == 'basophil_count': continue
+    if lab_name == 'eosinophil_count': continue
+    if lab_name in ['red_blood_cell_count', 'mean_corpuscular_volume', 
+      'mean_corpuscular_hemoglobin', 'mean_corpuscular_hemoglobin_concentration']: continue
     
-    lab_names.append(lab_name)
-
     if patient_id not in lab_bins:
       lab_bins[patient_id] = {}
+    if lab_name not in lab_names:
+      lab_names.append(lab_name)
     if lab_name not in patients_with_data:
       patients_with_data[lab_name] = set()
     if lab_name not in lab_bins[patient_id]:
@@ -147,27 +167,30 @@ for limit in limits:
     hours_since_admission = get_hours_between_datetimes(episode_start_time, lab_sample_time)
     if hours_since_admission > left_limit and hours_since_admission < right_limit:
       bin_num = int(hours_since_admission / hours_per_period) + int(left_offset / hours_per_period)
-      if lab_bins[patient_id][lab_name][bin_num] is not None:
+      if bin_num >= n_time_points: continue
+      if lab_name in lab_bins[patient_id] and \
+        bin_num < len(lab_bins[patient_id][lab_name])-1 and \
+        lab_bins[patient_id][lab_name][bin_num] is not None:
+        # Pick the most abnormal (simplified here to highest)
         if lab_value > lab_bins[patient_id][lab_name][bin_num]: 
           lab_bins[patient_id][lab_name][bin_num] = lab_value
-      else:
+      else: 
         lab_bins[patient_id][lab_name][bin_num] = lab_value
         patients_with_data[lab_name].add(patient_id)
         total_lab_num += 1
       total_entries_num += 1
     patient_ids.append(patient_id)
-
+  
   n_patients = len(np.unique(patient_ids))
-  print(total_lab_num / total_entries_num)
-
-  lab_names = []
 
   for lab_name in patients_with_data:
     x = len(patients_with_data[lab_name]) / n_patients
     percentages[-1].append(x)
-    lab_names.append(lab_name)
-
-  xlabels = lab_names
+  
+  percentages_total.append(\
+    total_lab_num / total_entries_num)
+    
+xlabels = lab_names
 
 patient_ids = np.asarray(np.unique(patient_ids))
 lab_names = np.asarray(lab_names)
@@ -176,30 +199,36 @@ percentages = np.asarray(percentages)
 means = np.asarray([np.mean(percentages[:,x]) \
   for x in range(0, percentages.shape[1])])
 
-for k in range(0,percentages.shape[0]):
-  points = []
-  for i in range(1, 9):
+for k in range(0, len(limits)):
+  
+  x, y = [], []
+
+  for i in range(1,9):
     threshold = i * 0.1
-    percentages_thresh = percentages[k]
-    percentages_thresh = percentages_thresh > threshold
+    percentages_thresh = percentages[k] < threshold
+    
     num_vars_left = np.count_nonzero(percentages_thresh)
-    points.append([threshold, num_vars_left])
-  points = np.asarray(points)
-  if PLT_ALL: plt.plot(points[:,0],points[:,1], label=ylabels[k], \
-    marker='o', color=PLOT_COLORS[k])
+    remaining_vars_missingness = percentages_total[k]
+    score = remaining_vars_missingness
+
+    x.append(threshold)
+    y.append(num_vars_left)
+  
+  if PLT_ALL: 
+    plt.plot(x,y,label=ylabels[k], \
+      marker='o', color=PLOT_COLORS[k])
 
 if PLT_ALL: 
-  plt.title("Missing data for different sampling strategies")
-  plt.ylabel("Number of features exceeding threshold")
-  plt.xlabel("Fraction of values that are not missing")
-
+  plt.title("Number of features included according to different sampling strategies and maximal missingness threshold")
+  plt.ylabel("Number of features that would be included given maximum missingness threshold")
+  plt.xlabel("Maximum fraction of missing data allowed for each feature (as % of patients with no data)")
+  plt.xlim(0.1, 0.9)
   plt.legend()
   plt.show()
 
-means_thresh = means > threshold_missingness
-
+left_limit, right_limit, hours_per_period = limits[selected_limit]
+means_thresh = percentages[selected_limit,:] > threshold_missingness
 selected_variables = lab_names[means_thresh].tolist()
-xy_data = percentages[:,means_thresh]
 
 n_selected_variables = len(selected_variables)
 print('Total %d variables selected' % n_selected_variables)
@@ -209,6 +238,7 @@ print(selected_variables)
 if PLT_ALL: 
 
   fig, ax = plt.subplots()
+  xy_data = percentages[:,means_thresh]
   im = ax.matshow(xy_data)
   xlabels = selected_variables
   ax.set_xticks(np.arange(len(xlabels)))
@@ -225,8 +255,7 @@ if PLT_ALL:
   fig.tight_layout()
   plt.show()
 
-
-pct_missingness_threshold = 1.0
+pct_missingness_threshold = 0.5
 pcts_completely_missing = []
 selected_patient_ids = []
 
@@ -251,6 +280,9 @@ for patient_id in patient_ids:
     selected_patient_ids.append(patient_id)
     pcts_completely_missing.append(pct_variables_completely_missing)
 
+num_patients_original = len(patient_ids)
+print('Total %d patients initially' % num_patients_original)
+
 num_patients_left = len(selected_patient_ids)
 print('Total %d patients remaining' % num_patients_left)
 
@@ -258,7 +290,7 @@ if PLT_ALL:
 
   n, bins, patches = plt.hist(x=pcts_completely_missing, 
     bins='auto', color=PLOT_COLORS[0], rwidth=0.9)
-  plt.grid(axis='y', alpha=0.75)
+  plt.grid(axis='y', alpha=0.4)
   plt.xlabel('Fraction of selected variables completely missing')
   plt.ylabel('Number of patients')
   plt.title(('Fraction of selected variables (n=%d) completely ' + \
@@ -271,7 +303,6 @@ if PLT_ALL:
   plt.show()
 
 pct_missing_timepoints = []
-n_time_points = 5
 
 for variable_name in selected_variables:
   pct_missing_timepoints_for_variable = \
@@ -351,8 +382,6 @@ n_fig_total = n_fig_rows * n_fig_cols
 
 if len(values_for_variables) > n_fig_total:
   print('Warning: not all variables plotted')
-
-PLT_ALL = False
 
 import scipy.stats as st
 from scipy.stats import kstest
@@ -627,7 +656,11 @@ def fit_gmm(variable_name,values_for_variable,ax1, ax2,show_plot=True):
    
     ax1.set_ylabel('$p(x)$',fontsize=6)
     ax1.set_xlim(np.min(values_for_variable)*0.9, np.max(values_for_variable)*1.1)
-    ax1.set_ylim(0, np.max(pdf)*1.5)
+    
+    if np.max(pdf) > 5: top_lim = 0.5
+    else: top_lim = np.max(pdf) * 1.5
+
+    ax1.set_ylim(0, top_lim)
     #ax1.set_xticks([])
     #ax1.set_yticks([])
   
@@ -661,15 +694,13 @@ for k in range(0, len(selected_variables)):
     ax2.set_title(ax_title,fontdict={"fontsize":6})
   else:
     ax1,ax2 = None, None
-  
+
   values_for_variable = positive_values_for_variables[k]
   gmm = fit_gmm(variable_name, values_for_variable, ax1, ax2)
   
   generated_values = gmm.sample(10000)[0][:,0]
 
   gmm_models[variable_name] = [gmm, generated_values]
-
-PLT_ALL = False
 
 if PLT_ALL: 
 
@@ -821,6 +852,7 @@ for k in range(0, len(selected_variables)):
     }, hist_kws={'color': PLOT_COLORS[0], 'alpha':0.4},ax=ax)
   
     ax.set_ylabel('$p(x)$',fontsize=6)
+    ax.set_ylim(0, np.min([ax.get_ylim()[1], 5]))
 
 if PLT_ALL:
   plt.tight_layout(rect=[0,0.03,0,1.25])

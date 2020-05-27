@@ -87,14 +87,16 @@ for test_obj in all_tests_obj:
   curr_ep = None
   for ep_mrn, ep_start, ep_end in er_episodes:
     if test_mrn != ep_mrn: continue
-    if is_between_datetimes(test_dt, ep_start, ep_end):
+    if test_dt != '' and ep_start != '' and ep_end != '' \
+      and is_between_datetimes(test_dt, ep_start, ep_end):
       was_done_in_er = True
       break
 
   was_done_in_non_er = False
   for ep_mrn, ep_start, ep_end in non_er_episodes:
     if test_mrn != ep_mrn: continue
-    if is_between_datetimes(test_dt, ep_start, ep_end):
+    if test_dt != '' and ep_start != '' and ep_end != '' \
+      and is_between_datetimes(test_dt, ep_start, ep_end):
       was_done_in_non_er = True
       break
 
@@ -272,15 +274,19 @@ for row in live_sheet_rows:
   patient_ramq = str(row[1])
   patient_age = row[-1]
   patient_birth_sex = row[-2]
-
+  
   try:
     patient_covid_status = map_patient_covid_status(row[-4])
   except:
-    print('Invalid COVID status')
+    print('Invalid COVID status: ' + str(row[-4]))
     continue
   
   pcr_result_time = row[-6]
   pcr_sample_time = row[-7]
+
+  if map_time(pcr_sample_time) == '':
+    print('Skipping row: invalid PCR time')
+    continue
 
   if patient_mrn not in patient_covid_statuses:
     patient_covid_statuses[patient_mrn] = [patient_covid_status]

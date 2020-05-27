@@ -59,7 +59,9 @@ episode_data_rows = [
     get_hours_between_datetimes( \
       row.dhreadm, row.dhredep, default_now=True),
   ] for i, row in df.iterrows() \
-  if get_hours_between_datetimes( \
+  if row.dhreadm != '' and \
+    pcr_sample_times[str(row.dossier)][0] != '' and \
+    get_hours_between_datetimes( \
     row.dhreadm, pcr_sample_times[str(row.dossier)][0]
   ) > 0
 ]

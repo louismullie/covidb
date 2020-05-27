@@ -162,7 +162,8 @@ def uniform_sampler(low, high, rows, cols):
   Returns:
     - uniform_random_matrix: generated uniform random matrix.
   '''
-  return np.random.uniform(low, high, size = [rows, cols])       
+  return np.random.normal(low, high, (rows, cols))
+  #np.random.uniform(low, high, size = [rows, cols])       
 
 
 def sample_batch_index(total, batch_size):

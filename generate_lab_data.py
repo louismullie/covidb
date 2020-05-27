@@ -80,7 +80,12 @@ for index, row in df.iterrows():
 
     mapped_lab_name = map_lab_name(lab_name)
     mapped_lab_sample_site = map_lab_sample_site(lab_name, lab_sample_site)
-    mapped_lab_value = map_lab_result_value(lab_result_string)
+    
+    try:
+      mapped_lab_value = map_lab_result_value(lab_result_string)
+    except:
+      print('Invalid lab value: ' + str(lab_result_string))
+      continue
 
     if mapped_lab_name == 'venous_o2_sat':
       print(mapped_lab_value)

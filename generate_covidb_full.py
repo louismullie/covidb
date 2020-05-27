@@ -13,7 +13,7 @@ def run_step(step_name):
   ], shell=True)
 
   csv_path = os.path.join(CSV_DIRECTORY, step_name + '.csv')
-[]
+
   print('\n\n* Generated table: %s' % step_name)
 
   df = pd.read_csv(csv_path)

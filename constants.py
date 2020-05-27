@@ -5,7 +5,15 @@ pd.set_option('display.max_rows', 250)
 
 DEBUG = True
 
-PLOT_COLORS = ["#00876c","#3d9a70","#64ad73","#89bf77","#afd17c","#d6e184","#fff18f","#fdd576","#fbb862","#f59b56","#ee7d4f","#e35e4e","#d43d51"]
+PLOT_COLORS = [
+ "#3288bd",
+ "#fc8d59",
+ "#fee08b",
+ "#998ec3",
+ "#e6f598",
+ "#d53e4f",
+ "#99d594"
+]
 
 LOCAL_SITE_CODE = 'chum'
 PATIENT_GLOBAL_SALT = '1fd5789d7ef4287fd8acfc765061e10eb3e7c093ff9150978695fb83692e4a87d55c4abf83c7ad9bcc3305ab03a4d28a5c404db6b84886c1665f949215e75a2b'
