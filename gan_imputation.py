@@ -109,21 +109,21 @@ def mean_confidence_interval(data, confidence=0.95):
     return m, m-h, m+h
 
 # 10, 128, 0.9, 2500, 0.2
-def main (alpha=100, batch_size=32, hint_rate=0.9, 
-  iterations=25000, miss_rate=0.2):
+def main (alpha=100, batch_size=16, hint_rate=0.9, 
+  iterations=1500, miss_rate=0.2):
   
   gain_parameters = {'batch_size': batch_size,
                      'hint_rate': hint_rate,
                      'alpha': alpha,
                      'iterations': iterations}
   
-  ENABLE_BOXCOX = False
+  ENABLE_BOXCOX = True
 
   # Load data and introduce missingness
   #file_name = 'data/spam.csv'
   #data_x = np.loadtxt(file_name, delimiter=",", skiprows=1)
   
-  remove_outliers = True
+  remove_outliers = False
 
   if remove_outliers:
     data_x = pickle.load(open('./missing_data.sav', 'rb'))
@@ -144,6 +144,14 @@ def main (alpha=100, batch_size=32, hint_rate=0.9,
 
   signed_variables = ['base_excess']
   no, dim = data_x.shape
+
+  no_total = no * dim
+  no_nan = np.count_nonzero(np.isnan(data_x.flatten()) == True)
+  no_not_nan = no_total - no_nan
+  print('Input shape', no, 'x', dim)
+  print('NAN values:', no_nan, '/', no_total, \
+    '%2.f%%' % (no_nan / no_total * 100))
+
   n_time_points = 3
   n_patients = int(no/n_time_points)
 
@@ -190,8 +198,15 @@ def main (alpha=100, batch_size=32, hint_rate=0.9,
   
   # Introduce missing data
   data_m = binary_sampler(1-miss_rate, no, dim)
+
   miss_data_x = data_x.copy()
   miss_data_x[data_m == 0] = np.nan
+  
+  no_nan = np.count_nonzero(np.isnan(miss_data_x.flatten()) == True)
+  no_not_nan = no_total - no_nan
+
+  print('After removal, NAN values:', no_nan, '/', no_total, \
+    '%2.f%%' % (no_nan / no_total * 100))
   
   from sklearn.ensemble import ExtraTreesRegressor
   from fancyimpute import SimpleFill, IterativeSVD
@@ -320,7 +335,7 @@ def main (alpha=100, batch_size=32, hint_rate=0.9,
       np.max(imputed_values)
     )
 
-    qqplot(deleted_values, imputed_values_knn, ax=ax2)
+    qqplot(deleted_values, imputed_values_gan, ax=ax2)
 
     try:
       kde_kws = {

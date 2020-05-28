@@ -104,7 +104,7 @@ def gain (data_x, gain_parameters):
     D_h1 = tf.nn.relu(tf.matmul(inputs, D_W1) + D_b1) 
     D_h2 = tf.nn.relu(tf.matmul(D_h1, D_W2) + D_b2)
     D_logit = tf.matmul(D_h2, D_W3) + D_b3
-    D_prob = tf.nn.sigmoid(D_logit)
+    D_prob = tf.nn.elu(D_logit)
     return D_prob
   
   ## GAIN structure
@@ -140,17 +140,23 @@ def gain (data_x, gain_parameters):
   # Start Iterations
   for it in tqdm(range(iterations)):    
       
-    # Sample batch
+    # Get batch coordinates
     batch_idx = sample_batch_index(no, batch_size)
+
+    # Get (normalized) data at coordinates
     X_mb = norm_data_x[batch_idx, :]  
+
+    # Get auxiliary (missingness) matrix
     M_mb = data_m[batch_idx, :]  
-    # Sample random vectors  
+
+    # Generate a random normal distribution (batch_size X dim)  
     Z_mb = uniform_sampler(0, 0.01, batch_size, dim) 
+
     # Sample hint vectors
     H_mb_temp = binary_sampler(hint_rate, batch_size, dim)
     H_mb = M_mb * H_mb_temp
       
-    # Combine random vectors with observed vectors
+    # Mask * Data + (1- Mask) * Random
     X_mb = M_mb * X_mb + (1-M_mb) * Z_mb 
       
     _, D_loss_curr = sess.run([D_solver, D_loss_temp], 

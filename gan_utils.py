@@ -14,7 +14,7 @@
 import numpy as np
 import tensorflow.compat.v1 as tf
 tf.disable_v2_behavior()
-
+np.random.seed(0)
 
 def normalization (data):
   '''Normalize data in [0, 1] range.
@@ -162,7 +162,10 @@ def uniform_sampler(low, high, rows, cols):
   Returns:
     - uniform_random_matrix: generated uniform random matrix.
   '''
-  return np.random.normal(low, high, (rows, cols))
+  return np.random.standard_t(10, (rows, cols))
+  #np.random.uniform(low, high, size = [rows, cols])     
+  #np.random.lognormal(mean=low, sigma=high, size=[rows, cols])
+  #np.random.standard_t(10, (rows, cols))
   #np.random.uniform(low, high, size = [rows, cols])       
 
 
