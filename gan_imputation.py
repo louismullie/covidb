@@ -82,13 +82,13 @@ def find_outliers(variable_name, values):
   predictions = autoencoder.predict(X_train_scaled)
 
   mse = np.mean(np.power(X_train_scaled - predictions, 2),axis=1)
-  outlier_indices = mse > 0.025
+  outlier_indices = mse > 0.05
   
   print(variable_name, values[outlier_indices])
   #plt.title(variable_name); plt.plot(mse); plt.show()
   return outlier_indices
 
-def qqplot(x, y, quantiles=None, interpolation='nearest', ax=None, **kwargs):
+def qqplot(x, y, quantiles=None, interpolation='nearest', ax=None, color=None, **kwargs):
     
     if ax is None:
         ax = plt.gca()
@@ -106,7 +106,7 @@ def qqplot(x, y, quantiles=None, interpolation='nearest', ax=None, **kwargs):
     # Draw the q-q plot
     ax.scatter(x_quantiles, y_quantiles, s=1)
     x = np.linspace(*ax.get_xlim())
-    ax.plot(x, x, lw=1)
+    ax.plot(x, x, lw=1,color=color)
 
 def mean_confidence_interval(data, confidence=0.95):
     a = 1.0 * np.array(data)
@@ -116,8 +116,8 @@ def mean_confidence_interval(data, confidence=0.95):
     return m, m-h, m+h
 
 # 5000
-def main (alpha=100, batch_size=128, hint_rate=0.9, 
-  iterations=10000, miss_rate=0.2):
+def main (alpha=1000, batch_size=128, hint_rate=0.9, 
+  iterations=6000, miss_rate=0.2):
   
   gain_parameters = {'batch_size': batch_size,
                      'hint_rate': hint_rate,
@@ -150,7 +150,7 @@ def main (alpha=100, batch_size=128, hint_rate=0.9,
     'partial_thromboplastin_time', 'bicarbonate', 'anion_gap', 'pco2', 
     'procalcitonin', 'base_excess', 'osmolality', 'lipase']
         
-  signed_variables = ['base_excess']
+  signed_variables = ['ast', 'lymphocyte_count', 'procalcitonin']
   no, dim = data_x.shape
   
   data_x_encoded = np.copy(data_x)
@@ -176,27 +176,24 @@ def main (alpha=100, batch_size=128, hint_rate=0.9,
       enc_x_unscaled = scaler.inverse_transform(enc_x_scaled)
       data_x_encoded[:,i] = enc_x_unscaled.flatten()
       
-      x = np.asarray(var_x_scaled.flatten())
-      y = np.asarray(enc_x_scaled.flatten())
-      diffs = x[~np.isnan(x)] - y[~np.isnan(y)]
+      mse = np.mean(np.power(var_x.reshape((-1,1)) - enc_x_unscaled, 2),axis=1)
       
-      mse = np.mean(np.power(diffs, 2))
-      outlier_indices = mse > 1e-5
-      nn_values[outlier_indices,i] = np.nan
-      print('... %d outlier(s) excluded' % \
-        len(outlier_indices[outlier_indices == True]))
-      miss_data_x[nn_indices,i] = nn_values
-
-      nn_values_enc = data_x_encoded[:,i][nn_indices]
-      nn_values_enc[outlier_indices,i] = np.nan
-      miss_data_x_enc[nn_indices,i] = nn_values_enc
+      #x = np.ma.array(mse, mask=np.isnan(mse))
+      #y = np.ma.array(var_x, mask=np.isnan(var_x))
+      #outlier_indices = (x / np.max(y)) > 2
+      
+      #outlier_values = var_x[outlier_indices]
+      
+      #print('... %d outlier(s) excluded' % \
+      #  len(outlier_values), outlier_values)
+      
+      #miss_data_x[outlier_indices == True,i] = np.nan
+      #miss_data_x_enc[outlier_indices == True,i] = np.nan
       
       scalers.append(scaler)
-      # print(var_x, '----', enc_x_scaled, '----', enc_x_unscaled.flatten())
+      #print(var_x, '----', enc_x_scaled, '----', enc_x_unscaled.flatten())
       print('Loaded model for %s...' % variable)
   
-  print(data_x[:,0], data_x_encoded[:,0])
-
   no_total = no * dim
   no_nan = np.count_nonzero(np.isnan(data_x.flatten()) == True)
   no_not_nan = no_total - no_nan
@@ -229,13 +226,17 @@ def main (alpha=100, batch_size=128, hint_rate=0.9,
 
   imputer = KNNImputer(n_neighbors=5)
   imputed_data_x_knn = imputer.fit_transform(miss_data_x)
-
+  
+  imputer = IterativeImputer()
+  imputed_data_x_mice = imputer.fit_transform(miss_data_x)
+  
   # Save imputed data to disk
   pickle.dump(imputed_data_x_gan,open('./filled_data.sav', 'wb'))
   
   # Get residuals for computation of stats
   distances_gan = np.zeros((dim, n_time_points*n_patients))
   distances_knn = np.zeros((dim, n_time_points*n_patients))
+  distances_mice = np.zeros((dim, n_time_points*n_patients))
 
   for i in range(0, n_patients):
     for j in range(0, dim):
@@ -247,13 +248,15 @@ def main (alpha=100, batch_size=128, hint_rate=0.9,
       corrupted_tuple = miss_data_x[i_start:i_stop,j]
       imputed_tuple_gan = imputed_data_x_gan[i_start:i_stop,j]
       imputed_tuple_knn = imputed_data_x_knn[i_start:i_stop,j]
+      imputed_tuple_mice = imputed_data_x_mice[i_start:i_stop,j]
       
+      print(original_tuple, corrupted_tuple, imputed_tuple_gan, imputed_tuple_knn)
       for k in range(0, n_time_points):
-        a, b, c = original_tuple[k], imputed_tuple_gan[k], imputed_tuple_knn[k]
-        print(a,b,c)
+        a, b, c, d = original_tuple[k], imputed_tuple_gan[k], imputed_tuple_knn[k], imputed_tuple_mice[k]
         if np.isnan(a): continue
         distances_gan[j,i*k] = b - a
         distances_knn[j,i*k] = c - a
+        distances_mice[j,i*k] = d - a
   
   # Compute distance statistics
   rrmses_gan, mean_biases, median_biases, bias_cis = [], [], [], []
@@ -266,21 +269,26 @@ def main (alpha=100, batch_size=128, hint_rate=0.9,
     
     # Stats for GAN
     dists_gan = np.asarray(distances_gan[j])
-    rmse = np.sqrt(np.mean(dists_gan**2))
-    mean_ci_95 = mean_confidence_interval(dists_gan)
     mean_bias = np.round(np.mean(dists_gan), 2)
     median_bias = np.round(np.median(dists_gan), 2)
+    mean_ci_95 = mean_confidence_interval(dists_gan)
+    rmse = np.sqrt(np.mean(dists_gan**2))
+    rrmse = np.round(rmse / dim_mean * 100, 2)
+    
     bias_cis.append([mean_ci_95[1], mean_ci_95[2]])
     mean_biases.append(mean_bias)
     median_biases.append(median_bias)
-    
-    rrmse = np.round(rmse / dim_mean * 100, 2)
     rrmses_gan.append(rrmse)
     
     # Stats for KNN
     dists_knn = np.asarray(distances_knn[j])
     rmse_knn = np.sqrt(np.mean(dists_knn**2))
     rrmses_knn = np.round(rmse_knn / dim_mean * 100, 2)
+    
+    # Stats for MICE
+    dists_mice = np.asarray(distances_mice[j])
+    rmse_mice = np.sqrt(np.mean(dists_mice**2))
+    rrmses_mice = np.round(rmse_mice / dim_mean * 100, 2)
     
     print(variables[j], ' - rrmse: ', rrmse, 
       '%%, bias: %.2f (95%% CI, %.2f to %.2f)' % mean_ci_95)
@@ -305,7 +313,7 @@ def main (alpha=100, batch_size=128, hint_rate=0.9,
     ax2 = axes2[int(j/n_fig_cols), j % n_fig_cols]
     ax.set_title(ax_title,fontdict={'fontsize':6})
 
-    input_arrays = [data_x, imputed_data_x_gan, imputed_data_x_knn]
+    input_arrays = [data_x, imputed_data_x_gan, imputed_data_x_knn, imputed_data_x_mice]
     
     output_arrays = [
       np.asarray([input_arr[ii,j] for ii in range(0, no) if \
@@ -313,7 +321,7 @@ def main (alpha=100, batch_size=128, hint_rate=0.9,
         data_m[ii,j] == 0)]) for input_arr in input_arrays
     ]
     
-    deleted_values, imputed_values_gan, imputed_values_knn = output_arrays
+    deleted_values, imputed_values_gan, imputed_values_knn, imputed_values_mice = output_arrays
     
     # Make KDE
     low_ci, high_ci = bias_cis[j]
@@ -337,16 +345,22 @@ def main (alpha=100, batch_size=128, hint_rate=0.9,
       kde_kws={**{ 'color': 'r'}, **kde_kws}, ax=ax)
     
     sns.distplot(imputed_values_knn, hist=False,
-      kde_kws={**{ 'color': 'b'}, **kde_kws},ax=ax)
+      kde_kws={**{ 'color': 'b', 'alpha': 0.5 }, **kde_kws},ax=ax)
+
+    sns.distplot(imputed_values_mice, hist=False,
+      kde_kws={**{ 'color': 'g', 'alpha': 0.5 }, **kde_kws},ax=ax)
 
     sns.distplot(deleted_values, hist=False,
       kde_kws={**{ 'color': '#000000'}, **kde_kws},ax=ax)
 
     # Make QQ plot
-    qqplot(deleted_values, imputed_values_gan, ax=ax2)
+    qqplot(deleted_values, imputed_values_gan, ax=ax2, color='r')
+    qqplot(deleted_values, imputed_values_knn, ax=ax2, color='b')
+    qqplot(deleted_values, imputed_values_mice, ax=ax2, color='g')
     
   top_title = 'KDE plot of original data (black) and data imputed using GAN (red) and KNN (blue)'
   fig.suptitle(top_title, fontsize=8)
+  fig.legend(labels=['GAN', 'KNN', 'MICE', 'Observed'])
 
   fig.tight_layout(rect=[0,0.03,0,1.25])
   fig.subplots_adjust(hspace=1, wspace=0.35)
@@ -366,6 +380,10 @@ def main (alpha=100, batch_size=128, hint_rate=0.9,
   print()
   mrrmse_knn = np.round(np.asarray(rrmses_knn).mean(), 2)
   print('Average RMSE (KNN): ', mrrmse_knn, '%')
+
+  print()
+  mrrmse_mice = np.round(np.asarray(rrmses_mice).mean(), 2)
+  print('Average RMSE (MICE): ', mrrmse_mice, '%')
   
   return imputed_data_x_gan, mrrmse_gan
 
