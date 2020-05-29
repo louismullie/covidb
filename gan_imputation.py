@@ -20,7 +20,7 @@ import matplotlib.pyplot as plt
 from sklearn.impute import KNNImputer
 from sklearn.experimental import enable_iterative_imputer
 from sklearn.impute import IterativeImputer
-from sklearn.preprocessing import MinMaxScaler
+from sklearn.preprocessing import MinMaxScaler, PowerTransformer
 from scipy.stats import boxcox, t, sem
 from scipy.special import inv_boxcox
 
@@ -84,7 +84,6 @@ def find_outliers(variable_name, values):
   mse = np.mean(np.power(X_train_scaled - predictions, 2),axis=1)
   outlier_indices = mse > 0.05
   
-  print(variable_name, values[outlier_indices])
   #plt.title(variable_name); plt.plot(mse); plt.show()
   return outlier_indices
 
@@ -115,9 +114,32 @@ def mean_confidence_interval(data, confidence=0.95):
     h = se * t.ppf((1 + confidence) / 2., n-1)
     return m, m-h, m+h
 
+
+variables = [
+  'urea', 'sodium', 'potassium', 'chloride', 'creatinine', 
+  'total_calcium', 'corrected_total_calcium', 'magnesium', 
+  'phosphate', 'total_bilirubin', 'ast', 'alanine_aminotransferase', 
+  'alkaline_phosphatase', 'white_blood_cell_count', 'hemoglobin', 
+  'platelet_count', 'lymphocyte_count', 'monocyte_count', 
+  'neutrophil_count', 'c_reactive_protein', 'lactic_acid', 'albumin', 
+  'mean_platelet_volume', 'glucose', 'hs_troponin_t', 
+  'partial_thromboplastin_time', 'bicarbonate', 'anion_gap', 'pco2', 
+  'procalcitonin', 'base_excess', 'osmolality', 'lipase']
+      
+encoders = []    
+      
+for i in range(0, len(variables)):
+    variable = variables[i]
+    with open('./models/autoencoders/%s.json' % variable,'r') as f:
+      model_json = f.read()
+    encoder_model = model_from_json(model_json)
+    encoder_model.load_weights('./models/autoencoders/%s.h5' % variable)
+
+    encoders.append(encoder_model)
+    
 # 5000
-def main (alpha=1000, batch_size=128, hint_rate=0.9, 
-  iterations=6000, miss_rate=0.2):
+def main (alpha=1000, batch_size=128, hint_rate=0.5, 
+  iterations=5500, miss_rate=0.3):
   
   gain_parameters = {'batch_size': batch_size,
                      'hint_rate': hint_rate,
@@ -129,28 +151,18 @@ def main (alpha=1000, batch_size=128, hint_rate=0.9,
   #data_x = np.loadtxt(file_name, delimiter=",", skiprows=1)
   
   remove_outliers = False
+  n_time_points = 3
   
   data_x = pickle.load(open('./missing_data.sav', 'rb'))
   data_x = data_x.transpose().astype(np.float)
-  
+  print(data_x.shape)
   # if remove_outliers:
   #  data_x = pickle.load(open('./missing_data.sav', 'rb'))
   #  data_x = data_x.transpose().astype(np.float)
   # else:
   #  data_x = pickle.load(open('./denoised_missing_data.sav', 'rb')) 
 
-  variables = [
-    'urea', 'sodium', 'potassium', 'chloride', 'creatinine', 
-    'total_calcium', 'corrected_total_calcium', 'magnesium', 
-    'phosphate', 'total_bilirubin', 'ast', 'alanine_aminotransferase', 
-    'alkaline_phosphatase', 'white_blood_cell_count', 'hemoglobin', 
-    'platelet_count', 'lymphocyte_count', 'monocyte_count', 
-    'neutrophil_count', 'c_reactive_protein', 'lactic_acid', 'albumin', 
-    'mean_platelet_volume', 'glucose', 'hs_troponin_t', 
-    'partial_thromboplastin_time', 'bicarbonate', 'anion_gap', 'pco2', 
-    'procalcitonin', 'base_excess', 'osmolality', 'lipase']
-        
-  signed_variables = ['ast', 'lymphocyte_count', 'procalcitonin']
+  signed_variables = ['base_excess']
   no, dim = data_x.shape
   
   data_x_encoded = np.copy(data_x)
@@ -161,11 +173,7 @@ def main (alpha=1000, batch_size=128, hint_rate=0.9,
   
   for i in range(0, dim):
       variable, var_x = variables[i], data_x[:,i]
-      with open('./models/autoencoders/%s.json' % variable,'r') as f:
-        model_json = f.read()
-      encoder_model = model_from_json(model_json)
-      encoder_model.load_weights('./models/autoencoders/%s.h5' % variable)
-      
+      encoder_model = encoders[i]
       # Exclude outliers based on error
       nn_indices = ~np.isnan(data_x_encoded[:,i])
       nn_values = data_x[:,i][nn_indices]
@@ -176,19 +184,19 @@ def main (alpha=1000, batch_size=128, hint_rate=0.9,
       enc_x_unscaled = scaler.inverse_transform(enc_x_scaled)
       data_x_encoded[:,i] = enc_x_unscaled.flatten()
       
-      mse = np.mean(np.power(var_x.reshape((-1,1)) - enc_x_unscaled, 2),axis=1)
-      
-      #x = np.ma.array(mse, mask=np.isnan(mse))
-      #y = np.ma.array(var_x, mask=np.isnan(var_x))
-      #outlier_indices = (x / np.max(y)) > 2
-      
-      #outlier_values = var_x[outlier_indices]
-      
-      #print('... %d outlier(s) excluded' % \
-      #  len(outlier_values), outlier_values)
-      
-      #miss_data_x[outlier_indices == True,i] = np.nan
-      #miss_data_x_enc[outlier_indices == True,i] = np.nan
+      # mse = np.mean(np.power(var_x.reshape((-1,1)) - enc_x_unscaled, 2),axis=1)
+      # 
+      # x = np.ma.array(mse, mask=np.isnan(mse))
+      # y = np.ma.array(var_x, mask=np.isnan(var_x))
+      # outlier_indices = (x / np.max(y)) > 2
+      # 
+      # outlier_values = var_x[outlier_indices]
+      # 
+      # print('... %d outlier(s) excluded' % \
+      #   len(outlier_values), outlier_values)
+      # 
+      # miss_data_x[outlier_indices == True,i] = np.nan
+      # miss_data_x_enc[outlier_indices == True,i] = np.nan
       
       scalers.append(scaler)
       #print(var_x, '----', enc_x_scaled, '----', enc_x_unscaled.flatten())
@@ -201,19 +209,24 @@ def main (alpha=1000, batch_size=128, hint_rate=0.9,
   print('NAN values:', no_nan, '/', no_total, \
     '%2.f%%' % (no_nan / no_total * 100))
 
-  n_time_points = 3
   n_patients = int(no/n_time_points)
 
   if len(variables) != dim:
     print(len(variables), dim)
     print('Incompatible dimensions.')
     exit()
-
+    
+  #transformer = PowerTransformer(method='box-cox')
+  #transformer.fit(miss_data_x)
+  
+  #data_x = transformer.transform(data_x)
+  #miss_data_x = transformer.transform(miss_data_x)
+  #miss_data_x_enc = transformer.transform(data_x_encoded)
+  
   # Introduce missing data
   data_m = binary_sampler(1-miss_rate, no, dim)
 
   miss_data_x[data_m == 0] = np.nan
-  
   miss_data_x_enc[data_m == 0] = np.nan
 
   no_nan = np.count_nonzero(np.isnan(miss_data_x.flatten()) == True)
@@ -222,13 +235,48 @@ def main (alpha=1000, batch_size=128, hint_rate=0.9,
   print('After removal, NAN values:', no_nan, '/', no_total, \
     '%2.f%%' % (no_nan / no_total * 100))
   
-  imputed_data_x_gan = gain(miss_data_x_enc, gain_parameters)
+  real_miss_rate = (no_nan / no_total * 100)
+  
+  imputed_data_x_gan = gain(
+    miss_data_x_enc, gain_parameters)
+  
+  # n_gans = 3
+  # idxg_combined = []
+  # 
+  # for  n_gan in range(0, n_gans):
+  #   np.random.seed(n_gan + 1)
+  #   idxg_combined.append(gain(miss_data_x_enc, gain_parameters))
+  # 
+  # idxg_combined = np.concatenate(idxg_combined)
+  #   
+  # idxg_combined_final = gain(
+  #   miss_data_x_enc, gain_parameters)
+  # 
+  # for j in range(0, dim):
+  #   idxg_combined_tmp = np.copy(idxg_combined)
+  #   
+  #   for i in range(0, n_patients * n_time_points):
+  #     if np.isnan(miss_data_x[i,j]) and data_m[i,j] != 0:
+  #       idxg_combined_tmp[i,j] = np.nan
+  # 
+  #   imputer = IterativeImputer() # KNNImputer(n_neighbors=5)
+  #   idxg_knn = imputer.fit_transform(idxg_combined_tmp)
+  #   idxg_combined_final[:,j] = idxg_knn[0:n_patients*n_time_points,j]
+  #   print('Done KNN imputation #%d' % j)
+  # 
+  # imputed_data_x_gan = idxg_combined_final
 
   imputer = KNNImputer(n_neighbors=5)
-  imputed_data_x_knn = imputer.fit_transform(miss_data_x)
+  imputed_data_x_knn = imputer.fit_transform(miss_data_x_enc)
   
   imputer = IterativeImputer()
-  imputed_data_x_mice = imputer.fit_transform(miss_data_x)
+  imputed_data_x_mice = imputer.fit_transform(miss_data_x_enc)
+  
+  # data_x = transformer.inverse_transform(data_x)-1
+  # miss_data_x = transformer.inverse_transform(miss_data_x)-1
+  # imputed_data_x_gan = transformer.inverse_transform(imputed_data_x_gan)-1
+  # imputed_data_x_knn = transformer.inverse_transform(imputed_data_x_knn)-1
+  # imputed_data_x_mice = transformer.inverse_transform(imputed_data_x_mice)-1
   
   # Save imputed data to disk
   pickle.dump(imputed_data_x_gan,open('./filled_data.sav', 'wb'))
@@ -254,7 +302,7 @@ def main (alpha=1000, batch_size=128, hint_rate=0.9,
       for k in range(0, n_time_points):
         a, b, c, d = original_tuple[k], imputed_tuple_gan[k], imputed_tuple_knn[k], imputed_tuple_mice[k]
         if np.isnan(a): continue
-        distances_gan[j,i*k] = b - a
+        distances_gan[j,i*k] = (b - a)
         distances_knn[j,i*k] = c - a
         distances_mice[j,i*k] = d - a
   
@@ -269,8 +317,8 @@ def main (alpha=1000, batch_size=128, hint_rate=0.9,
     
     # Stats for GAN
     dists_gan = np.asarray(distances_gan[j])
-    mean_bias = np.round(np.mean(dists_gan), 2)
-    median_bias = np.round(np.median(dists_gan), 2)
+    mean_bias = np.round(np.mean(dists_gan), 4)
+    median_bias = np.round(np.median(dists_gan), 4)
     mean_ci_95 = mean_confidence_interval(dists_gan)
     rmse = np.sqrt(np.mean(dists_gan**2))
     rrmse = np.round(rmse / dim_mean * 100, 2)
@@ -332,6 +380,7 @@ def main (alpha=1000, batch_size=128, hint_rate=0.9,
     ax.set_ylabel('$p(x)$',fontsize=6)
     
     range_arrays = np.concatenate([deleted_values, imputed_values_gan])
+    
     x_range = (np.min(range_arrays), 
       np.min([
         np.mean(range_arrays) + 3 * np.std(range_arrays), 
@@ -385,6 +434,13 @@ def main (alpha=1000, batch_size=128, hint_rate=0.9,
   mrrmse_mice = np.round(np.asarray(rrmses_mice).mean(), 2)
   print('Average RMSE (MICE): ', mrrmse_mice, '%')
   
-  return imputed_data_x_gan, mrrmse_gan
+  return real_miss_rate, mrrmse_gan, mrrmse_knn, mrrmse_mice
 
-imputed_data, rmse = main()
+errors = []
+for k in np.linspace(0.1,0.9, 9):
+  print('----------')
+  real_miss_rate, mrrmse_gan, mrrmse_knn, mrrmse_mice = main(miss_rate = 0.2)
+  errors.append([real_miss_rate, mrrmse_gan, mrrmse_knn, mrrmse_mice])
+  print(real_miss_rate, mrrmse_gan, mrrmse_knn, mrrmse_mice)
+  
+print(errors)

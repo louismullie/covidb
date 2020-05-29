@@ -164,7 +164,7 @@ def uniform_sampler(low, high, rows, cols):
     - uniform_random_matrix: generated uniform random matrix.
   '''
   return np.random.standard_t(10, (rows, cols))
-  #np.random.uniform(low, high, size = [rows, cols])     
+  #  
   #np.random.lognormal(mean=low, sigma=high, size=[rows, cols])
   #np.random.standard_t(10, (rows, cols))
   #np.random.uniform(low, high, size = [rows, cols])       
