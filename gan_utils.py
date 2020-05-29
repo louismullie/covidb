@@ -9,11 +9,12 @@
 (7) uniform_sampler: sample uniform random variables
 (8) sample_batch_index: sample random batch index
 '''
+
+import tensorflow.compat.v1 as tf
+tf.disable_v2_behavior()
  
 # Necessary packages
 import numpy as np
-import tensorflow.compat.v1 as tf
-tf.disable_v2_behavior()
 np.random.seed(0)
 
 def normalization (data):

@@ -3,8 +3,10 @@ from __future__ import division
 from __future__ import print_function
 
 import argparse
+import pandas as pd
 import numpy as np
 import pickle
+import json
 
 from constants import PLOT_COLORS
 
@@ -25,10 +27,15 @@ from scipy.special import inv_boxcox
 from keras.layers import Input, Dense
 from keras.models import Model
 from keras import regularizers
+from keras.models import load_model, model_from_json
+
+import tensorflow.compat.v1 as tf
+tf.disable_v2_behavior()
+
+from sklearn.ensemble import ExtraTreesRegressor
+from fancyimpute import SimpleFill, IterativeSVD
 
 import numbers
-
-import pandas as pd
 
 def find_outliers(variable_name, values):
   RANDOM_SEED = 101
@@ -108,28 +115,29 @@ def mean_confidence_interval(data, confidence=0.95):
     h = se * t.ppf((1 + confidence) / 2., n-1)
     return m, m-h, m+h
 
-# 10, 128, 0.9, 2500, 0.2
-def main (alpha=100, batch_size=16, hint_rate=0.9, 
-  iterations=1500, miss_rate=0.2):
+# 5000
+def main (alpha=100, batch_size=128, hint_rate=0.9, 
+  iterations=10000, miss_rate=0.2):
   
   gain_parameters = {'batch_size': batch_size,
                      'hint_rate': hint_rate,
                      'alpha': alpha,
                      'iterations': iterations}
   
-  ENABLE_BOXCOX = True
-
   # Load data and introduce missingness
   #file_name = 'data/spam.csv'
   #data_x = np.loadtxt(file_name, delimiter=",", skiprows=1)
   
   remove_outliers = False
-
-  if remove_outliers:
-    data_x = pickle.load(open('./missing_data.sav', 'rb'))
-    data_x = data_x.transpose().astype(np.float)
-  else:
-    data_x = pickle.load(open('./denoised_missing_data.sav', 'rb')) 
+  
+  data_x = pickle.load(open('./missing_data.sav', 'rb'))
+  data_x = data_x.transpose().astype(np.float)
+  
+  # if remove_outliers:
+  #  data_x = pickle.load(open('./missing_data.sav', 'rb'))
+  #  data_x = data_x.transpose().astype(np.float)
+  # else:
+  #  data_x = pickle.load(open('./denoised_missing_data.sav', 'rb')) 
 
   variables = [
     'urea', 'sodium', 'potassium', 'chloride', 'creatinine', 
@@ -141,9 +149,53 @@ def main (alpha=100, batch_size=16, hint_rate=0.9,
     'mean_platelet_volume', 'glucose', 'hs_troponin_t', 
     'partial_thromboplastin_time', 'bicarbonate', 'anion_gap', 'pco2', 
     'procalcitonin', 'base_excess', 'osmolality', 'lipase']
-
+        
   signed_variables = ['base_excess']
   no, dim = data_x.shape
+  
+  data_x_encoded = np.copy(data_x)
+  miss_data_x = np.copy(data_x)
+  miss_data_x_enc = np.copy(data_x_encoded)
+  
+  scalers = []
+  
+  for i in range(0, dim):
+      variable, var_x = variables[i], data_x[:,i]
+      with open('./models/autoencoders/%s.json' % variable,'r') as f:
+        model_json = f.read()
+      encoder_model = model_from_json(model_json)
+      encoder_model.load_weights('./models/autoencoders/%s.h5' % variable)
+      
+      # Exclude outliers based on error
+      nn_indices = ~np.isnan(data_x_encoded[:,i])
+      nn_values = data_x[:,i][nn_indices]
+      
+      scaler = MinMaxScaler()
+      var_x_scaled = scaler.fit_transform(var_x.reshape((-1,1)))
+      enc_x_scaled = encoder_model.predict(var_x_scaled)
+      enc_x_unscaled = scaler.inverse_transform(enc_x_scaled)
+      data_x_encoded[:,i] = enc_x_unscaled.flatten()
+      
+      x = np.asarray(var_x_scaled.flatten())
+      y = np.asarray(enc_x_scaled.flatten())
+      diffs = x[~np.isnan(x)] - y[~np.isnan(y)]
+      
+      mse = np.mean(np.power(diffs, 2))
+      outlier_indices = mse > 1e-5
+      nn_values[outlier_indices,i] = np.nan
+      print('... %d outlier(s) excluded' % \
+        len(outlier_indices[outlier_indices == True]))
+      miss_data_x[nn_indices,i] = nn_values
+
+      nn_values_enc = data_x_encoded[:,i][nn_indices]
+      nn_values_enc[outlier_indices,i] = np.nan
+      miss_data_x_enc[nn_indices,i] = nn_values_enc
+      
+      scalers.append(scaler)
+      # print(var_x, '----', enc_x_scaled, '----', enc_x_unscaled.flatten())
+      print('Loaded model for %s...' % variable)
+  
+  print(data_x[:,0], data_x_encoded[:,0])
 
   no_total = no * dim
   no_nan = np.count_nonzero(np.isnan(data_x.flatten()) == True)
@@ -160,93 +212,30 @@ def main (alpha=100, batch_size=16, hint_rate=0.9,
     print('Incompatible dimensions.')
     exit()
 
-  # Outlier detection using autoencoder
-  if remove_outliers:
-
-    for d in range(0, dim):
-      dim_values = data_x[:,d]
-      nn_indices = np.isnan(dim_values) == False
-      nn_dim_values = dim_values[nn_indices]
-      out_indices = find_outliers(variables[d], nn_dim_values)
-      nn_dim_values[out_indices] = np.nan
-      dim_values[nn_indices] = nn_dim_values
-      data_x[:,d] = dim_values
-
-    pickle.dump(data_x, open('./denoised_missing_data.sav', 'wb'))
-    
-
-  scaling_parameters = []
-  for d in range(0, dim):
-    dim_values = data_x[:,d]
-    nn_indices = np.isnan(dim_values) == False
-    nn_dim_values = dim_values[nn_indices]
-
-    delta = np.min(nn_dim_values)
-
-    if variables[d] not in signed_variables and delta < 0:
-      print('Negative value for unsigned variable: %s' % \
-        variables[d])
-      exit()
-
-    if ENABLE_BOXCOX:
-      nn_dim_values -= delta
-    
-      nn_dim_values, lmbda = boxcox(nn_dim_values+0.5)
-      scaling_parameters.append([lmbda,delta])
-
-      data_x[nn_indices,d] = nn_dim_values
-  
   # Introduce missing data
   data_m = binary_sampler(1-miss_rate, no, dim)
 
-  miss_data_x = data_x.copy()
   miss_data_x[data_m == 0] = np.nan
   
+  miss_data_x_enc[data_m == 0] = np.nan
+
   no_nan = np.count_nonzero(np.isnan(miss_data_x.flatten()) == True)
   no_not_nan = no_total - no_nan
 
   print('After removal, NAN values:', no_nan, '/', no_total, \
     '%2.f%%' % (no_nan / no_total * 100))
   
-  from sklearn.ensemble import ExtraTreesRegressor
-  from fancyimpute import SimpleFill, IterativeSVD
-  imputed_data_x_gan = gain(miss_data_x, gain_parameters)
-  imputed_data_x = np.copy(imputed_data_x_gan)
+  imputed_data_x_gan = gain(miss_data_x_enc, gain_parameters)
 
-  #imputer = IterativeSVD()#IterativeImputer(max_iter=2, verbose=True)
-  #imputed_data_x_svd = imputer.fit_transform(miss_data_x)
-  imputed_data_x_svd = np.copy(imputed_data_x_gan)
-
-  imputer = KNNImputer()
+  imputer = KNNImputer(n_neighbors=5)
   imputed_data_x_knn = imputer.fit_transform(miss_data_x)
 
-  transformed_arrs = []
-  for arr in [data_x, miss_data_x, imputed_data_x, \
-    imputed_data_x_gan, imputed_data_x_knn, imputed_data_x_svd]:
-    for d in range(0, dim):
-      
-      nn_values = [x for x in arr[:,d] if x is not None]
-
-      if ENABLE_BOXCOX:
-        lmbda, delta = scaling_parameters[d]
-        nn_values = inv_boxcox(nn_values, lmbda) - 0.5
-        nn_values += delta
-
-      k = 0
-      for i in range(0, no):
-        if arr[i,d] is not None:
-          arr[i,d] = nn_values[k]
-          k += 1
-    transformed_arrs.append(arr)
-
-  data_x, miss_data_x, imputed_data_x, \
-    imputed_data_x_gan, imputed_data_x_knn, \
-    imputed_data_x_svd = transformed_arrs
+  # Save imputed data to disk
+  pickle.dump(imputed_data_x_gan,open('./filled_data.sav', 'wb'))
   
-  pickle.dump(imputed_data_x,open('./filled_data.sav', 'wb'))
-  
-  distances_gan = [[] for d in range(0, dim)]
-  distances_knn = [[] for d in range(0, dim)]
+  # Get residuals for computation of stats
+  distances_gan = np.zeros((dim, n_time_points*n_patients))
+  distances_knn = np.zeros((dim, n_time_points*n_patients))
 
   for i in range(0, n_patients):
     for j in range(0, dim):
@@ -254,44 +243,49 @@ def main (alpha=100, batch_size=16, hint_rate=0.9,
       i_start = int(i*n_time_points)
       i_stop = int(i*n_time_points+n_time_points)
       
-      orig_tuple = data_x[i_start:i_stop,j]
-      corrupt_tuple = miss_data_x[i_start:i_stop,j]
-      imput_tuple_gan = imputed_data_x_gan[i_start:i_stop,j]
-      imput_tuple = imputed_data_x[i_start:i_stop,j]
+      original_tuple = data_x[i_start:i_stop,j]
+      corrupted_tuple = miss_data_x[i_start:i_stop,j]
+      imputed_tuple_gan = imputed_data_x_gan[i_start:i_stop,j]
+      imputed_tuple_knn = imputed_data_x_knn[i_start:i_stop,j]
       
-      #print(variable_name, orig_tuple, corrupt_tuple, imput_tuple)
-
       for k in range(0, n_time_points):
-        a, b = orig_tuple[k], corrupt_tuple[k]
-        c, d = imput_tuple_gan[k], imput_tuple[k]
-        
-        if not np.isnan(a) and np.isnan(b):
-          distances_gan[j].append(c - a)
-          distances_knn[j].append(d - a)
+        a, b, c = original_tuple[k], imputed_tuple_gan[k], imputed_tuple_knn[k]
+        print(a,b,c)
+        if np.isnan(a): continue
+        distances_gan[j,i*k] = b - a
+        distances_knn[j,i*k] = c - a
   
-  rrmses = []
-  mbiases = []
-  cis = []
+  # Compute distance statistics
+  rrmses_gan, mean_biases, median_biases, bias_cis = [], [], [], []
+  rrmses_knn, mean_biases_knn, median_biases_knn, bias_cis_knn = [], [], [], []
 
   for j in range(0, dim):
+    
+    # Stats for original data
+    dim_mean = np.mean([x for x in data_x[:,j] if not np.isnan(x)])
+    
+    # Stats for GAN
     dists_gan = np.asarray(distances_gan[j])
-    dists = np.asarray(distances_knn[j])
-    mbias_gan = np.round(np.mean(dists_gan), 2)
-
-    mean_ci_95 = mean_confidence_interval(dists)
-    mbias = np.round(np.mean(mean_ci_95[0]), 2)
-    cis.append([mean_ci_95[1], mean_ci_95[2]])
-
-    mbiases.append(mbias)
-    rmse = np.sqrt(np.mean(dists**2))
-    dim_mean = np.mean([x for x \
-      in data_x[:,j] if not np.isnan(x)])
+    rmse = np.sqrt(np.mean(dists_gan**2))
+    mean_ci_95 = mean_confidence_interval(dists_gan)
+    mean_bias = np.round(np.mean(dists_gan), 2)
+    median_bias = np.round(np.median(dists_gan), 2)
+    bias_cis.append([mean_ci_95[1], mean_ci_95[2]])
+    mean_biases.append(mean_bias)
+    median_biases.append(median_bias)
+    
     rrmse = np.round(rmse / dim_mean * 100, 2)
-    rrmses.append(rrmse)
+    rrmses_gan.append(rrmse)
+    
+    # Stats for KNN
+    dists_knn = np.asarray(distances_knn[j])
+    rmse_knn = np.sqrt(np.mean(dists_knn**2))
+    rrmses_knn = np.round(rmse_knn / dim_mean * 100, 2)
+    
+    print(variables[j], ' - rrmse: ', rrmse, 
+      '%%, bias: %.2f (95%% CI, %.2f to %.2f)' % mean_ci_95)
 
-    print(variables[j], rrmse, '%', mbias_gan, mbias)
-
-  n_fig_rows = 7
+  n_fig_rows = 6
   n_fig_cols = 6
 
   n_fig_total = n_fig_rows * n_fig_cols
@@ -305,97 +299,74 @@ def main (alpha=100, batch_size=16, hint_rate=0.9,
     n_fig_rows, n_fig_cols, figsize=(15,15))
 
   for j in range(0, dim):
+    
     ax_title = variables[j]
     ax = axes[int(j/n_fig_cols), j % n_fig_cols]
     ax2 = axes2[int(j/n_fig_cols), j % n_fig_cols]
     ax.set_title(ax_title,fontdict={'fontsize':6})
 
-    deleted_values = np.asarray([data_x[ii,j] \
-      for ii in range(0, no) if \
-      (not np.isnan(data_x[ii,j]) and \
-       data_m[ii,j] == 0)])
-
-    imputed_values = np.asarray([imputed_data_x[ii,j]
-     for ii in range(0, no) if \
-      (not np.isnan(data_x[ii,j]) and \
-       data_m[ii,j] == 0)])
-
-    imputed_values_gan = np.asarray([imputed_data_x_gan[ii,j]
-     for ii in range(0, no) if \
-      (not np.isnan(data_x[ii,j]) and \
-       data_m[ii,j] == 0)])
+    input_arrays = [data_x, imputed_data_x_gan, imputed_data_x_knn]
     
-    imputed_values_knn = np.asarray([imputed_data_x_knn[ii,j]
-     for ii in range(0, no) if \
-      (not np.isnan(data_x[ii,j]) and \
-       data_m[ii,j] == 0)])
-
-    x_range = (
-      np.min(imputed_values), 
-      np.max(imputed_values)
-    )
-
-    qqplot(deleted_values, imputed_values_gan, ax=ax2)
-
-    try:
-      kde_kws = {
-        'shade': False, 'color': 'r',
-        'bw':'scott', 'clip': x_range 
-      }
-      sns.distplot(imputed_values_gan, \
-        kde_kws=kde_kws, hist=False,ax=ax)
-
-      kde_kws = {
-        'shade': False, 'color': '#000000',
-        'bw':'scott', 'clip': x_range
-      }
-      sns.distplot(deleted_values, \
-        kde_kws=kde_kws, hist=False,ax=ax)
-
-      kde_kws = {
-        'shade': False, 'color': 'b',
-         'bw':'scott', 'clip': x_range 
-      }
-      sns.distplot(imputed_values_knn, \
-        kde_kws=kde_kws, hist=False,ax=ax)
-
-      kde_kws = {
-        'shade': False, 'color': 'y',
-         'bw':'scott', 'clip': x_range 
-      }
-      #sns.distplot(imputed_values_svd, \
-      #  kde_kws=kde_kws, hist=False,ax=ax)
-    except:
-      pass
+    output_arrays = [
+      np.asarray([input_arr[ii,j] for ii in range(0, no) if \
+        (not np.isnan(input_arr[ii,j]) and \
+        data_m[ii,j] == 0)]) for input_arr in input_arrays
+    ]
+    
+    deleted_values, imputed_values_gan, imputed_values_knn = output_arrays
+    
+    # Make KDE
+    low_ci, high_ci = bias_cis[j]
+    xlabel = 'mean bias = %.2f (95%% CI, %.2f to %.2f)' % \
+      (mean_biases[j], low_ci, high_ci)
+      
+    ax.set_xlabel(xlabel, fontsize=6)
     ax.set_ylabel('$p(x)$',fontsize=6)
-    low_ci, high_ci = cis[j]
-    xlab = 'RB = %.2f (%.2f to %.2f)' % \
-      (mbiases[j], low_ci, high_ci)
-    ax.set_xlabel(xlab,fontsize=6)
+    
+    range_arrays = np.concatenate([deleted_values, imputed_values_gan])
+    x_range = (np.min(range_arrays), 
+      np.min([
+        np.mean(range_arrays) + 3 * np.std(range_arrays), 
+        np.max(range_arrays)
+      ])
+    )
+    
+    kde_kws = { 'shade': False, 'bw':'scott', 'clip': x_range }
+    
+    sns.distplot(imputed_values_gan, hist=False,
+      kde_kws={**{ 'color': 'r'}, **kde_kws}, ax=ax)
+    
+    sns.distplot(imputed_values_knn, hist=False,
+      kde_kws={**{ 'color': 'b'}, **kde_kws},ax=ax)
 
-  top_title = 'Histogram of original data and imputed data'
+    sns.distplot(deleted_values, hist=False,
+      kde_kws={**{ 'color': '#000000'}, **kde_kws},ax=ax)
+
+    # Make QQ plot
+    qqplot(deleted_values, imputed_values_gan, ax=ax2)
+    
+  top_title = 'KDE plot of original data (black) and data imputed using GAN (red) and KNN (blue)'
   fig.suptitle(top_title, fontsize=8)
 
-  plt.setp(axes, yticks=[], xticks=[])
   fig.tight_layout(rect=[0,0.03,0,1.25])
   fig.subplots_adjust(hspace=1, wspace=0.35)
 
   top_title = 'Q-Q plot of observed vs. predicted values'
   fig2.suptitle(top_title, fontsize=8)
 
-  plt.setp(axes2, yticks=[], xticks=[])
   fig2.tight_layout(rect=[0,0.03,0,1.25])
   fig2.subplots_adjust(hspace=1, wspace=0.35)
   
   plt.show()
 
-  # Report the RMSE performance
-  # rmse = rmse_loss(data_x, imputed_data_x, data_m)
-  
   print()
-  mrrmse = np.round(np.asarray(rrmses).mean(), 2)
-  print('Average RMSE: ' + str(mrrmse) + '%')
+  mrrmse_gan = np.round(np.asarray(rrmses_gan).mean(), 2)
+  print('Average RMSE (GAN): ', mrrmse_gan, '%')
+
+  print()
+  mrrmse_knn = np.round(np.asarray(rrmses_knn).mean(), 2)
+  print('Average RMSE (KNN): ', mrrmse_knn, '%')
   
-  return imputed_data_x, rmse
+  return imputed_data_x_gan, mrrmse_gan
 
 imputed_data, rmse = main()
