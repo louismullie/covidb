@@ -102,7 +102,6 @@ def gain (data_x, gain_parameters):
     # Concatenate Data and Hint
     inputs = tf.concat(values = [x, h], axis = 1) 
     D_h1 = tf.nn.relu(tf.matmul(inputs, D_W1) + D_b1) 
-    #D_h1 = tf.nn.dropout(D_h1, rate=0.3)
     D_h2 = tf.nn.relu(tf.matmul(D_h1, D_W2) + D_b2)
     D_logit = tf.matmul(D_h2, D_W3) + D_b3
     D_prob = tf.nn.sigmoid(D_logit)
@@ -168,7 +167,7 @@ def gain (data_x, gain_parameters):
     
     print(it, MSE_loss_curr)
     
-    if MSE_loss_curr < 0.01:
+    if MSE_loss_curr < 0.009:
       break
     
   

@@ -24,7 +24,7 @@ import matplotlib.pyplot as plt
 from sklearn.impute import KNNImputer
 from sklearn.experimental import enable_iterative_imputer
 from sklearn.impute import IterativeImputer
-from sklearn.preprocessing import MinMaxScaler, PowerTransformer, QuantileTransformer
+from sklearn.preprocessing import MinMaxScaler, PowerTransformer, QuantileTransformer, RobustScaler
 from scipy.stats import boxcox, t, sem, probplot
 from scipy.special import inv_boxcox
 
@@ -121,14 +121,14 @@ for i in range(0, len(variables)):
     encoders.append(encoder_model)
     
 def main (alpha=1000, batch_size=128, hint_rate=0.05, 
-  iterations=2500, miss_rate=0.3):
+  iterations=5000, miss_rate=0.3):
   
   gain_parameters = {'batch_size': batch_size,
                      'hint_rate': hint_rate,
                      'alpha': alpha,
                      'iterations': iterations}
   
-  enable_transform = True
+  enable_transform = False
   remove_outliers = False
   n_time_points = 3
   
@@ -194,22 +194,23 @@ def main (alpha=1000, batch_size=128, hint_rate=0.05,
   
   if enable_transform:  
     print('Applying transformation...')
-    transformer = PowerTransformer()
-    transformer.fit(miss_data_x)
-    miss_data_x_enc = transformer.transform(data_x_encoded)
+    transformer1 = RobustScaler()
+    #transformer2 = PowerTransformer()
+    miss_data_x_enc = transformer1.fit_transform(miss_data_x)
+    miss_data_x_enc[data_m == 0] = np.nan
   
   imputed_data_x_gan = gain(
     miss_data_x_enc, gain_parameters)
+  
+  if enable_transform:  
+    print('Reversing transformation...')
+    imputed_data_x_gan = transformer1.inverse_transform(imputed_data_x_gan)
   
   imputer = KNNImputer(n_neighbors=5)
   imputed_data_x_knn = imputer.fit_transform(miss_data_x)
   
   imputer = IterativeImputer()
   imputed_data_x_mice = imputer.fit_transform(miss_data_x)
-  
-  if enable_transform:  
-    print('Applying transformation...')
-    imputed_data_x_gan = transformer.inverse_transform(imputed_data_x_gan)
   
   # Save imputed data to disk
   pickle.dump(imputed_data_x_gan,open('./filled_data.sav', 'wb'))
@@ -333,17 +334,24 @@ def main (alpha=1000, batch_size=128, hint_rate=0.05,
       ])
     )
     
+    all_values_gan = (imputed_values_gan * 2 + imputed_values_mice * 1) / 3
+    
+    
+    
     kde_kws = { 'shade': False, 'bw':'scott', 'clip': x_range }
     
-    sns.distplot(imputed_values_gan, hist=False,
+    sns.distplot(all_values_gan, hist=False,
       kde_kws={**{ 'color': 'r'}, **kde_kws}, ax=ax)
-    
-    sns.distplot(imputed_values_knn, hist=False,
-      kde_kws={**{ 'color': 'b', 'alpha': 0.5 }, **kde_kws},ax=ax)
-    
-    sns.distplot(imputed_values_mice, hist=False,
-      kde_kws={**{ 'color': 'g', 'alpha': 0.5 }, **kde_kws},ax=ax)
-    
+      
+    #sns.distplot(imputed_values_gan, hist=False,
+    #  kde_kws={**{ 'color': 'r'}, **kde_kws}, ax=ax)
+    #
+    #sns.distplot(imputed_values_knn, hist=False,
+    #  kde_kws={**{ 'color': 'b', 'alpha': 0.5 }, **kde_kws},ax=ax)
+    #
+    #sns.distplot(imputed_values_mice, hist=False,
+    #  kde_kws={**{ 'color': 'g', 'alpha': 0.5 }, **kde_kws},ax=ax)
+    #
     sns.distplot(deleted_values, hist=False,
       kde_kws={**{ 'color': '#000000'}, **kde_kws},ax=ax)
 

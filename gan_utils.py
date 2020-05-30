@@ -163,7 +163,7 @@ def uniform_sampler(low, high, rows, cols):
   Returns:
     - uniform_random_matrix: generated uniform random matrix.
   '''
-  return np.random.standard_t(50, (rows, cols))
+  return np.random.standard_t(5, (rows, cols))
 
 def sample_batch_index(total, batch_size):
   '''Sample index of the mini-batch.
