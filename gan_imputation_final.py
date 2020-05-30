@@ -25,8 +25,9 @@ from sklearn.impute import KNNImputer
 from sklearn.experimental import enable_iterative_imputer
 from sklearn.impute import IterativeImputer
 from sklearn.preprocessing import MinMaxScaler, PowerTransformer, QuantileTransformer, RobustScaler
-from scipy.stats import boxcox, t, sem, probplot
+from scipy.stats import boxcox, t, sem, probplot, iqr, gaussian_kde
 from scipy.special import inv_boxcox
+from scipy.optimize import fmin
 
 from keras.layers import Input, Dense
 from keras.models import Model
@@ -121,7 +122,7 @@ for i in range(0, len(variables)):
     encoders.append(encoder_model)
     
 def main (alpha=1000, batch_size=128, hint_rate=0.05, 
-  iterations=5000, miss_rate=0.3):
+  iterations=1500, miss_rate=0.3):
   
   gain_parameters = {'batch_size': batch_size,
                      'hint_rate': hint_rate,
@@ -163,24 +164,47 @@ def main (alpha=1000, batch_size=128, hint_rate=0.05,
     
     nn_indices = ~np.isnan(data_x_encoded[:,i])
     nn_values = data_x[:,i][nn_indices]
-
-    scaler = MinMaxScaler()
-    var_x_scaled = scaler.fit_transform(var_x.reshape((-1,1)))
     
-    enc_x_scaled = encoder_model.predict(var_x_scaled)
-    enc_x_unscaled = scaler.inverse_transform(enc_x_scaled)
-    data_x_encoded[:,i] = enc_x_unscaled.flatten()
+    data_x_encoded[:,i] = np.copy(var_x)
     
-    scalers.append(scaler)
+    # scaler = MinMaxScaler()
+    # var_x_scaled = scaler.fit_transform(var_x.reshape((-1,1)))
+    # 
+    # enc_x_scaled = encoder_model.predict(var_x_scaled)
+    # enc_x_unscaled = scaler.inverse_transform(enc_x_scaled)
+    # data_x_encoded[:,i] = enc_x_unscaled.flatten()
+    # 
+    # scalers.append(scaler)
+    
+    outliers_indices = np.zeros(data_x.shape)
+    
+    if remove_outliers:
+      print('Excluding outliers...')
+      mse = np.mean(np.power(var_x.reshape((-1,1)) - enc_x_unscaled, 2),axis=1)
+    
+      x = np.ma.array(mse, mask=np.isnan(mse))
+      y = np.ma.array(var_x, mask=np.isnan(var_x))
+      outlier_indices = (x / np.max(y)) > 0.05
       
+      outlier_values = var_x[outlier_indices]
+      
+      print('... %d outlier(s) excluded' % \
+        len(outlier_values), outlier_values)
+      
+      #miss_data_x[outlier_indices == True,i] = np.nan
+      #miss_data_x_enc[outlier_indices == True,i] = np.nan
+      outliers_indices[outlier_indices == True,i] = 1
+    
     #print(var_x, '----', enc_x_scaled, '----', enc_x_unscaled.flatten())
     print('Loaded model for %s...' % variable)
   
   # Introduce missing data
   data_m = binary_sampler(1-miss_rate, no, dim)
   
+  data_x_encoded[data_m == 0] = np.nan
   miss_data_x[data_m == 0] = np.nan
   miss_data_x_enc[data_m == 0] = np.nan
+  outliers_indices[data_m == 0] = 0
 
   no_nan = np.count_nonzero(np.isnan(miss_data_x.flatten()) == True)
   no_not_nan = no_total - no_nan
@@ -195,12 +219,39 @@ def main (alpha=1000, batch_size=128, hint_rate=0.05,
   if enable_transform:  
     print('Applying transformation...')
     transformer1 = RobustScaler()
-    #transformer2 = PowerTransformer()
     miss_data_x_enc = transformer1.fit_transform(miss_data_x)
     miss_data_x_enc[data_m == 0] = np.nan
   
-  imputed_data_x_gan = gain(
-    miss_data_x_enc, gain_parameters)
+  # Place all time points in single column
+  #miss_data_x_enc = np.concatenate(
+  #  [miss_data_x_enc[k::n_time_points,:] \
+  #  for k in range(0, n_time_points)], axis=1
+  #)
+  
+  miss_data_x_enc_tmp = np.zeros((n_patients,dim*n_time_points))
+  
+  # Swap (one row per time point) to (one column per time point)
+  for i in range(0, n_patients):
+    for j in range(0, dim):
+      for n in range(0, n_time_points):
+        miss_data_x_enc_tmp[i,n*dim+j] = miss_data_x_enc[i*n_time_points+n,j] 
+  
+  print(miss_data_x_enc_tmp.shape)
+  print(miss_data_x_enc)
+  
+  imputed_data_x_gan_tmp = gain(
+    miss_data_x_enc_tmp, gain_parameters)
+  
+  imputed_data_x_gan = np.copy(miss_data_x)
+  
+  # Swap (one column per time point) to (one row per time point)
+  for i in range(0, n_patients):
+    for j in range(0, dim):
+      for n in range(0, n_time_points):
+        imputed_data_x_gan[i*n_time_points+n,j] = imputed_data_x_gan_tmp[i,n*dim+j]
+  
+  print(imputed_data_x_gan.shape)
+  print(imputed_data_x_gan)
   
   if enable_transform:  
     print('Reversing transformation...')
@@ -212,6 +263,14 @@ def main (alpha=1000, batch_size=128, hint_rate=0.05,
   imputer = IterativeImputer()
   imputed_data_x_mice = imputer.fit_transform(miss_data_x)
   
+  #for j in range(0, dim):
+  #  kde_knn = gaussian_kde(imputed_data_x_knn[:,j], bw_method='scott')
+  #  peak_knn = fmin(lambda x: -kde_knn.pdf(x), 0)[0]
+  #  kde_gan = gaussian_kde(imputed_data_x_gan[:,j], bw_method='scott')
+  #  peak_gan = fmin(lambda x: -kde_gan.pdf(x), 0)[0]
+  #  imputed_data_x_gan[:,j] -= (peak_knn - peak_gan)
+  #  print(variables[j], peak_knn, peak_gan, peak_knn - peak_gan)
+  
   # Save imputed data to disk
   pickle.dump(imputed_data_x_gan,open('./filled_data.sav', 'wb'))
   
@@ -220,8 +279,14 @@ def main (alpha=1000, batch_size=128, hint_rate=0.05,
   distances_knn = np.zeros((dim, n_time_points*n_patients))
   distances_mice = np.zeros((dim, n_time_points*n_patients))
 
-  for i in range(0, n_patients):
-    for j in range(0, dim):
+  for j in range(0, dim):
+    
+    nn_values = data_x[:,j].flatten()
+    nn_values = nn_values[~np.isnan(nn_values)]
+
+    dim_iqr = np.median(nn_values)
+    
+    for i in range(0, n_patients):
       variable_name = variables[j]
       i_start = int(i*n_time_points)
       i_stop = int(i*n_time_points+n_time_points)
@@ -238,9 +303,9 @@ def main (alpha=1000, batch_size=128, hint_rate=0.05,
         a, b, c, d = original_tuple[k], imputed_tuple_gan[k], imputed_tuple_knn[k], imputed_tuple_mice[k]
         if np.isnan(a) or data_m[i_start+k,j] != 0: continue
         if i % 10 == 0: print(variable_name, a,b,c,d, b-a)
-        distances_gan[j,i*k] = (b - a)
-        distances_knn[j,i*k] = c - a
-        distances_mice[j,i*k] = d - a
+        distances_gan[j,i*k] = (b - a)  / dim_iqr
+        distances_knn[j,i*k] = (c - a)  / dim_iqr
+        distances_mice[j,i*k] = (d - a) / dim_iqr
   
   # Compute distance statistics
   rrmses_gan, mean_biases, median_biases, bias_cis = [], [], [], []
@@ -258,28 +323,30 @@ def main (alpha=1000, batch_size=128, hint_rate=0.05,
     dists_mice = distances_mice[j]
     
     # Stats for GAN
-    mean_bias = np.round(np.mean(dists_gan), 4)
-    median_bias = np.round(np.median(dists_gan), 4)
+    mean_bias = np.mean(dists_gan)
+    median_bias = np.median(dists_gan)
     mean_ci_95 = mean_confidence_interval(dists_gan)
-    rmse_gan = np.sqrt(np.mean(dists_gan**2))
-    rrmse_gan = rmse_gan / dim_mean
     
     bias_cis.append([mean_ci_95[1], mean_ci_95[2]])
     mean_biases.append(mean_bias)
     median_biases.append(median_bias)
+    
+    # Stats for GAN
+    rmse_gan = np.sqrt(np.mean(dists_gan**2))
+    rrmse_gan = rmse_gan
     rrmses_gan.append(rrmse_gan)
     
     # Stats for KNN
     rmse_knn = np.sqrt(np.mean(dists_knn**2))
-    rrmse_knn = rmse_knn / dim_mean
+    rrmse_knn = rmse_knn
     rrmses_knn.append(rrmse_knn)
     
     # Stats for MICE
     rmse_mice = np.sqrt(np.mean(dists_mice**2))
-    rrmse_mice = rmse_mice / dim_mean
+    rrmse_mice = rmse_mice
     rrmses_mice.append(rrmse_mice)
     
-    print(variables[j], ' - rrmse: ', rmse_gan, 'median bias: %.2f' % median_bias,
+    print(variables[j], ' - rrmse (iqr): ', rmse_gan, 'mean bias: %.4f' % mean_bias,
       '%%, bias: %.2f (95%% CI, %.2f to %.2f)' % mean_ci_95)
 
   n_fig_rows = 6
@@ -334,24 +401,17 @@ def main (alpha=1000, batch_size=128, hint_rate=0.05,
       ])
     )
     
-    all_values_gan = (imputed_values_gan * 2 + imputed_values_mice * 1) / 3
-    
-    
-    
     kde_kws = { 'shade': False, 'bw':'scott', 'clip': x_range }
     
-    sns.distplot(all_values_gan, hist=False,
+    sns.distplot(imputed_values_gan, hist=False,
       kde_kws={**{ 'color': 'r'}, **kde_kws}, ax=ax)
-      
-    #sns.distplot(imputed_values_gan, hist=False,
-    #  kde_kws={**{ 'color': 'r'}, **kde_kws}, ax=ax)
-    #
-    #sns.distplot(imputed_values_knn, hist=False,
-    #  kde_kws={**{ 'color': 'b', 'alpha': 0.5 }, **kde_kws},ax=ax)
-    #
-    #sns.distplot(imputed_values_mice, hist=False,
-    #  kde_kws={**{ 'color': 'g', 'alpha': 0.5 }, **kde_kws},ax=ax)
-    #
+    
+    sns.distplot(imputed_values_knn, hist=False,
+      kde_kws={**{ 'color': 'b', 'alpha': 0.5 }, **kde_kws},ax=ax)
+    
+    sns.distplot(imputed_values_mice, hist=False,
+      kde_kws={**{ 'color': 'g', 'alpha': 0.5 }, **kde_kws},ax=ax)
+    
     sns.distplot(deleted_values, hist=False,
       kde_kws={**{ 'color': '#000000'}, **kde_kws},ax=ax)
 

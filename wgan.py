@@ -54,9 +54,6 @@ def gain (data_x, gain_parameters):
   # Input placeholders
   # Data vector
   X = tf.placeholder(tf.float32, shape = [None, dim])
-  # Encoded vector
-  E = tf.placeholder(tf.float32, shape=(None, dim))
-  
   # Mask vector 
   M = tf.placeholder(tf.float32, shape = [None, dim])
   # Hint vector
@@ -104,7 +101,7 @@ def gain (data_x, gain_parameters):
     D_h1 = tf.nn.relu(tf.matmul(inputs, D_W1) + D_b1) 
     D_h2 = tf.nn.relu(tf.matmul(D_h1, D_W2) + D_b2)
     #D_h2 = tf.nn.dropout(D_h2, rate=0.3)
-    D_prob = tf.nn.sigmoid(tf.matmul(D_h2, D_W3) + D_b3)
+    D_prob = tf.nn.sigmoid()
     return D_prob
   
   ## GAIN structure
@@ -131,8 +128,8 @@ def gain (data_x, gain_parameters):
   KL_loss = tf.reduce_mean(tf.keras.losses.kullback_leibler_divergence(X_true, X_pred))
   
   D_loss = D_loss_temp
-  alpha, beta, delta = 50, 0.05, 10 ### Extract
-  G_loss = G_loss_temp + alpha * Hu_loss #  + beta * tf.math.abs(KL_loss)  #.sqrt(MSE_loss)
+  alpha, beta, delta = 5, 0.05, 10 ### Extract
+  G_loss = G_loss_temp + alpha * MSE_loss + beta * KL_loss  #.sqrt(MSE_loss)
   
   ## GAIN solver
   D_solver = tf.train.AdamOptimizer(learning_rate=0.0002, beta1=0.1).minimize(D_loss, var_list=theta_D)
@@ -180,7 +177,7 @@ def gain (data_x, gain_parameters):
     losses['Hu'].append(Hu_loss_curr * delta)
     print(it, G_loss_curr - MSE_loss_curr * alpha - KL_loss_curr * beta, MSE_loss_curr * alpha, KL_loss_curr * beta, G_loss_curr, MSE_loss_curr)
     
-    if MSE_loss_curr < 0.005:
+    if MSE_loss_curr < 0.01:
       break
   
   import matplotlib.pyplot as plt
