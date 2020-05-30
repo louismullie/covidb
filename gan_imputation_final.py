@@ -15,13 +15,17 @@ from gan_utils import rmse_loss, binary_sampler
 from sklearn.metrics import mean_squared_error
 
 import seaborn as sns
+import matplotlib as mpl
+mpl.rcParams['lines.markersize']=1
+mpl.rcParams['lines.marker']='+'
+mpl.rc('font', **{ 'family': ['Helvetica'] })
 import matplotlib.pyplot as plt
 
 from sklearn.impute import KNNImputer
 from sklearn.experimental import enable_iterative_imputer
 from sklearn.impute import IterativeImputer
 from sklearn.preprocessing import MinMaxScaler, PowerTransformer, QuantileTransformer
-from scipy.stats import boxcox, t, sem
+from scipy.stats import boxcox, t, sem, probplot
 from scipy.special import inv_boxcox
 
 from keras.layers import Input, Dense
@@ -36,76 +40,55 @@ from sklearn.ensemble import ExtraTreesRegressor
 from fancyimpute import SimpleFill, IterativeSVD
 
 import numbers
+from math import sqrt
+from scipy.stats import norm 
 
-def find_outliers(variable_name, values):
-  RANDOM_SEED = 101
+np.random.seed(1)
+def qqplot_1sample(x, ax=None, color=None, draw_line=True):
 
-  X_train = pd.DataFrame(values.reshape(-1, 1))
-  scaler = MinMaxScaler()
-  X_train_scaled = scaler.fit_transform(X_train)
-
-  # No of Neurons in each Layer [9,6,3,2,3,6,9]
-  input_dim = X_train.shape[1]
-  encoding_dim = 6
-
-  input_layer = Input(shape=(input_dim, ))
-  encoder = Dense(encoding_dim, activation="tanh",activity_regularizer=regularizers.l1(10e-5))(input_layer)
-  encoder = Dense(int(encoding_dim / 2), activation="tanh")(encoder)
-  encoder = Dense(int(2), activation="tanh")(encoder)
-  decoder = Dense(int(encoding_dim/ 2), activation='tanh')(encoder)
-  decoder = Dense(int(encoding_dim), activation='tanh')(decoder)
-  decoder = Dense(input_dim, activation='tanh')(decoder)
-  autoencoder = Model(inputs=input_layer, outputs=decoder)
-  #autoencoder.summary()
-
-  nb_epoch = 100
-  batch_size = 32
-  autoencoder.compile(optimizer='adam', loss='mse' )
-
-  history = autoencoder.fit(
-    X_train_scaled, X_train_scaled,
-    epochs=nb_epoch,
-    batch_size=batch_size,
-    shuffle=True,
-    validation_split=0.1,
-    verbose=False
-  )
-
-  with open('./models/autoencoders/%s.json' % \
-    variable_name, 'w') as json_file:
-    json_file.write(autoencoder.to_json())
-
-  autoencoder.save_weights('./models/autoencoders/%s.h5' % \
-    variable_name, 'w')
-
-  df_history = pd.DataFrame(history.history)
-  predictions = autoencoder.predict(X_train_scaled)
-
-  mse = np.mean(np.power(X_train_scaled - predictions, 2),axis=1)
-  outlier_indices = mse > 0.05
+  probplot(x, dist="norm",plot=ax)
   
-  #plt.title(variable_name); plt.plot(mse); plt.show()
-  return outlier_indices
+#def qqplot_sample_subsample(x_o, y_o, ax=None, color=None, draw_line=True):
+#  probplot_arrays, lsf = probplot(x_o, dist="norm")
+#  x, y = probplot_arrays
+#  ax.scatter(x,y,s=1,c='b',marker='+',alpha=0.5)
+#  
+#  x2 = np.linspace(np.min(x), np.max(y), 50)
+#  y2 = np.poly1d(np.polyfit(x,y, 1))(x2)
+#  
+#  if draw_line: ax.plot(x2,y2, lw=1,color='gray',alpha=0.5)
+#  
+#  ax.set_xticks([-2.5, -1, 0, 1, 2.5])
+#  ax.set_yticks([0, 0.5, 1.0])
+#  #ax.set_xlim(-2.5, 2.5)
+#  #ax.set_ylim(0, 1.0)
 
-def qqplot(x, y, quantiles=None, interpolation='nearest', ax=None, color=None, **kwargs):
+def qqplot(x, y, ax=None, color=None, draw_line=True):
     
-    if ax is None:
-        ax = plt.gca()
-
-    if quantiles is None:
-        quantiles = min(len(x), len(y))
-
-    if isinstance(quantiles, numbers.Integral):
-        quantiles = np.linspace(start=0, stop=1, num=int(quantiles))
-    else:
-        quantiles = np.atleast_1d(np.sort(quantiles))
-    x_quantiles = np.quantile(x, quantiles, interpolation=interpolation)
-    y_quantiles = np.quantile(y, quantiles, interpolation=interpolation)
-
+    if ax is None: ax = plt.gca()
+    
+    quantiles = min(len(x), len(y))
+    quantiles = np.linspace(start=0, stop=1, num=int(quantiles))
+    
+    x_quantiles = np.quantile(x, quantiles, interpolation='nearest')
+    y_quantiles = np.quantile(y, quantiles, interpolation='nearest')
+    
     # Draw the q-q plot
-    ax.scatter(x_quantiles, y_quantiles, s=1)
-    x = np.linspace(*ax.get_xlim())
-    ax.plot(x, x, lw=1,color=color)
+    ax.scatter(x_quantiles, y_quantiles, s=1, alpha=0.5)
+    x = np.linspace(0, 1.0, 50)
+    ax.plot(x, x, lw=1,color='gray',alpha=0.5)
+    ax.set_xticks([0, 0.5, 1.0])
+    ax.set_yticks([0, 0.5, 1.0])
+    
+    lim = np.max([
+      np.min([np.max(x),1.0]),
+      np.min([np.max(y),1.0])
+    ])
+
+    ax.set_ylabel('$quantiles$',fontsize=6)
+    
+    ax.set_xlim(0, lim)
+    ax.set_ylim(0, lim)
 
 def mean_confidence_interval(data, confidence=0.95):
     a = 1.0 * np.array(data)
@@ -125,7 +108,7 @@ variables = [
   'mean_platelet_volume', 'glucose', 'hs_troponin_t', 
   'partial_thromboplastin_time', 'bicarbonate', 'anion_gap', 'pco2', 
   'procalcitonin', 'base_excess', 'osmolality', 'lipase']
-      
+
 encoders = []    
       
 for i in range(0, len(variables)):
@@ -137,34 +120,32 @@ for i in range(0, len(variables)):
 
     encoders.append(encoder_model)
     
-# 5000
-def main (alpha=1000, batch_size=128, hint_rate=0.5, 
-  iterations=900, miss_rate=0.3):
+def main (alpha=1000, batch_size=128, hint_rate=0.05, 
+  iterations=2500, miss_rate=0.3):
   
   gain_parameters = {'batch_size': batch_size,
                      'hint_rate': hint_rate,
                      'alpha': alpha,
                      'iterations': iterations}
   
-  # Load data and introduce missingness
-  #file_name = 'data/spam.csv'
-  #data_x = np.loadtxt(file_name, delimiter=",", skiprows=1)
-  
-  enable_transform = False
+  enable_transform = True
   remove_outliers = False
   n_time_points = 3
   
   data_x = pickle.load(open('./missing_data.sav', 'rb'))
   data_x = data_x.transpose().astype(np.float)[:,:]
-  print(data_x.shape)
-  # if remove_outliers:
-  #  data_x = pickle.load(open('./missing_data.sav', 'rb'))
-  #  data_x = data_x.transpose().astype(np.float)
-  # else:
-  #  data_x = pickle.load(open('./denoised_missing_data.sav', 'rb')) 
 
-  signed_variables = ['base_excess']
   no, dim = data_x.shape
+  
+  if len(variables) != dim:
+    print(len(variables), dim)
+    print('Incompatible dimensions.')
+    exit()
+  
+  no_total = no * dim
+  no_nan = np.count_nonzero(np.isnan(data_x.flatten()) == True)
+  no_not_nan = no_total - no_nan
+  n_patients = int(no/n_time_points)
   
   data_x_encoded = np.copy(data_x)
   miss_data_x = np.copy(data_x)
@@ -172,67 +153,32 @@ def main (alpha=1000, batch_size=128, hint_rate=0.5,
   
   scalers = []
   
-  for i in range(0, dim):
-      variable, var_x = variables[i], np.copy(data_x[:,i])
-      encoder_model = encoders[i]
-      # Exclude outliers based on error
-      nn_indices = ~np.isnan(data_x_encoded[:,i])
-      nn_values = data_x[:,i][nn_indices]
-
-      scaler = MinMaxScaler()
-      var_x_scaled = scaler.fit_transform(var_x.reshape((-1,1)))
-    
-      enc_x_scaled = encoder_model.predict(var_x_scaled)
-      enc_x_unscaled = scaler.inverse_transform(enc_x_scaled)
-      data_x_encoded[:,i] = enc_x_unscaled.flatten()
-      
-      scalers.append(scaler)
-      
-      if remove_outliers:
-        print('Excluding outliers...')
-        mse = np.mean(np.power(var_x.reshape((-1,1)) - enc_x_unscaled, 2),axis=1)
-      
-        x = np.ma.array(mse, mask=np.isnan(mse))
-        y = np.ma.array(var_x, mask=np.isnan(var_x))
-        outlier_indices = (x / np.max(y)) > 2
-        
-        outlier_values = var_x[outlier_indices]
-        
-        print('... %d outlier(s) excluded' % \
-          len(outlier_values), outlier_values)
-        
-        miss_data_x[outlier_indices == True,i] = np.nan
-        miss_data_x_enc[outlier_indices == True,i] = np.nan
-      
-      #print(var_x, '----', enc_x_scaled, '----', enc_x_unscaled.flatten())
-      print('Loaded model for %s...' % variable)
-  
-  no_total = no * dim
-  no_nan = np.count_nonzero(np.isnan(data_x.flatten()) == True)
-  no_not_nan = no_total - no_nan
   print('Input shape', no, 'x', dim)
   print('NAN values:', no_nan, '/', no_total, \
     '%2.f%%' % (no_nan / no_total * 100))
-
-  n_patients = int(no/n_time_points)
-
-  if len(variables) != dim:
-    print(len(variables), dim)
-    print('Incompatible dimensions.')
-    exit()
   
-  if enable_transform:  
-    print('Applying transformation...')
-    transformer = MinMaxScaler()
-    transformer.fit(data_x)
-  
-    #data_x = transformer.transform(data_x)
-    #miss_data_x = transformer.transform(miss_data_x)
-    miss_data_x_enc = transformer.transform(data_x_encoded)
+  for i in range(0, dim):
+    variable, var_x = variables[i], np.copy(data_x[:,i])
+    encoder_model = encoders[i]
+    
+    nn_indices = ~np.isnan(data_x_encoded[:,i])
+    nn_values = data_x[:,i][nn_indices]
+
+    scaler = MinMaxScaler()
+    var_x_scaled = scaler.fit_transform(var_x.reshape((-1,1)))
+    
+    enc_x_scaled = encoder_model.predict(var_x_scaled)
+    enc_x_unscaled = scaler.inverse_transform(enc_x_scaled)
+    data_x_encoded[:,i] = enc_x_unscaled.flatten()
+    
+    scalers.append(scaler)
+      
+    #print(var_x, '----', enc_x_scaled, '----', enc_x_unscaled.flatten())
+    print('Loaded model for %s...' % variable)
   
   # Introduce missing data
   data_m = binary_sampler(1-miss_rate, no, dim)
-
+  
   miss_data_x[data_m == 0] = np.nan
   miss_data_x_enc[data_m == 0] = np.nan
 
@@ -244,47 +190,26 @@ def main (alpha=1000, batch_size=128, hint_rate=0.5,
   
   real_miss_rate = (no_nan / no_total * 100)
   
+  transformer = None
+  
+  if enable_transform:  
+    print('Applying transformation...')
+    transformer = PowerTransformer()
+    transformer.fit(miss_data_x)
+    miss_data_x_enc = transformer.transform(data_x_encoded)
+  
   imputed_data_x_gan = gain(
     miss_data_x_enc, gain_parameters)
   
-  # n_gans = 3
-  # idxg_combined = []
-  # 
-  # for  n_gan in range(0, n_gans):
-  #   np.random.seed(n_gan + 1)
-  #   idxg_combined.append(gain(miss_data_x_enc, gain_parameters))
-  # 
-  # idxg_combined = np.concatenate(idxg_combined)
-  #   
-  # idxg_combined_final = gain(
-  #   miss_data_x_enc, gain_parameters)
-  # 
-  # for j in range(0, dim):
-  #   idxg_combined_tmp = np.copy(idxg_combined)
-  #   
-  #   for i in range(0, n_patients * n_time_points):
-  #     if np.isnan(miss_data_x[i,j]) and data_m[i,j] != 0:
-  #       idxg_combined_tmp[i,j] = np.nan
-  # 
-  #   imputer = IterativeImputer() # KNNImputer(n_neighbors=5)
-  #   idxg_knn = imputer.fit_transform(idxg_combined_tmp)
-  #   idxg_combined_final[:,j] = idxg_knn[0:n_patients*n_time_points,j]
-  #   print('Done KNN imputation #%d' % j)
-  # 
-  # imputed_data_x_gan = idxg_combined_final
-
   imputer = KNNImputer(n_neighbors=5)
   imputed_data_x_knn = imputer.fit_transform(miss_data_x)
   
   imputer = IterativeImputer()
   imputed_data_x_mice = imputer.fit_transform(miss_data_x)
   
-  if enable_transform:
-    #data_x = transformer.inverse_transform(data_x)
-    #miss_data_x = transformer.inverse_transform(miss_data_x)
+  if enable_transform:  
+    print('Applying transformation...')
     imputed_data_x_gan = transformer.inverse_transform(imputed_data_x_gan)
-    #imputed_data_x_knn = transformer.inverse_transform(imputed_data_x_knn)
-    #imputed_data_x_mice = transformer.inverse_transform(imputed_data_x_mice)
   
   # Save imputed data to disk
   pickle.dump(imputed_data_x_gan,open('./filled_data.sav', 'wb'))
@@ -319,42 +244,41 @@ def main (alpha=1000, batch_size=128, hint_rate=0.5,
   # Compute distance statistics
   rrmses_gan, mean_biases, median_biases, bias_cis = [], [], [], []
   rrmses_knn, mean_biases_knn, median_biases_knn, bias_cis_knn = [], [], [], []
+  rrmses_mice = []
 
   for j in range(0, dim):
     
     # Stats for original data
     dim_mean = np.mean([x for x in data_x[:,j] if not np.isnan(x)])
     dim_max = np.max([x for x in data_x[:,j] if not np.isnan(x)])
-
+    
     dists_gan = distances_gan[j]
     dists_knn = distances_knn[j]
     dists_mice = distances_mice[j]
-    
-    #dists_gan /= dim_max
-    #dists_knn /= dim_max
-    #dists_mice /= dim_max
     
     # Stats for GAN
     mean_bias = np.round(np.mean(dists_gan), 4)
     median_bias = np.round(np.median(dists_gan), 4)
     mean_ci_95 = mean_confidence_interval(dists_gan)
-    rmse = np.sqrt(np.mean(dists_gan**2))
-    rrmse = np.round(rmse / dim_mean * 100, 2)
+    rmse_gan = np.sqrt(np.mean(dists_gan**2))
+    rrmse_gan = rmse_gan / dim_mean
     
     bias_cis.append([mean_ci_95[1], mean_ci_95[2]])
     mean_biases.append(mean_bias)
     median_biases.append(median_bias)
-    rrmses_gan.append(rrmse)
+    rrmses_gan.append(rrmse_gan)
     
     # Stats for KNN
     rmse_knn = np.sqrt(np.mean(dists_knn**2))
-    rrmses_knn = np.round(rmse_knn / dim_mean * 100, 2)
+    rrmse_knn = rmse_knn / dim_mean
+    rrmses_knn.append(rrmse_knn)
     
     # Stats for MICE
     rmse_mice = np.sqrt(np.mean(dists_mice**2))
-    rrmses_mice = np.round(rmse_mice / dim_mean * 100, 2)
+    rrmse_mice = rmse_mice / dim_mean
+    rrmses_mice.append(rrmse_mice)
     
-    print(variables[j], ' - rrmse: ', rrmse, 'median bias: %.2f' % median_bias,
+    print(variables[j], ' - rrmse: ', rmse_gan, 'median bias: %.2f' % median_bias,
       '%%, bias: %.2f (95%% CI, %.2f to %.2f)' % mean_ci_95)
 
   n_fig_rows = 6
@@ -369,14 +293,18 @@ def main (alpha=1000, batch_size=128, hint_rate=0.5,
     n_fig_rows, n_fig_cols, figsize=(15,15))
   fig2, axes2 = plt.subplots(\
     n_fig_rows, n_fig_cols, figsize=(15,15))
+  fig3, axes3 = plt.subplots(\
+    n_fig_rows, n_fig_cols, figsize=(15,15))
 
   for j in range(0, dim):
+
+    dim_not_nan = np.count_nonzero(~np.isnan(data_x[:,j]))
+    ax_title = variables[j] + (' (n=%d)' % dim_not_nan)
     
-    ax_title = variables[j]
     ax = axes[int(j/n_fig_cols), j % n_fig_cols]
     ax2 = axes2[int(j/n_fig_cols), j % n_fig_cols]
-    ax.set_title(ax_title,fontdict={'fontsize':6})
-
+    ax3 = axes3[int(j/n_fig_cols), j % n_fig_cols]
+    
     input_arrays = [data_x, imputed_data_x_gan, imputed_data_x_knn, imputed_data_x_mice]
     
     output_arrays = [
@@ -394,6 +322,7 @@ def main (alpha=1000, batch_size=128, hint_rate=0.5,
       
     ax.set_xlabel(xlabel, fontsize=6)
     ax.set_ylabel('$p(x)$',fontsize=6)
+    ax.set_yticks([])
     
     range_arrays = np.concatenate([deleted_values, imputed_values_gan])
     
@@ -411,17 +340,32 @@ def main (alpha=1000, batch_size=128, hint_rate=0.5,
     
     sns.distplot(imputed_values_knn, hist=False,
       kde_kws={**{ 'color': 'b', 'alpha': 0.5 }, **kde_kws},ax=ax)
-
+    
     sns.distplot(imputed_values_mice, hist=False,
       kde_kws={**{ 'color': 'g', 'alpha': 0.5 }, **kde_kws},ax=ax)
-
+    
     sns.distplot(deleted_values, hist=False,
       kde_kws={**{ 'color': '#000000'}, **kde_kws},ax=ax)
 
-    # Make QQ plot
-    qqplot(deleted_values, imputed_values_gan, ax=ax2, color='r')
-    qqplot(deleted_values, imputed_values_knn, ax=ax2, color='b')
-    qqplot(deleted_values, imputed_values_mice, ax=ax2, color='g')
+    # Make QQ plot of observed vs. imputed values
+    dist_max = np.max(np.concatenate([imputed_values_gan, deleted_values]))
+    dist_min = np.min(np.concatenate([imputed_values_gan, deleted_values]))
+    
+    qqplot((deleted_values-dist_min) / dist_max, (imputed_values_gan-dist_min) / dist_max, ax=ax2, color='r')
+    qqplot((deleted_values-dist_min) / dist_max, (imputed_values_knn-dist_min) / dist_max, ax=ax2, color='b')
+    qqplot((deleted_values-dist_min) / dist_max, (imputed_values_mice-dist_min) / dist_max, ax=ax2, color='g')
+    
+    # Make QQ plot of original and deleted values vs. normal distribution
+    dist_max = np.max(np.concatenate([imputed_values_gan, deleted_values]))
+    
+    sample_indices = []
+    
+    qqplot_1sample((data_x[~np.isnan(data_x[:,j]),j] - dist_min) / dist_max, ax=ax3, color='b')
+    #qqplot_1sample((data_x[data_m[:,j] == 0,j] - dist_min) / dist_max, ax=ax3, color='r',draw_line=False)
+    
+    ax.set_title(ax_title,fontdict={'fontsize':6})
+    ax2.set_title(ax_title,fontdict={'fontsize':6})
+    ax3.set_title(ax_title,fontdict={'fontsize':6})
     
   top_title = 'KDE plot of original data (black) and data imputed using GAN (red) and KNN (blue)'
   fig.suptitle(top_title, fontsize=8)
@@ -435,27 +379,54 @@ def main (alpha=1000, batch_size=128, hint_rate=0.5,
 
   fig2.tight_layout(rect=[0,0.03,0,1.25])
   fig2.subplots_adjust(hspace=1, wspace=0.35)
+
+  top_title = 'Q-Q plot for distribution of observed values (black) and deleted values (red)'
+  fig3.suptitle(top_title, fontsize=8)
+
+  fig3.tight_layout(rect=[0,0.03,0,1.25])
+  fig3.subplots_adjust(hspace=1, wspace=0.35)
+  
+  fig4, ax4 = plt.subplots(1,1)
+  
+  kde_kws = { 'shade': False, 'bw':'scott' }
+  
+  sns.distplot(rrmses_gan, hist=True,
+    kde_kws={**{ 'color': 'r'}, **kde_kws}, ax=ax4)
+  
+  sns.distplot(rrmses_knn, hist=True,
+    kde_kws={**{ 'color': 'b'}, **kde_kws}, ax=ax4)
+    
+  sns.distplot(rrmses_mice, hist=True,
+    kde_kws={**{ 'color': 'g'}, **kde_kws}, ax=ax4)
+  
+  fig4.suptitle('Distribution of relative RMSEs for each variable, according to imputation method', fontsize=8)
+  
+  fig4.tight_layout(rect=[0,0.03,0,1.25])
+  fig4.subplots_adjust(hspace=1, wspace=0.35)
   
   plt.show()
-
+  
   print()
   mrrmse_gan = np.round(np.asarray(rrmses_gan).mean(), 2)
-  print('Average RMSE (GAN): ', mrrmse_gan, '%')
+  print('Average RMSE (GAN): ', mrrmse_gan)
+  #print('Average STD (GAN): ', std_gan, '%')
 
   print()
   mrrmse_knn = np.round(np.asarray(rrmses_knn).mean(), 2)
-  print('Average RMSE (KNN): ', mrrmse_knn, '%')
+  print('Average RMSE (KNN): ', mrrmse_knn)
+  #print('Average STD (KNN): ', std_knn, '%')
 
   print()
   mrrmse_mice = np.round(np.asarray(rrmses_mice).mean(), 2)
-  print('Average RMSE (MICE): ', mrrmse_mice, '%')
+  print('Average RMSE (MICE): ', mrrmse_mice)
+  #print('Average STD (MICE): ', std_mice, '%')
   
   return real_miss_rate, mrrmse_gan, mrrmse_knn, mrrmse_mice
 
 errors = []
 for k in np.linspace(0.2,0.8, 6):
   print('----------')
-  real_miss_rate, mrrmse_gan, mrrmse_knn, mrrmse_mice = main(miss_rate = 0.5)
+  real_miss_rate, mrrmse_gan, mrrmse_knn, mrrmse_mice = main(miss_rate = 0.2)
   errors.append([real_miss_rate, mrrmse_gan, mrrmse_knn, mrrmse_mice])
   print(real_miss_rate, mrrmse_gan, mrrmse_knn, mrrmse_mice)
   

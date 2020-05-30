@@ -15,7 +15,6 @@ tf.disable_v2_behavior()
  
 # Necessary packages
 import numpy as np
-np.random.seed(0)
 
 def normalization (data):
   '''Normalize data in [0, 1] range.
@@ -150,6 +149,7 @@ def binary_sampler(p, rows, cols):
   binary_random_matrix = 1*(unif_random_matrix < p)
   return binary_random_matrix
 
+from scipy.stats import truncnorm
 
 def uniform_sampler(low, high, rows, cols):
   '''Sample uniform random variables.
@@ -163,12 +163,7 @@ def uniform_sampler(low, high, rows, cols):
   Returns:
     - uniform_random_matrix: generated uniform random matrix.
   '''
-  return np.random.standard_t(10, (rows, cols))
-  #  
-  #np.random.lognormal(mean=low, sigma=high, size=[rows, cols])
-  #np.random.standard_t(10, (rows, cols))
-  #np.random.uniform(low, high, size = [rows, cols])       
-
+  return np.random.standard_t(50, (rows, cols))
 
 def sample_batch_index(total, batch_size):
   '''Sample index of the mini-batch.

@@ -90,9 +90,9 @@ def gain (data_x, gain_parameters):
     # Concatenate Mask and Data
     inputs = tf.concat(values = [x, m], axis = 1) 
     G_h1 = tf.nn.relu(tf.matmul(inputs, G_W1) + G_b1)
-    G_h1 = tf.nn.dropout(G_h1, rate=0.3)
+    #G_h1 = tf.nn.dropout(G_h1, rate=0.3)
     G_h2 = tf.nn.relu(tf.matmul(G_h1, G_W2) + G_b2)  
-    G_h2 = tf.nn.dropout(G_h2, rate=0.3)
+    #G_h2 = tf.nn.dropout(G_h2, rate=0.3)
     # MinMax normalized output
     G_prob = tf.nn.sigmoid(tf.matmul(G_h2, G_W3) + G_b3) 
     return G_prob
@@ -102,9 +102,10 @@ def gain (data_x, gain_parameters):
     # Concatenate Data and Hint
     inputs = tf.concat(values = [x, h], axis = 1) 
     D_h1 = tf.nn.relu(tf.matmul(inputs, D_W1) + D_b1) 
+    #D_h1 = tf.nn.dropout(D_h1, rate=0.3)
     D_h2 = tf.nn.relu(tf.matmul(D_h1, D_W2) + D_b2)
     D_logit = tf.matmul(D_h2, D_W3) + D_b3
-    D_prob = tf.nn.elu(D_logit)
+    D_prob = tf.nn.sigmoid(D_logit)
     return D_prob
   
   ## GAIN structure
@@ -130,8 +131,8 @@ def gain (data_x, gain_parameters):
   G_loss = G_loss_temp + alpha * MSE_loss 
   
   ## GAIN solver
-  D_solver = tf.train.AdamOptimizer(learning_rate=0.0002, beta1=0.5).minimize(D_loss, var_list=theta_D)
-  G_solver = tf.train.AdamOptimizer(learning_rate=0.0001, beta1=0.5).minimize(G_loss, var_list=theta_G)
+  D_solver = tf.train.AdamOptimizer(learning_rate=0.0002, beta1=0.1).minimize(D_loss, var_list=theta_D)
+  G_solver = tf.train.AdamOptimizer(learning_rate=0.0001, beta1=0.1).minimize(G_loss, var_list=theta_G)
   
   ## Iterations
   sess = tf.Session()
@@ -164,7 +165,12 @@ def gain (data_x, gain_parameters):
     _, G_loss_curr, MSE_loss_curr = \
     sess.run([G_solver, G_loss_temp, MSE_loss],
              feed_dict = {X: X_mb, M: M_mb, H: H_mb})
+    
     print(it, MSE_loss_curr)
+    
+    if MSE_loss_curr < 0.01:
+      break
+    
   
   ## Return imputed data      
   Z_mb = uniform_sampler(0, 0.01, no, dim) 
