@@ -98,7 +98,6 @@ def mean_confidence_interval(data, confidence=0.95):
     h = se * t.ppf((1 + confidence) / 2., n-1)
     return m, m-h, m+h
 
-
 variables = [
   'urea', 'sodium', 'potassium', 'chloride', 'creatinine', 
   'total_calcium', 'corrected_total_calcium', 'magnesium', 
@@ -121,8 +120,8 @@ for i in range(0, len(variables)):
 
     encoders.append(encoder_model)
     
-def main (alpha=1000, batch_size=128, hint_rate=0.05, 
-  iterations=1500, miss_rate=0.3):
+def main (alpha=1000, batch_size=128, hint_rate=0.5, 
+  iterations=5000, miss_rate=0.3):
   
   gain_parameters = {'batch_size': batch_size,
                      'hint_rate': hint_rate,
@@ -176,9 +175,9 @@ def main (alpha=1000, batch_size=128, hint_rate=0.05,
     # 
     # scalers.append(scaler)
     
-    outliers_indices = np.zeros(data_x.shape)
-    
     if remove_outliers:
+      outliers_indices = np.zeros(data_x.shape)
+    
       print('Excluding outliers...')
       mse = np.mean(np.power(var_x.reshape((-1,1)) - enc_x_unscaled, 2),axis=1)
     
@@ -204,7 +203,8 @@ def main (alpha=1000, batch_size=128, hint_rate=0.05,
   data_x_encoded[data_m == 0] = np.nan
   miss_data_x[data_m == 0] = np.nan
   miss_data_x_enc[data_m == 0] = np.nan
-  outliers_indices[data_m == 0] = 0
+  
+  if remove_outliers: outliers_indices[data_m == 0] = 0
 
   no_nan = np.count_nonzero(np.isnan(miss_data_x.flatten()) == True)
   no_not_nan = no_total - no_nan
@@ -221,12 +221,6 @@ def main (alpha=1000, batch_size=128, hint_rate=0.05,
     transformer1 = RobustScaler()
     miss_data_x_enc = transformer1.fit_transform(miss_data_x)
     miss_data_x_enc[data_m == 0] = np.nan
-  
-  # Place all time points in single column
-  #miss_data_x_enc = np.concatenate(
-  #  [miss_data_x_enc[k::n_time_points,:] \
-  #  for k in range(0, n_time_points)], axis=1
-  #)
   
   miss_data_x_enc_tmp = np.zeros((n_patients,dim*n_time_points))
   
