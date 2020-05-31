@@ -137,9 +137,9 @@ def gain (data_x, gain_parameters):
     # Concatenate Mask and Data
     inputs = tf.concat(values = [x, m], axis = 1)
     G_h1 = tf.nn.relu(tf.matmul(inputs, G_W1) + G_b1)
-    if use_dropout: G_h1 = tf.nn.dropout(G_h1, rate=0.05)
+    if use_dropout: G_h1 = tf.nn.dropout(G_h1, rate=0.3)
     G_h2 = tf.nn.relu(tf.matmul(G_h1, G_W2) + G_b2)
-    if use_dropout: G_h2 = tf.nn.dropout(G_h2, rate=0.05)
+    if use_dropout: G_h2 = tf.nn.dropout(G_h2, rate=0.3)
     G_prob = tf.nn.sigmoid(tf.matmul(G_h2, G_W3) + G_b3)
     return G_prob
   
@@ -148,9 +148,9 @@ def gain (data_x, gain_parameters):
     # Concatenate Data and Hint
     inputs = tf.concat(values = [x, h], axis = 1) 
     D_h1 = tf.nn.relu(tf.matmul(inputs, D_W1) + D_b1) 
-    if use_dropout: D_h1 = tf.nn.dropout(D_h1, rate=0.05)
+    if use_dropout: D_h1 = tf.nn.dropout(D_h1, rate=0.5)
     D_h2 = tf.nn.relu(tf.matmul(D_h1, D_W2) + D_b2)
-    if use_dropout: D_h2 = tf.nn.dropout(D_h2, rate=0.05)
+    if use_dropout: D_h2 = tf.nn.dropout(D_h2, rate=0.5)
     D_prob = tf.nn.sigmoid(tf.matmul(D_h2, D_W3) + D_b3)
     return D_prob
 
@@ -158,6 +158,8 @@ def gain (data_x, gain_parameters):
     use_dropout = True
   else:
     use_dropout = False
+
+  alpha, beta, delta = 10, 0.01, 0.01 ### Extract
   
   ## GAIN structure
   # Generator
@@ -177,9 +179,7 @@ def gain (data_x, gain_parameters):
   # D_KL(Q(z|X_noise) || P(z|X)); calculate in closed form as both dist. are Gaussian
   kl_loss = 0.5 * tf.reduce_sum(tf.exp(z_logvar) + z_mu**2 - 1. - z_logvar, 1)
   # VAE loss
-  E_loss_temp = tf.reduce_mean(recon_loss + kl_loss)
-  
-  E_loss = E_loss_temp
+  E_loss_temp = tf.reduce_mean(recon_loss + kl_loss) * beta
   
   # Combine with observed data
   Hat_X = X_e * M + G_sample * (1-M)
@@ -201,13 +201,13 @@ def gain (data_x, gain_parameters):
   KL_loss = tf.reduce_mean(tf.keras.losses.kullback_leibler_divergence(X_true, X_pred))
   
   D_loss = D_loss_temp
-  alpha, beta, delta = 50, 0.0001, 10 ### Extract
-  G_loss = G_loss_temp + alpha * MSE_loss #  + beta * tf.math.abs(KL_loss)  #.sqrt(MSE_loss)
+  G_loss = G_loss_temp + alpha * MSE_loss + delta * tf.math.abs(KL_loss)
+  E_loss = E_loss_temp
   
   ## GAIN solver
   E_solver = tf.train.AdamOptimizer(learning_rate=0.00005, beta1=0.5).minimize(E_loss, var_list=theta_E)
-  D_solver = tf.train.AdamOptimizer(learning_rate=0.00002, beta1=0.5).minimize(D_loss, var_list=theta_D)
-  G_solver = tf.train.AdamOptimizer(learning_rate=0.00001, beta1=0.5).minimize(G_loss, var_list=theta_G)
+  D_solver = tf.train.AdamOptimizer(learning_rate=0.000001, beta1=0.5).minimize(D_loss, var_list=theta_D)
+  G_solver = tf.train.AdamOptimizer(learning_rate=0.00002, beta1=0.5).minimize(G_loss, var_list=theta_G)
   
   ## Iterations
   sess = tf.Session()
@@ -248,13 +248,13 @@ def gain (data_x, gain_parameters):
        sess.run([G_solver, G_loss_temp, MSE_loss, KL_loss, Hu_loss],
        feed_dict = {X: X_mb, M: M_mb, H: H_mb })
     
-    losses['E'].append(E_loss_curr * beta)
-    losses['D'].append(D_loss_curr )
+    losses['E'].append(E_loss_curr)
+    losses['D'].append(D_loss_curr)
     losses['G'].append(G_loss_curr )
     losses['MSE'].append(MSE_loss_curr * alpha)
     
     print('Iteration: %d, encoder: %.3f, discriminator: %.3f, generator: %.3f, MSE: %.3f' % 
-      (it, E_loss_curr * beta, D_loss_curr, G_loss_curr, MSE_loss_curr))
+      (it, E_loss_curr, D_loss_curr, G_loss_curr, MSE_loss_curr))
     
     #if MSE_loss_curr < 0.005:
     #  break
@@ -284,6 +284,8 @@ def gain (data_x, gain_parameters):
   plt.plot(losses['MSE'], label='MSE', lw=1)
   #plt.plot(losses['Hu'], label='Huber', lw=1)
   plt.legend()
+  ax = plt.gca()
+  ax.set_ylim([0.0, 1.0])
   plt.show()
   
   return imputed_data

@@ -109,6 +109,8 @@ variables = [
   'partial_thromboplastin_time', 'bicarbonate', 'anion_gap', 'pco2', 
   'procalcitonin', 'base_excess', 'osmolality', 'lipase']
 
+remove_variables = ['ast', 'procalcitonin']
+
 encoders = []    
       
 for i in range(0, len(variables)):
@@ -121,7 +123,7 @@ for i in range(0, len(variables)):
     encoders.append(encoder_model)
     
 def main (alpha=1000, batch_size=128, hint_rate=0.5, 
-  iterations=5000, miss_rate=0.3):
+  iterations=2500, miss_rate=0.3):
   
   gain_parameters = {'batch_size': batch_size,
                      'hint_rate': hint_rate,
