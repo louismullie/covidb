@@ -51,7 +51,7 @@ def gain (data_x, gain_parameters):
   
   ## GAIN architecture   
   # Input placeholders
-  X_dim = 99
+  X_dim = 90
   z_dim = 30
   noise_factor = 0.25
   

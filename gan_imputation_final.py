@@ -14,12 +14,6 @@ from gain import gain
 from gan_utils import rmse_loss, binary_sampler
 from sklearn.metrics import mean_squared_error
 
-import seaborn as sns
-import matplotlib as mpl
-mpl.rcParams['lines.markersize']=1
-mpl.rcParams['lines.marker']='+'
-mpl.rc('font', **{ 'family': ['Helvetica'] })
-import matplotlib.pyplot as plt
 
 from sklearn.impute import KNNImputer
 from sklearn.experimental import enable_iterative_imputer
@@ -44,26 +38,18 @@ import numbers
 from math import sqrt
 from scipy.stats import norm 
 
+import seaborn as sns
+import matplotlib.pyplot as plt
+import matplotlib as mpl
+mpl.rcParams['lines.markersize']=1
+mpl.rcParams['lines.marker']='+'
+mpl.rc('font', **{ 'family': ['Helvetica'] })
+
 np.random.seed(1)
 def qqplot_1sample(x, ax=None, color=None, draw_line=True):
 
   probplot(x, dist="norm",plot=ax)
   
-#def qqplot_sample_subsample(x_o, y_o, ax=None, color=None, draw_line=True):
-#  probplot_arrays, lsf = probplot(x_o, dist="norm")
-#  x, y = probplot_arrays
-#  ax.scatter(x,y,s=1,c='b',marker='+',alpha=0.5)
-#  
-#  x2 = np.linspace(np.min(x), np.max(y), 50)
-#  y2 = np.poly1d(np.polyfit(x,y, 1))(x2)
-#  
-#  if draw_line: ax.plot(x2,y2, lw=1,color='gray',alpha=0.5)
-#  
-#  ax.set_xticks([-2.5, -1, 0, 1, 2.5])
-#  ax.set_yticks([0, 0.5, 1.0])
-#  #ax.set_xlim(-2.5, 2.5)
-#  #ax.set_ylim(0, 1.0)
-
 def qqplot(x, y, ax=None, color=None, draw_line=True):
     
     if ax is None: ax = plt.gca()
@@ -109,19 +95,8 @@ variables = [
   'partial_thromboplastin_time', 'bicarbonate', 'anion_gap', 'pco2', 
   'procalcitonin', 'base_excess', 'osmolality', 'lipase']
 
-remove_variables = ['ast', 'procalcitonin']
+remove_variables = ['ast', 'procalcitonin', 'lipase']
 
-encoders = []    
-      
-for i in range(0, len(variables)):
-    variable = variables[i]
-    with open('./models/autoencoders/%s.json' % variable,'r') as f:
-      model_json = f.read()
-    encoder_model = model_from_json(model_json)
-    encoder_model.load_weights('./models/autoencoders/%s.h5' % variable)
-
-    encoders.append(encoder_model)
-    
 def main (alpha=1000, batch_size=128, hint_rate=0.5, 
   iterations=2500, miss_rate=0.3):
   
@@ -136,7 +111,16 @@ def main (alpha=1000, batch_size=128, hint_rate=0.5,
   
   data_x = pickle.load(open('./missing_data.sav', 'rb'))
   data_x = data_x.transpose().astype(np.float)[:,:]
-
+  
+  # Remove variables with more 
+  no, dim = data_x.shape
+  removed = 0
+  for d in range(0,dim):
+    if variables[d-removed] in remove_variables:
+      variables.remove(variables[d-removed])
+      data_x = np.delete(data_x, d-removed, axis=1)
+      removed += 1
+    
   no, dim = data_x.shape
   
   if len(variables) != dim:
@@ -149,65 +133,16 @@ def main (alpha=1000, batch_size=128, hint_rate=0.5,
   no_not_nan = no_total - no_nan
   n_patients = int(no/n_time_points)
   
-  data_x_encoded = np.copy(data_x)
   miss_data_x = np.copy(data_x)
-  miss_data_x_enc = np.copy(data_x)
-  
-  scalers = []
   
   print('Input shape', no, 'x', dim)
   print('NAN values:', no_nan, '/', no_total, \
     '%2.f%%' % (no_nan / no_total * 100))
   
-  for i in range(0, dim):
-    variable, var_x = variables[i], np.copy(data_x[:,i])
-    encoder_model = encoders[i]
-    
-    nn_indices = ~np.isnan(data_x_encoded[:,i])
-    nn_values = data_x[:,i][nn_indices]
-    
-    data_x_encoded[:,i] = np.copy(var_x)
-    
-    # scaler = MinMaxScaler()
-    # var_x_scaled = scaler.fit_transform(var_x.reshape((-1,1)))
-    # 
-    # enc_x_scaled = encoder_model.predict(var_x_scaled)
-    # enc_x_unscaled = scaler.inverse_transform(enc_x_scaled)
-    # data_x_encoded[:,i] = enc_x_unscaled.flatten()
-    # 
-    # scalers.append(scaler)
-    
-    if remove_outliers:
-      outliers_indices = np.zeros(data_x.shape)
-    
-      print('Excluding outliers...')
-      mse = np.mean(np.power(var_x.reshape((-1,1)) - enc_x_unscaled, 2),axis=1)
-    
-      x = np.ma.array(mse, mask=np.isnan(mse))
-      y = np.ma.array(var_x, mask=np.isnan(var_x))
-      outlier_indices = (x / np.max(y)) > 0.05
-      
-      outlier_values = var_x[outlier_indices]
-      
-      print('... %d outlier(s) excluded' % \
-        len(outlier_values), outlier_values)
-      
-      #miss_data_x[outlier_indices == True,i] = np.nan
-      #miss_data_x_enc[outlier_indices == True,i] = np.nan
-      outliers_indices[outlier_indices == True,i] = 1
-    
-    #print(var_x, '----', enc_x_scaled, '----', enc_x_unscaled.flatten())
-    print('Loaded model for %s...' % variable)
-  
   # Introduce missing data
   data_m = binary_sampler(1-miss_rate, no, dim)
-  
-  data_x_encoded[data_m == 0] = np.nan
   miss_data_x[data_m == 0] = np.nan
-  miss_data_x_enc[data_m == 0] = np.nan
   
-  if remove_outliers: outliers_indices[data_m == 0] = 0
-
   no_nan = np.count_nonzero(np.isnan(miss_data_x.flatten()) == True)
   no_not_nan = no_total - no_nan
 
@@ -215,28 +150,16 @@ def main (alpha=1000, batch_size=128, hint_rate=0.5,
     '%2.f%%' % (no_nan / no_total * 100))
   
   real_miss_rate = (no_nan / no_total * 100)
-  
-  transformer = None
-  
-  if enable_transform:  
-    print('Applying transformation...')
-    transformer1 = RobustScaler()
-    miss_data_x_enc = transformer1.fit_transform(miss_data_x)
-    miss_data_x_enc[data_m == 0] = np.nan
-  
-  miss_data_x_enc_tmp = np.zeros((n_patients,dim*n_time_points))
+  miss_data_x_gan_tmp = np.zeros((n_patients,dim*n_time_points))
   
   # Swap (one row per time point) to (one column per time point)
   for i in range(0, n_patients):
     for j in range(0, dim):
       for n in range(0, n_time_points):
-        miss_data_x_enc_tmp[i,n*dim+j] = miss_data_x_enc[i*n_time_points+n,j] 
-  
-  print(miss_data_x_enc_tmp.shape)
-  print(miss_data_x_enc)
+        miss_data_x_gan_tmp[i,n*dim+j] = miss_data_x[i*n_time_points+n,j] 
   
   imputed_data_x_gan_tmp = gain(
-    miss_data_x_enc_tmp, gain_parameters)
+    miss_data_x_gan_tmp, gain_parameters)
   
   imputed_data_x_gan = np.copy(miss_data_x)
   
@@ -246,26 +169,11 @@ def main (alpha=1000, batch_size=128, hint_rate=0.5,
       for n in range(0, n_time_points):
         imputed_data_x_gan[i*n_time_points+n,j] = imputed_data_x_gan_tmp[i,n*dim+j]
   
-  print(imputed_data_x_gan.shape)
-  print(imputed_data_x_gan)
-  
-  if enable_transform:  
-    print('Reversing transformation...')
-    imputed_data_x_gan = transformer1.inverse_transform(imputed_data_x_gan)
-  
   imputer = KNNImputer(n_neighbors=5)
   imputed_data_x_knn = imputer.fit_transform(miss_data_x)
   
   imputer = IterativeImputer()
   imputed_data_x_mice = imputer.fit_transform(miss_data_x)
-  
-  #for j in range(0, dim):
-  #  kde_knn = gaussian_kde(imputed_data_x_knn[:,j], bw_method='scott')
-  #  peak_knn = fmin(lambda x: -kde_knn.pdf(x), 0)[0]
-  #  kde_gan = gaussian_kde(imputed_data_x_gan[:,j], bw_method='scott')
-  #  peak_gan = fmin(lambda x: -kde_gan.pdf(x), 0)[0]
-  #  imputed_data_x_gan[:,j] -= (peak_knn - peak_gan)
-  #  print(variables[j], peak_knn, peak_gan, peak_knn - peak_gan)
   
   # Save imputed data to disk
   pickle.dump(imputed_data_x_gan,open('./filled_data.sav', 'wb'))
@@ -280,7 +188,7 @@ def main (alpha=1000, batch_size=128, hint_rate=0.5,
     nn_values = data_x[:,j].flatten()
     nn_values = nn_values[~np.isnan(nn_values)]
 
-    dim_iqr = np.median(nn_values)
+    dim_iqr = np.mean(nn_values)
     
     for i in range(0, n_patients):
       variable_name = variables[j]
