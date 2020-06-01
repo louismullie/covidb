@@ -51,7 +51,7 @@ def gain (data_x, gain_parameters):
   
   ## GAIN architecture   
   # Input placeholders
-  X_dim = 96
+  X_dim = 99
   z_dim = 60
   noise_factor = 0.25
   
@@ -152,8 +152,9 @@ def gain (data_x, gain_parameters):
     if use_dropout: D_h1 = tf.nn.dropout(D_h1, rate=0.5)
     D_h2 = tf.nn.relu(tf.matmul(D_h1, D_W2) + D_b2)
     if use_dropout: D_h2 = tf.nn.dropout(D_h2, rate=0.5)
-    D_prob = tf.nn.sigmoid(tf.matmul(D_h2, D_W3) + D_b3)
-    return D_prob
+    D_h3 = tf.matmul(D_h2, D_W3) + D_b3
+    #D_prob = tf.nn.sigmoid(D_h3)
+    return D_h3
 
   if tf.reduce_sum(dropout) == 1: 
     use_dropout = True
@@ -187,16 +188,14 @@ def gain (data_x, gain_parameters):
   
   # Discriminator
   D_prob = discriminator(Hat_X, H, use_dropout)
-  D_prob_reg = discriminator(Hat_X_reg, H, use_dropout)
+  D_prob_reg = tf.nn.sigmoid(discriminator(Hat_X_reg, H, use_dropout))
 
   ## GAIN loss
   E_loss_temp = tf.reduce_mean(recon_loss) * beta + \
                 tf.reduce_mean(tf.math.log(D_prob_reg + 1e-8)) 
 
-  D_loss_temp = -tf.reduce_mean(M * tf.log(D_prob + 1e-8) \
-                                + (1-M) * tf.log(1. - D_prob + 1e-8)) 
-  
-  G_loss_temp = -tf.reduce_mean((1-M) * tf.log(D_prob + 1e-8))
+  D_loss_temp = -tf.reduce_mean(M * D_prob + (1-M) * (1-D_prob)) 
+  G_loss_temp = -tf.reduce_mean((1-M) * D_prob)
   
   X_true = M * X
   X_pred = M * G_sample
@@ -211,8 +210,8 @@ def gain (data_x, gain_parameters):
   
   ## GAIN solver
   E_solver = tf.train.AdamOptimizer(learning_rate=0.00005, beta1=0.5).minimize(E_loss, var_list=theta_E)
-  D_solver = tf.train.AdamOptimizer(learning_rate=0.000001, beta1=0.5).minimize(D_loss, var_list=theta_D)
-  G_solver = tf.train.AdamOptimizer(learning_rate=0.00002, beta1=0.5).minimize(G_loss, var_list=theta_G)
+  D_solver = tf.train.RMSPropOptimizer(learning_rate=0.000001).minimize(D_loss, var_list=theta_D)
+  G_solver = tf.train.RMSPropOptimizer(learning_rate=0.00002).minimize(G_loss, var_list=theta_G)
   
   ## Iterations
   sess = tf.Session()

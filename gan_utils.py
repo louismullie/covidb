@@ -150,6 +150,7 @@ def binary_sampler(p, rows, cols):
   return binary_random_matrix
 
 from scipy.stats import truncnorm
+import random
 
 def uniform_sampler(low, high, rows, cols):
   '''Sample uniform random variables.
@@ -163,7 +164,16 @@ def uniform_sampler(low, high, rows, cols):
   Returns:
     - uniform_random_matrix: generated uniform random matrix.
   '''
-  return np.random.standard_t(5, (rows, cols))
+  
+  a, b = 0.1, 2
+  r = truncnorm.rvs(a, b, size=(rows*cols))
+
+  # x = np.linspace(truncnorm.ppf(0.01, a, b),
+  # plt.plot(x, truncnorm.pdf(x, a, b),
+  # 'r-', lw=5, alpha=0.6, label='truncnorm pdf')
+  # plt.show()
+
+  return r.reshape((rows,cols)) + np.random.standard_t(5, (rows, cols))
 
 def sample_batch_index(total, batch_size):
   '''Sample index of the mini-batch.

@@ -95,7 +95,7 @@ variables = [
   'partial_thromboplastin_time', 'bicarbonate', 'anion_gap', 'pco2', 
   'procalcitonin', 'base_excess', 'osmolality', 'lipase']
 
-remove_variables = ['ast']#['ast', 'procalcitonin', 'lipase', 'base_excess', 'lymphocyte_count']
+remove_variables = []#['ast', 'procalcitonin', 'lipase', 'base_excess', 'lymphocyte_count']
 
 def main (alpha=1000, batch_size=128, hint_rate=0.5, 
   iterations=3000, miss_rate=0.3):
