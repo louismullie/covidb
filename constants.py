@@ -33,7 +33,6 @@ DICOM_STUDY_ID_MAP = {}
 
 for dicom_id_map_row in dicom_id_map_rows:
   if len(dicom_id_map_row) == 0: continue
-  DICOM_PATIENT_ID_MAP[str(dicom_id_map_row[2])] = str(dicom_id_map_row[0])
   DICOM_STUDY_ID_MAP[str(dicom_id_map_row[2])] = str(dicom_id_map_row[1])
 
 TABLE_COLUMNS = {

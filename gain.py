@@ -51,8 +51,8 @@ def gain (data_x, gain_parameters):
   
   ## GAIN architecture   
   # Input placeholders
-  X_dim = 90
-  z_dim = 30
+  X_dim = 96
+  z_dim = 60
   noise_factor = 0.25
   
   dropout = tf.placeholder(tf.int32, shape = [1])
@@ -114,13 +114,13 @@ def gain (data_x, gain_parameters):
   theta_G = [G_W1, G_W2, G_W3, G_b1, G_b2, G_b3]
   
   ## VAE functions
-  def Q(X):
+  def encoder(X):
     h = tf.nn.relu(tf.matmul(X, Q_W1) + Q_b1)
     z_mu = tf.matmul(h, Q_W2_mu) + Q_b2_mu
     z_logvar = tf.matmul(h, Q_W2_sigma) + Q_b2_sigma
     return z_mu, z_logvar
 
-  def P(z):
+  def decoder(z):
     h = tf.nn.relu(tf.matmul(z, P_W1) + P_b1)
     logits = tf.matmul(h, P_W2) + P_b2
     prob = tf.nn.sigmoid(logits)
@@ -140,7 +140,8 @@ def gain (data_x, gain_parameters):
     if use_dropout: G_h1 = tf.nn.dropout(G_h1, rate=0.3)
     G_h2 = tf.nn.relu(tf.matmul(G_h1, G_W2) + G_b2)
     if use_dropout: G_h2 = tf.nn.dropout(G_h2, rate=0.3)
-    G_prob = tf.nn.sigmoid(tf.matmul(G_h2, G_W3) + G_b3)
+    G_h3 = tf.matmul(G_h2, G_W3) + G_b3
+    G_prob = tf.nn.sigmoid(G_h3)
     return G_prob
   
   # Discriminator
@@ -158,36 +159,40 @@ def gain (data_x, gain_parameters):
     use_dropout = True
   else:
     use_dropout = False
+    noise_factor = 0
 
-  alpha, beta, delta = 10, 0.01, 0.01 ### Extract
-  
-  ## GAIN structure
-  # Generator
-  G_sample = generator(X, M, use_dropout)
+  alpha, beta, delta, gamma = 10, 0.01, 0.1, 0.5 ### Extract
   
   # Encoder
-  X_noise = G_sample + noise_factor * tf.random_normal(tf.shape(G_sample))
+  X_noise = X + noise_factor * tf.random_normal(tf.shape(X))
   X_noise = tf.clip_by_value(X_noise, 0., 1.)
 
-  z_mu, z_logvar = Q(X_noise)
+  z_mu, z_logvar = encoder(X_noise)
   z_sample = sample_z(z_mu, z_logvar)
-  X_e, logits = P(z_sample)
+  X_e, logits = decoder(z_sample)
 
-  X_samples, _ = P(z)
   # E[log P(X|z)]
-  recon_loss = tf.reduce_sum(tf.nn.sigmoid_cross_entropy_with_logits(logits=logits, labels=G_sample), 1)
+  recon_loss = tf.reduce_sum(tf.nn.sigmoid_cross_entropy_with_logits(logits=logits, labels=X), 1)
   # D_KL(Q(z|X_noise) || P(z|X)); calculate in closed form as both dist. are Gaussian
-  kl_loss = 0.5 * tf.reduce_sum(tf.exp(z_logvar) + z_mu**2 - 1. - z_logvar, 1)
+  kl_loss = gamma * tf.reduce_sum(tf.exp(z_logvar) + z_mu**2 - 1. - z_logvar, 1)
   # VAE loss
-  E_loss_temp = tf.reduce_mean(recon_loss + kl_loss) * beta
+
+  # Generator
+  G_sample = generator(X, M, use_dropout)
+  G_sample_reg = generator(X_e, M, use_dropout)
   
   # Combine with observed data
-  Hat_X = X_e * M + G_sample * (1-M)
+  Hat_X = X * M + G_sample * (1-M)
+  Hat_X_reg = X * M + G_sample_reg * (1-M)
   
   # Discriminator
   D_prob = discriminator(Hat_X, H, use_dropout)
+  D_prob_reg = discriminator(Hat_X_reg, H, use_dropout)
 
   ## GAIN loss
+  E_loss_temp = tf.reduce_mean(recon_loss) * beta + \
+                tf.reduce_mean(tf.math.log(D_prob_reg + 1e-8)) 
+
   D_loss_temp = -tf.reduce_mean(M * tf.log(D_prob + 1e-8) \
                                 + (1-M) * tf.log(1. - D_prob + 1e-8)) 
   
@@ -200,9 +205,9 @@ def gain (data_x, gain_parameters):
   Hu_loss = tf.reduce_mean(tf.keras.losses.Huber()(X_true, X_pred))
   KL_loss = tf.reduce_mean(tf.keras.losses.kullback_leibler_divergence(X_true, X_pred))
   
-  D_loss = D_loss_temp
-  G_loss = G_loss_temp + alpha * MSE_loss + delta * tf.math.abs(KL_loss)
-  E_loss = E_loss_temp
+  D_loss = D_loss_temp # + 0.001 * G_loss_temp
+  G_loss = G_loss_temp + E_loss_temp + alpha * MSE_loss #+ delta * tf.math.abs(KL_loss)
+  E_loss = E_loss_temp #+ 0.001 * G_loss_temp
   
   ## GAIN solver
   E_solver = tf.train.AdamOptimizer(learning_rate=0.00005, beta1=0.5).minimize(E_loss, var_list=theta_E)
@@ -247,7 +252,7 @@ def gain (data_x, gain_parameters):
     _, G_loss_curr, MSE_loss_curr, KL_loss_curr, Hu_loss_curr = \
        sess.run([G_solver, G_loss_temp, MSE_loss, KL_loss, Hu_loss],
        feed_dict = {X: X_mb, M: M_mb, H: H_mb })
-    
+
     losses['E'].append(E_loss_curr)
     losses['D'].append(D_loss_curr)
     losses['G'].append(G_loss_curr )

@@ -45,7 +45,7 @@ mpl.rcParams['lines.markersize']=1
 mpl.rcParams['lines.marker']='+'
 mpl.rc('font', **{ 'family': ['Helvetica'] })
 
-np.random.seed(1)
+np.random.seed(10)
 def qqplot_1sample(x, ax=None, color=None, draw_line=True):
 
   probplot(x, dist="norm",plot=ax)
@@ -95,10 +95,10 @@ variables = [
   'partial_thromboplastin_time', 'bicarbonate', 'anion_gap', 'pco2', 
   'procalcitonin', 'base_excess', 'osmolality', 'lipase']
 
-remove_variables = ['ast', 'procalcitonin', 'lipase']
+remove_variables = ['ast']#['ast', 'procalcitonin', 'lipase', 'base_excess', 'lymphocyte_count']
 
 def main (alpha=1000, batch_size=128, hint_rate=0.5, 
-  iterations=2500, miss_rate=0.3):
+  iterations=3000, miss_rate=0.3):
   
   gain_parameters = {'batch_size': batch_size,
                      'hint_rate': hint_rate,
@@ -143,6 +143,9 @@ def main (alpha=1000, batch_size=128, hint_rate=0.5,
   data_m = binary_sampler(1-miss_rate, no, dim)
   miss_data_x[data_m == 0] = np.nan
   
+  #transformer = RobustScaler()
+  #miss_data_x = transformer.fit_transform(miss_data_x)
+  
   no_nan = np.count_nonzero(np.isnan(miss_data_x.flatten()) == True)
   no_not_nan = no_total - no_nan
 
@@ -150,6 +153,7 @@ def main (alpha=1000, batch_size=128, hint_rate=0.5,
     '%2.f%%' % (no_nan / no_total * 100))
   
   real_miss_rate = (no_nan / no_total * 100)
+  
   miss_data_x_gan_tmp = np.zeros((n_patients,dim*n_time_points))
   
   # Swap (one row per time point) to (one column per time point)
@@ -163,7 +167,7 @@ def main (alpha=1000, batch_size=128, hint_rate=0.5,
   
   imputed_data_x_gan = np.copy(miss_data_x)
   
-  # Swap (one column per time point) to (one row per time point)
+  ## Swap (one column per time point) to (one row per time point)
   for i in range(0, n_patients):
     for j in range(0, dim):
       for n in range(0, n_time_points):
@@ -175,6 +179,10 @@ def main (alpha=1000, batch_size=128, hint_rate=0.5,
   imputer = IterativeImputer()
   imputed_data_x_mice = imputer.fit_transform(miss_data_x)
   
+  #imputed_data_x_gan = transformer.inverse_transform(imputed_data_x_gan)
+  #imputed_data_x_knn = transformer.inverse_transform(imputed_data_x_knn)
+  #imputed_data_x_mice = transformer.inverse_transform(imputed_data_x_mice)
+  
   # Save imputed data to disk
   pickle.dump(imputed_data_x_gan,open('./filled_data.sav', 'wb'))
   
@@ -182,13 +190,15 @@ def main (alpha=1000, batch_size=128, hint_rate=0.5,
   distances_gan = np.zeros((dim, n_time_points*n_patients))
   distances_knn = np.zeros((dim, n_time_points*n_patients))
   distances_mice = np.zeros((dim, n_time_points*n_patients))
-
+  
+  from scipy.stats import iqr
+  
   for j in range(0, dim):
     
     nn_values = data_x[:,j].flatten()
     nn_values = nn_values[~np.isnan(nn_values)]
 
-    dim_iqr = np.mean(nn_values)
+    dim_iqr = np.mean(nn_values) # iqr(nn_values)
     
     for i in range(0, n_patients):
       variable_name = variables[j]
@@ -307,6 +317,9 @@ def main (alpha=1000, batch_size=128, hint_rate=0.5,
     
     kde_kws = { 'shade': False, 'bw':'scott', 'clip': x_range }
     
+    #sns.distplot(data_x[:,j], hist=False,
+    #  kde_kws={**{ 'color': 'orange'}, **kde_kws}, ax=ax)
+      
     sns.distplot(imputed_values_gan, hist=False,
       kde_kws={**{ 'color': 'r'}, **kde_kws}, ax=ax)
     
