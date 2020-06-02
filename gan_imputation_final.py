@@ -45,6 +45,8 @@ mpl.rcParams['lines.markersize']=1
 mpl.rcParams['lines.marker']='+'
 mpl.rc('font', **{ 'family': ['Helvetica'] })
 
+from sklearn.metrics import mutual_info_score as mutual_info
+
 np.random.seed(10)
 def qqplot_1sample(x, ax=None, color=None, draw_line=True):
 
@@ -98,7 +100,7 @@ variables = [
 remove_variables = []#['ast', 'procalcitonin', 'lipase', 'base_excess', 'lymphocyte_count']
 
 def main (alpha=1000, batch_size=128, hint_rate=0.5, 
-  iterations=3000, miss_rate=0.3):
+  iterations=10000, miss_rate=0.3):
   
   gain_parameters = {'batch_size': batch_size,
                      'hint_rate': hint_rate,
@@ -222,6 +224,10 @@ def main (alpha=1000, batch_size=128, hint_rate=0.5,
         distances_mice[j,i*k] = (d - a) / dim_iqr
   
   # Compute distance statistics
+  stats = {
+    'gan': {}, 'knn': {}, 'mice': {}
+  }
+  
   rrmses_gan, mean_biases, median_biases, bias_cis = [], [], [], []
   rrmses_knn, mean_biases_knn, median_biases_knn, bias_cis_knn = [], [], [], []
   rrmses_mice = []

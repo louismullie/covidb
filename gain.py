@@ -137,9 +137,9 @@ def gain (data_x, gain_parameters):
     # Concatenate Mask and Data
     inputs = tf.concat(values = [x, m], axis = 1)
     G_h1 = tf.nn.relu(tf.matmul(inputs, G_W1) + G_b1)
-    if use_dropout: G_h1 = tf.nn.dropout(G_h1, rate=0.3)
+    if use_dropout: G_h1 = tf.nn.dropout(G_h1, rate=0.5)
     G_h2 = tf.nn.relu(tf.matmul(G_h1, G_W2) + G_b2)
-    if use_dropout: G_h2 = tf.nn.dropout(G_h2, rate=0.3)
+    if use_dropout: G_h2 = tf.nn.dropout(G_h2, rate=0.5)
     G_h3 = tf.matmul(G_h2, G_W3) + G_b3
     G_prob = tf.nn.sigmoid(G_h3)
     return G_prob
@@ -260,8 +260,8 @@ def gain (data_x, gain_parameters):
     print('Iteration: %d, encoder: %.3f, discriminator: %.3f, generator: %.3f, MSE: %.3f' % 
       (it, E_loss_curr, D_loss_curr, G_loss_curr, MSE_loss_curr))
     
-    #if MSE_loss_curr < 0.005:
-    #  break
+    if MSE_loss_curr < 0.019:
+      break
     
   ## Return imputed data      
   Z_mb = uniform_sampler(0, 0.01, no, dim) 
