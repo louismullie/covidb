@@ -17,27 +17,16 @@ from gan_utils import xavier_init
 from gan_utils import binary_sampler, uniform_sampler, sample_batch_index
 
 def gain (data_x, gain_parameters):
-  '''Impute missing values in data_x
-  
-  Args:
-    - data_x: original data with missing values
-    - gain_parameters: GAIN network parameters:
-      - batch_size: Batch size
-      - hint_rate: Hint rate
-      - alpha: Hyperparameter
-      - iterations: Iterations
-      
-  Returns:
-    - imputed_data: imputed data
-  '''
   # Define mask matrix
   data_m = 1-np.isnan(data_x)
   
   # System parameters
   batch_size = gain_parameters['batch_size']
   hint_rate = gain_parameters['hint_rate']
-  alpha = gain_parameters['alpha']
   iterations = gain_parameters['iterations']
+
+  # Hyperparameters
+  alpha, beta, delta, gamma = 10, 0.01, 0.1, 0.5
   
   # Other parameters
   no, dim = data_x.shape
@@ -162,8 +151,6 @@ def gain (data_x, gain_parameters):
     use_dropout = False
     noise_factor = 0
 
-  alpha, beta, delta, gamma = 10, 0.01, 0.1, 0.5 ### Extract
-  
   # Encoder
   X_noise = X + noise_factor * tf.random_normal(tf.shape(X))
   X_noise = tf.clip_by_value(X_noise, 0., 1.)
@@ -200,7 +187,7 @@ def gain (data_x, gain_parameters):
   X_true = M * X
   X_pred = M * G_sample
   
-  MSE_loss = tf.reduce_mean((M * X - M * G_sample)**2) / tf.reduce_mean(M)
+  MSE_loss = tf.reduce_mean(tf.math.abs(M * X - M * G_sample)) / tf.reduce_mean(M)
   Hu_loss = tf.reduce_mean(tf.keras.losses.Huber()(X_true, X_pred))
   KL_loss = tf.reduce_mean(tf.keras.losses.kullback_leibler_divergence(X_true, X_pred))
   
@@ -222,7 +209,7 @@ def gain (data_x, gain_parameters):
   dropout = tf.constant(1)
   # Start Iterations
   for it in tqdm(range(iterations)):    
-    
+
     # Get batch coordinates
     batch_idx = sample_batch_index(no, batch_size)
 
@@ -233,7 +220,7 @@ def gain (data_x, gain_parameters):
     M_mb = data_m[batch_idx, :]  
 
     # Generate a random normal distribution (batch_size X dim)  
-    Z_mb = uniform_sampler(0, 0.01, batch_size, dim) 
+    Z_mb = uniform_sampler(0, 0.01, batch_size, dim, True) 
 
     # Sample hint vectors
     H_mb_temp = binary_sampler(hint_rate, batch_size, dim)
@@ -252,10 +239,11 @@ def gain (data_x, gain_parameters):
        sess.run([G_solver, G_loss_temp, MSE_loss, KL_loss, Hu_loss],
        feed_dict = {X: X_mb, M: M_mb, H: H_mb })
 
-    losses['E'].append(E_loss_curr)
-    losses['D'].append(D_loss_curr)
-    losses['G'].append(G_loss_curr )
-    losses['MSE'].append(MSE_loss_curr * alpha)
+    if it % 20 == 0:
+      losses['E'].append(E_loss_curr)
+      losses['D'].append(D_loss_curr)
+      losses['G'].append(G_loss_curr * 5)
+      losses['MSE'].append(MSE_loss_curr * alpha)
     
     print('Iteration: %d, encoder: %.3f, discriminator: %.3f, generator: %.3f, MSE: %.3f' % 
       (it, E_loss_curr, D_loss_curr, G_loss_curr, MSE_loss_curr))
@@ -264,7 +252,7 @@ def gain (data_x, gain_parameters):
       break
     
   ## Return imputed data      
-  Z_mb = uniform_sampler(0, 0.01, no, dim) 
+  Z_mb = uniform_sampler(0, 0.01, no, dim, False) 
   M_mb = data_m
   X_mb = norm_data_x          
   X_mb = M_mb * X_mb + (1-M_mb) * Z_mb 
@@ -281,15 +269,15 @@ def gain (data_x, gain_parameters):
   imputed_data = rounding(imputed_data, data_x)  
   
   import matplotlib.pyplot as plt
-  plt.plot(losses['E'], label='encoder', lw=1)
-  plt.plot(losses['D'], label='discriminator', lw=1)
-  plt.plot(losses['G'], label='generator', lw=1)
+  plt.title('Encoder, generator, and discriminator losses over time')
+  plt.plot(losses['E'], label='Encoder', lw=1)
+  plt.plot(losses['G'], label='Generator', lw=1)
+  plt.plot(losses['D'], label='Discriminator', lw=1)
   #plt.plot(losses['K-L'], label='K-L', lw=1)
   plt.plot(losses['MSE'], label='MSE', lw=1)
   #plt.plot(losses['Hu'], label='Huber', lw=1)
   plt.legend()
   ax = plt.gca()
-  ax.set_ylim([0.0, 1.0])
   plt.show()
   
   return imputed_data
