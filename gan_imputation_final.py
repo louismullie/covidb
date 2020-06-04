@@ -55,13 +55,10 @@ def plot_error_distributions(all_stats, fig, ax):
   
   for model_num, model_name in enumerate(['gan', 'knn', 'mice']):
     
-    dist = [all_stats[variable_name][model_name]['rmse'] for variable_name in all_stats]
-    sns.distplot(dist, hist=True, kde_kws={**{ 'color': PLOT_COLORS[model_num+1]}, **kde_kws}, ax=ax)
-  
-  fig.suptitle('Distribution of relative RMSEs for each variable, according to imputation method', fontsize=8)
-  
-  fig.tight_layout(rect=[0,0.03,0,1.25])
-  fig.subplots_adjust(hspace=1, wspace=0.35)
+    dist = [all_stats[variable_name][model_name]['nrmse'] for variable_name in all_stats]
+    
+    sns.distplot(dist, kde=True, hist=False, label=model_name,
+      kde_kws={**{ 'color': PLOT_COLORS[model_num+1]}, **kde_kws}, ax=ax)
   
 def plot_distribution_residuals(output_arrays, ax):
   
@@ -71,15 +68,16 @@ def plot_distribution_residuals(output_arrays, ax):
   dist_max = np.max(np.concatenate([imputed_values_gan, deleted_values]))
   dist_min = np.min(np.concatenate([imputed_values_gan, deleted_values]))
   
-  qqplot((deleted_values-dist_min) / dist_max, (imputed_values_gan-dist_min) / dist_max, ax=ax, color=PLOT_COLORS[1])
-  qqplot((deleted_values-dist_min) / dist_max, (imputed_values_knn-dist_min) / dist_max, ax=ax, color=PLOT_COLORS[2])
-  qqplot((deleted_values-dist_min) / dist_max, (imputed_values_mice-dist_min) / dist_max, ax=ax, color=PLOT_COLORS[3])
+  qqplot((deleted_values-dist_min) / dist_max, (imputed_values_gan-dist_min) / dist_max, 'GAN', ax=ax, color=PLOT_COLORS[1])
+  qqplot((deleted_values-dist_min) / dist_max, (imputed_values_knn-dist_min) / dist_max, 'KNN', ax=ax, color=PLOT_COLORS[2])
+  qqplot((deleted_values-dist_min) / dist_max, (imputed_values_mice-dist_min) / dist_max, 'MICE', ax=ax, color=PLOT_COLORS[3])
   
-def plot_distribution_densities(output_arrays, ax):
+  ax.legend(fontsize=6)
+  
+def plot_distribution_densities(output_arrays, all_stats, variable_name, ax):
   
   deleted_values, imputed_values_gan, imputed_values_knn, imputed_values_mice = output_arrays
   
-  ax.set_xlabel('', fontsize=6)
   ax.set_ylabel('$p(x)$',fontsize=6)
   ax.set_yticks([])
   
@@ -94,20 +92,29 @@ def plot_distribution_densities(output_arrays, ax):
   
   # Plot KDE for imputed distributions
   imputed_dists = [imputed_values_gan, imputed_values_knn, imputed_values_mice]
-  imputed_dists_names = ['GAN', 'KNN', 'MICE']
+  imputed_dists_names = ['gan', 'knn', 'mice']
   kde_kws = { 'shade': False, 'bw':'scott', 'clip': x_range }
   
   for model_num, imputed_dist in enumerate(imputed_dists):
-    kws = {**{ 'color': PLOT_COLORS[model_num+1]}, **kde_kws}
-    if model_num == 1: kws['alpha'] = 0.75
+    kws = {**{ 'color': PLOT_COLORS[model_num+1] }, **kde_kws}
+    if model_num == 1: kws['alpha'] = 1
     lab = imputed_dists_names[model_num]
     sns.distplot(imputed_dist, hist=False, kde_kws=kws, ax=ax, label=lab)
+    
+  x1 = np.round(all_stats[variable_name]['gan']['nrmse'],2)
+  x2 = np.round(all_stats[variable_name]['knn']['nrmse'],2)
+  x3 = np.round(all_stats[variable_name]['mice']['nrmse'],2)
+  
+  summary_stats = 'NRMSEs: GAN = ' + str(x1) + \
+    ' - KNN = '+ str(x2) + ' - MICE = ' + str(x3)
+  
+  ax.set_xlabel(summary_stats, fontsize=6)
   
   # Plot KDE for missing data held out
   sns.distplot(deleted_values, hist=True, kde=True, 
-    kde_kws={**{ 'color': '#000000', 'alpha': 0.25}, **kde_kws},
-    hist_kws={ 'color': PLOT_COLORS[0], 'alpha': 0.25},
-    ax=ax, label='Observed')  
+    kde_kws={**{ 'color': '#000000', 'alpha': 0.15}, **kde_kws},
+    hist_kws={ 'color': PLOT_COLORS[0], 'alpha': 0.25, 'range': x_range },
+    ax=ax, label='obs.')  
   
   ax.legend(fontsize=6)
 
@@ -144,7 +151,7 @@ def plot_distribution_summaries(output_arrays, ax):
 
   ax.set_ylim(low_lim, high_lim)
   ax.set_xticks([m+0.75 for m in range(len(output_arrays))])
-  ax.set_xticklabels(['Obs.', 'GAN', 'KNN', 'MICE'])
+  ax.set_xticklabels(['obs.', 'gan', 'knn', 'mice'])
   
   [lab.set_fontsize(6.5) for lab in ax.get_xticklabels()]
   [lab.set_fontsize(6.5) for lab in ax.get_yticklabels()]
@@ -162,7 +169,7 @@ def qqplot_1sample(x, ax=None, color=None, draw_line=True):
 
   probplot(x, dist="norm",plot=ax)
   
-def qqplot(x, y, ax=None, color=None, draw_line=True):
+def qqplot(x, y, label, ax=None, color=None, draw_line=True):
     
     if ax is None: ax = plt.gca()
     
@@ -173,7 +180,7 @@ def qqplot(x, y, ax=None, color=None, draw_line=True):
     y_quantiles = np.quantile(y, quantiles, interpolation='nearest')
     
     # Draw the q-q plot
-    ax.scatter(x_quantiles, y_quantiles, s=1, alpha=0.5)
+    ax.scatter(x_quantiles, y_quantiles, s=0.75, alpha=0.75,color=color,label=label)
     x = np.linspace(0, 1.0, 50)
     ax.plot(x, x, lw=1,color='gray',alpha=0.5)
     ax.set_xticks([0, 0.5, 1.0])
@@ -184,10 +191,12 @@ def qqplot(x, y, ax=None, color=None, draw_line=True):
       np.min([np.max(y),1.0])
     ])
 
-    ax.set_ylabel('$quantiles$',fontsize=6)
+    ax.set_ylabel('quantiles ($predicted$)',fontsize=6)
+    ax.set_xlabel('quantiles ($observed$)',fontsize=6)
     
     ax.set_xlim(0, lim)
     ax.set_ylim(0, lim)
+    
 
 def mean_confidence_interval(data, confidence=0.95):
     a = 1.0 * np.array(data)
@@ -253,8 +262,8 @@ def main (iterations=NUM_ITERATIONS, batch_size=128, hint_rate=0.5, miss_rate=0.
   data_m = binary_sampler(1-miss_rate, no, dim)
   miss_data_x[data_m == 0] = np.nan
   
-  #transformer = RobustScaler()
-  #miss_data_x = transformer.fit_transform(miss_data_x)
+  transformer = RobustScaler()
+  miss_data_x = transformer.fit_transform(miss_data_x)
   
   no_nan = np.count_nonzero(np.isnan(miss_data_x.flatten()) == True)
   no_not_nan = no_total - no_nan
@@ -289,9 +298,9 @@ def main (iterations=NUM_ITERATIONS, batch_size=128, hint_rate=0.5, miss_rate=0.
   imputer = IterativeImputer(verbose=True)
   imputed_data_x_mice = imputer.fit_transform(miss_data_x)
   
-  #imputed_data_x_gan = transformer.inverse_transform(imputed_data_x_gan)
-  #imputed_data_x_knn = transformer.inverse_transform(imputed_data_x_knn)
-  #imputed_data_x_mice = transformer.inverse_transform(imputed_data_x_mice)
+  imputed_data_x_gan = transformer.inverse_transform(imputed_data_x_gan)
+  imputed_data_x_knn = transformer.inverse_transform(imputed_data_x_knn)
+  imputed_data_x_mice = transformer.inverse_transform(imputed_data_x_mice)
   
   # Save imputed data to disk
   pickle.dump(imputed_data_x_gan,open('./filled_data.sav', 'wb'))
@@ -335,37 +344,40 @@ def main (iterations=NUM_ITERATIONS, batch_size=128, hint_rate=0.5, miss_rate=0.
         distances_mice[j,i*k] = (d - a)
 
   # Compute distance statistics
-  stats = { 'gan': {}, 'knn': {}, 'mice': {} }
   all_stats = {}
   
   for j in range(0, dim):
     
     print('%d. Imputed variable: %s' % (j, variables[j]))
     
-    current_stats = dict(stats) # make a copy
+    current_stats =  { 'gan': {}, 'knn': {}, 'mice': {} } # make a copy
     
     # Stats for original data
     dim_mean = np.mean([x for x in data_x[:,j] if not np.isnan(x)])
     dim_max = np.max([x for x in data_x[:,j] if not np.isnan(x)])
+    dim_iqr = iqr([x for x in data_x[:,j] if not np.isnan(x)])
     
     # Stats for GAN
     current_stats['gan']['rmse'] = np.sqrt(np.mean(distances_gan[j]**2))
+    current_stats['gan']['nrmse'] = current_stats['gan']['rmse'] / dim_iqr
     current_stats['gan']['mape'] = np.mean(np.abs(distances_gan[j]))
     
     # Stats for KNN
     current_stats['knn']['rmse'] = np.sqrt(np.mean(distances_knn[j]**2))
+    current_stats['knn']['nrmse'] = current_stats['knn']['rmse'] / dim_iqr
     current_stats['knn']['mape'] = np.mean(np.abs(distances_knn[j]))
     
     # Stats for MICE
     current_stats['mice']['rmse'] = np.sqrt(np.mean(distances_mice[j]**2))
+    current_stats['mice']['nrmse'] = current_stats['mice']['rmse'] / dim_iqr
     current_stats['mice']['mape'] = np.mean(np.abs(distances_mice[j]))
     
     for model_name in current_stats:
-      model = stats[model_name]
-      print('... %s - RMSE: %.3f, MAPE: %.3f' % \
-        (model_name, model['rmse'], model['mape']))
+      model = current_stats[model_name]
+      print('... %s - RMSE: %.3f, NRMSE: %.3f, MAPE: %.3f' % \
+        (model_name, model['rmse'], model['nrmse'], model['mape']))
     
-    all_stats[variables[j]] = current_stats
+    all_stats[variables[j]] = dict(current_stats)
     
     print()
     
@@ -374,7 +386,7 @@ def main (iterations=NUM_ITERATIONS, batch_size=128, hint_rate=0.5, miss_rate=0.
 
   if dim > n_fig_total: print('Warning: not all variables plotted')
 
-  all_fig_axes = [plt.subplots(n_fig_rows, n_fig_cols, figsize=(15,15)) for _ in range(0,4)]
+  all_fig_axes = [plt.subplots(n_fig_rows, n_fig_cols, figsize=(15,15)) for _ in range(0,3)]
 
   for j in range(0, dim):
 
@@ -396,7 +408,7 @@ def main (iterations=NUM_ITERATIONS, batch_size=128, hint_rate=0.5, miss_rate=0.
   
     deleted_values, imputed_values_gan, imputed_values_knn, imputed_values_mice = output_arrays
     
-    plot_distribution_densities(output_arrays, dim_axes[0])
+    plot_distribution_densities(output_arrays, all_stats, variables[j], dim_axes[0])
     plot_distribution_residuals(output_arrays, dim_axes[1])
     plot_distribution_summaries(output_arrays, dim_axes[2])
     
@@ -407,7 +419,7 @@ def main (iterations=NUM_ITERATIONS, batch_size=128, hint_rate=0.5, miss_rate=0.
     
   # Figure 1
   fig1 = all_fig_axes[0][0]
-  top_title = 'KDE plot of original data (black) and data imputed using GAN (red) and KNN (blue)'
+  top_title = 'Kernel density estimation for erased and predicted values, for each imputation method'
   fig1.suptitle(top_title, fontsize=8)
 
   fig1.tight_layout(rect=[0,0.03,0,1.25])
@@ -415,7 +427,7 @@ def main (iterations=NUM_ITERATIONS, batch_size=128, hint_rate=0.5, miss_rate=0.
 
   # Figure 2
   fig2 = all_fig_axes[1][0]
-  top_title = 'Q-Q plot of erased vs. predicted values, for each imputation method'
+  top_title = 'Q-Q plot of erased vs. imputed values, for each imputation method'
   fig2.suptitle(top_title, fontsize=8)
 
   fig2.tight_layout(rect=[0,0.03,0,1.25])
@@ -423,23 +435,31 @@ def main (iterations=NUM_ITERATIONS, batch_size=128, hint_rate=0.5, miss_rate=0.
   
   # Figure 3
   fig3 = all_fig_axes[2][0]
-  top_title = 'Bayesian confidence intervals for the mean, var, and standard deviation, for imputed and observed values'
+  top_title = 'Bayesian confidence intervals for the mean and standard deviation, for erased values and imputed values'
   fig3.suptitle(top_title, fontsize=8)
 
   fig3.tight_layout(rect=[0,0.03,0,1.25])
   fig3.subplots_adjust(hspace=1, wspace=0.35)
-  fig3.legend(labels=['Observed', 'GAN', 'KNN', 'MICE'])
   
   # Figure 4
   fig5, ax5 = plt.subplots(1,1)
+  top_title = 'Distribution of normalized RMSEs for each imputation method'
+  fig5.suptitle(top_title, fontsize=8)
   plot_error_distributions(all_stats, fig5, ax5)
+  ax5.set_ylabel('Probability density', fontsize=6)
+  ax5.set_xlabel('NRMSE (normalized to IQR)', fontsize=6)
+  ax5.legend(fontsize=6)
+  fig5.tight_layout(rect=[0,0.03,0,1.25])
+  fig5.subplots_adjust(hspace=1, wspace=0.35)
   
   plt.show()
   
   for model_name in ['gan', 'knn', 'mice']:
-    rrmses = [all_stats[variable_name][model_name]['rmse'] for variable_name in all_stats]
-    mrrmse = np.round(np.asarray(rrmses).mean(), 2)
-    print('Average RMSE (%s): ' % model_name, mrrmse)
+    rmses = [all_stats[variable_name][model_name]['rmse'] for variable_name in all_stats]
+    nrmses = [all_stats[variable_name][model_name]['nrmse'] for variable_name in all_stats]
+    mrmse = np.round(np.asarray(rmses).mean(), 2)
+    mnrmse = np.round(np.asarray(nrmses).mean(), 2)
+    print('Model: %s - average RMSE = %.2f, average NRMSE = %.2f ' % (model_name, mrmse, mnrmse))
 
   return all_stats
 

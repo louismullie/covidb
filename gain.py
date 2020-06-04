@@ -245,8 +245,8 @@ def gain (data_x, gain_parameters):
       losses['G'].append(G_loss_curr * 5)
       losses['MSE'].append(MSE_loss_curr * alpha)
     
-    print('Iteration: %d, encoder: %.3f, discriminator: %.3f, generator: %.3f, MSE: %.3f' % 
-      (it, E_loss_curr, D_loss_curr, G_loss_curr, MSE_loss_curr))
+      print('Iteration: %d, encoder: %.3f, discriminator: %.3f, generator: %.3f, MSE: %.3f' % 
+        (it, E_loss_curr, D_loss_curr, G_loss_curr, MSE_loss_curr))
     
     if MSE_loss_curr < 0.019:
       break
@@ -270,12 +270,13 @@ def gain (data_x, gain_parameters):
   
   import matplotlib.pyplot as plt
   plt.title('Encoder, generator, and discriminator losses over time')
-  plt.plot(losses['E'], label='Encoder', lw=1)
-  plt.plot(losses['G'], label='Generator', lw=1)
-  plt.plot(losses['D'], label='Discriminator', lw=1)
+  plt.plot(losses['E'], label='Encoder', lw=2, alpha=0.5)
+  plt.plot(losses['G'], label='Generator', lw=2, alpha=0.5)
+  plt.plot(losses['D'], label='Discriminator', lw=2, alpha=0.5)
   #plt.plot(losses['K-L'], label='K-L', lw=1)
-  plt.plot(losses['MSE'], label='MSE', lw=1)
+  plt.plot(losses['MSE'], label='MSE', lw=2, alpha=0.5)
   #plt.plot(losses['Hu'], label='Huber', lw=1)
+  plt.xlabel('$Number of training epochs$',fontsize=6)
   plt.legend()
   ax = plt.gca()
   plt.show()
