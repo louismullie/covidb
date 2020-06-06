@@ -19,7 +19,8 @@ from sklearn.impute import KNNImputer
 from sklearn.experimental import enable_iterative_imputer
 from sklearn.impute import IterativeImputer
 from sklearn.preprocessing import MinMaxScaler, PowerTransformer, QuantileTransformer, RobustScaler
-from scipy.stats import boxcox, t, sem, probplot, iqr, gaussian_kde, norm, bayes_mvs
+from scipy.stats import boxcox, t, sem, probplot, iqr, gaussian_kde, norm, bayes_mvs, wasserstein_distance
+from scipy.spatial.distance import jensenshannon
 from scipy.special import inv_boxcox
 from scipy.optimize import fmin
 
@@ -47,7 +48,7 @@ mpl.rc('font', **{ 'family': ['Helvetica'] })
 from sklearn.metrics import mutual_info_score as mutual_info
 
 NUM_ITERATIONS = 3000
-np.random.seed(10)
+np.random.seed(5)
 
 def plot_error_distributions(all_stats, fig, ax):
   
@@ -302,6 +303,7 @@ def main (iterations=NUM_ITERATIONS, batch_size=128, hint_rate=0.5, miss_rate=0.
   imputed_data_x_knn = transformer.inverse_transform(imputed_data_x_knn)
   imputed_data_x_mice = transformer.inverse_transform(imputed_data_x_mice)
   
+  
   # Save imputed data to disk
   pickle.dump(imputed_data_x_gan,open('./filled_data.sav', 'wb'))
   
@@ -356,26 +358,35 @@ def main (iterations=NUM_ITERATIONS, batch_size=128, hint_rate=0.5, miss_rate=0.
     dim_mean = np.mean([x for x in data_x[:,j] if not np.isnan(x)])
     dim_max = np.max([x for x in data_x[:,j] if not np.isnan(x)])
     dim_iqr = iqr([x for x in data_x[:,j] if not np.isnan(x)])
+
+    # Indices for removed data
+    ind = (data_m[:,j] == 0).flatten() & (~np.isnan(data_x[:,j])).flatten()
     
     # Stats for GAN
+    current_stats['gan']['bias'] = np.mean(distances_gan[j])
     current_stats['gan']['rmse'] = np.sqrt(np.mean(distances_gan[j]**2))
     current_stats['gan']['nrmse'] = current_stats['gan']['rmse'] / dim_iqr
     current_stats['gan']['mape'] = np.mean(np.abs(distances_gan[j]))
+    current_stats['gan']['wd'] = wasserstein_distance(data_x[ind,j].flatten(), imputed_data_x_gan[ind,j].flatten())
     
     # Stats for KNN
+    current_stats['knn']['bias'] = np.mean(distances_knn[j])
     current_stats['knn']['rmse'] = np.sqrt(np.mean(distances_knn[j]**2))
     current_stats['knn']['nrmse'] = current_stats['knn']['rmse'] / dim_iqr
     current_stats['knn']['mape'] = np.mean(np.abs(distances_knn[j]))
+    current_stats['knn']['wd'] = wasserstein_distance(data_x[ind,j].flatten(), imputed_data_x_knn[ind,j].flatten())
     
     # Stats for MICE
+    current_stats['mice']['bias'] = np.mean(distances_mice[j])
     current_stats['mice']['rmse'] = np.sqrt(np.mean(distances_mice[j]**2))
     current_stats['mice']['nrmse'] = current_stats['mice']['rmse'] / dim_iqr
     current_stats['mice']['mape'] = np.mean(np.abs(distances_mice[j]))
+    current_stats['mice']['wd'] = wasserstein_distance(data_x[ind,j].flatten(), imputed_data_x_mice[ind,j].flatten())
     
     for model_name in current_stats:
       model = current_stats[model_name]
-      print('... %s - RMSE: %.3f, NRMSE: %.3f, MAPE: %.3f' % \
-        (model_name, model['rmse'], model['nrmse'], model['mape']))
+      print('... %s - bias: %.3f, RMSE: %.3f, ME: %.3f, WD: %.3f' % \
+        (model_name, model['bias'], model['rmse'], model['mape'], model['wd']))
     
     all_stats[variables[j]] = dict(current_stats)
     
@@ -455,11 +466,11 @@ def main (iterations=NUM_ITERATIONS, batch_size=128, hint_rate=0.5, miss_rate=0.
   plt.show()
   
   for model_name in ['gan', 'knn', 'mice']:
-    rmses = [all_stats[variable_name][model_name]['rmse'] for variable_name in all_stats]
+    wds = [all_stats[variable_name][model_name]['wd'] for variable_name in all_stats]
     nrmses = [all_stats[variable_name][model_name]['nrmse'] for variable_name in all_stats]
-    mrmse = np.round(np.asarray(rmses).mean(), 2)
+    mwd = np.round(np.asarray(wds).mean(), 2)
     mnrmse = np.round(np.asarray(nrmses).mean(), 2)
-    print('Model: %s - average RMSE = %.2f, average NRMSE = %.2f ' % (model_name, mrmse, mnrmse))
+    print('Model: %s - average WD = %.2f, average NRMSE = %.2f ' % (model_name, mwd, mnrmse))
 
   return all_stats
 
